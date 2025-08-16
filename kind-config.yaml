@@ -1,0 +1,27 @@
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+name: test-cluster
+networking:
+  disableDefaultCNI: true   # Important for Cilium
+nodes:
+  - role: control-plane
+    image: kindest/node:v1.33.0
+# Patch anoter node
+    kubeadmConfigPatches:
+      - |
+        kind: JoinConfiguration
+        nodeRegistration:
+          kubeletExtraArgs:
+            node-labels: "worker1"
+  - role: worker
+    image: kindest/node:v1.33.0
+# Patch anoter node
+    kubeadmConfigPatches:
+      - |
+        kind: JoinConfiguration
+        nodeRegistration:
+          kubeletExtraArgs:
+            node-labels: "worker2"
+  - role: worker
+    image: kindest/node:v1.33.0
+    
