@@ -2,6 +2,15 @@
 
 - Installation please [see the page](https://linkerd.io/2.18/getting-started/)
 
+- Inject pods, deployments
+
+```sh
+# Example
+kubectl get deploy prometheus-kube-state-metrics -n monitoring -o yaml \
+  | linkerd inject - \
+  | kubectl delete -f -
+```
+
 - Remove Linkerd mesh
 
 ```sh
