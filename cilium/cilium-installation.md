@@ -6,8 +6,6 @@ sha256sum --check cilium-linux-amd64.tar.gz.sha256sum
 tar xzvf cilium-linux-amd64.tar.gz
 sudo mv cilium /usr/local/bin
 cilium install
-cilium status
-
 ## Enable Hubble
 
 cilium hubble enable
@@ -25,7 +23,8 @@ sha256sum --check hubble-linux-${HUBBLE_ARCH}.tar.gz.sha256sum
 sudo tar xzvfC hubble-linux-${HUBBLE_ARCH}.tar.gz /usr/local/bin
 rm hubble-linux-${HUBBLE_ARCH}.tar.gz{,.sha256sum}
 ```
-* Activate UI 
+
+* Activate UI
 
 ```sh
 cilium hubble enable --relay --ui
@@ -43,7 +42,6 @@ http://localhost:12000/
 
 * So: UI == plain HTTP server → easy to forward, no special protocol issues.
 
-
 ## Why hubble-relay was failing?
 
 * The Relay is not a simple HTTP server.
@@ -52,7 +50,7 @@ http://localhost:12000/
 
 * The hubble-relay Service remaps that to port 80, so you’re supposed to forward 4245:80.
 
-## The trouble is:
+## The trouble is
 
 * gRPC is binary, not plain HTTP. If you try to “curl” it, you’ll just see resets.
 
@@ -64,6 +62,7 @@ http://localhost:12000/
 connection reset by peer
 connection refused
 ```
+
 * the relay was either not listening yet, or your client was speaking the wrong protocol (TLS vs no TLS).
 
 ## Why the UI just works
@@ -76,27 +75,14 @@ connection refused
 
 * So:
 
-- Port-forward UI → browser → UI pod → Relay pod → Cilium agents → Flows ✅
+* Port-forward UI → browser → UI pod → Relay pod → Cilium agents → Flows ✅
 
-- Port-forward Relay directly → CLI → Relay pod ❌ (you hit protocol/TLS mismatches).
+* Port-forward Relay directly → CLI → Relay pod ❌ (you hit protocol/TLS mismatches).
 
 ## Summary
 
-- hubble-ui works with port-forward because it’s plain HTTP on port 80.
+* hubble-ui works with port-forward because it’s plain HTTP on port 80.
 
-- hubble-relay fails with port-forward because it expects gRPC, and your CLI + relay config are out of sync (TLS mismatch or port mismatch).
+* hubble-relay fails with port-forward because it expects gRPC, and your CLI + relay config are out of sync (TLS mismatch or port mismatch).
 
-- The UI hides that complexity, because it already knows how to talk to Relay correctly.
-
-
-
-
-
-
-
-
-
-
-
-
-
+* The UI hides that complexity, because it already knows how to talk to Relay correctly.
