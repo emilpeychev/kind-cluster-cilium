@@ -2,4 +2,3 @@
 resources:
   - gateway.yaml
   - httproute.yaml
-  
