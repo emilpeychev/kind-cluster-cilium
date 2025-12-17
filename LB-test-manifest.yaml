@@ -6,7 +6,7 @@ metadata:
     app: foo
 spec:
   containers:
-  - image: nginx:latest
+  - image: istio:latest
     name: foo-app
     resources:
       requests:

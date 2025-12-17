@@ -1,0 +1,29 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: apps
+  namespace: argocd
+spec:
+  generators:
+    - git:
+        repoURL: git@github.com:emilpeychev/kind-cluster-cilium.git
+        revision: dev
+        directories:
+          - path: apps/*
+  template:
+    metadata:
+      annotations:
+        argocd.argoproj.io/sync-wave: "2"
+      name: '{{path.basename}}'
+    spec:
+      project: apps
+      source:
+        repoURL: git@github.com:emilpeychev/kind-cluster-cilium.git
+        targetRevision: dev
+        path: '{{path}}'
+      destination:
+        server: https://kubernetes.default.svc
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true

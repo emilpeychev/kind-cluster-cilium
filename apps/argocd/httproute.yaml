@@ -1,0 +1,21 @@
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: argocd-route
+  namespace: argocd
+  # annotations:
+  #   # IP allowlist from cluster authorized_ips
+  #   istio.org/allow-list: "85.118.192.241/32,130.204.112.109/32"
+spec:
+  parentRefs:
+    - name: dev-gateway
+      namespace: istio-gateway
+      sectionName: https  # HTTPS-only access
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /argocd
+      backendRefs:
+        - name: argocd-server
+          port: 80

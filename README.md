@@ -90,9 +90,10 @@ curl -v http://<bar-service-EXTERNAL-IP>:8765
 ```sh
 kubectl create namespace istio-gateway
 kubectl label namespace istio-gateway istio.io/dataplane-mode=ambient
+```
 
-
-stioctl install \
+```sh
+istioctl install \
   --set profile=ambient \
   --set 'components.ingressGateways[0].name=istio-ingressgateway' \
   --set 'components.ingressGateways[0].enabled=true' \
@@ -102,7 +103,6 @@ stioctl install \
 
 - Istio [Install istioctl](https://istio.io/latest/docs/ambient/getting-started/#download-the-istio-cli)
 - Istio [Install Istio over the Canal cni](https://medium.com/@SabujJanaCodes/touring-the-kubernetes-istio-ambient-mesh-part-1-setup-ztunnel-c80336fcfb2d)
-
 
 ## Deploy httpbin (demo app)
 

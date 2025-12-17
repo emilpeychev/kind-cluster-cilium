@@ -1,0 +1,29 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: infra
+  namespace: argocd
+spec:
+  description: "Infrastructure project"
+  
+  # Allow ALL sources (git repos)
+  sourceRepos:
+    - '*'
+
+  # Allow deploying to ANY namespace
+  destinations:
+    - server: https://kubernetes.default.svc
+      namespace: '*'
+
+  # Allow cluster-scoped resources (REQUIRED for GatewayClass)
+  clusterResourceWhitelist:
+    - group: '*'
+      kind: '*'
+
+  # Allow namespace-scoped resources
+  namespaceResourceWhitelist:
+    - group: '*'
+      kind: '*'
+
+  # No sync window restrictions
+  syncWindows: []

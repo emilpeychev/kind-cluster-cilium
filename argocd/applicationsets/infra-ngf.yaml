@@ -1,0 +1,30 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: istio-gateway
+  namespace: argocd
+spec:
+  generators:
+  - list:
+      elements:
+      - name: istio-gateway
+        path: infra/istio-gateway
+  template:
+    metadata:
+      name: istio-gateway
+      annotations:
+        argocd.argoproj.io/sync-wave: "1"
+    spec:
+      project: infra
+      source:
+        repoURL: git@github.com:emilpeychev/kind-cluster-cilium.git
+        path: '{{path}}'
+        targetRevision: dev
+      destination:
+        server: https://kubernetes.default.svc
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+        syncOptions:
+        - CreateNamespace=true
