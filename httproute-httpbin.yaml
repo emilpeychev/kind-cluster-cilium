@@ -11,8 +11,8 @@ spec:
     namespace: istio-gateway
   rules:
   - matches:
-    - path:
-        type: PathPrefix
+    - istio:
+        type: istioPrefix
         value: /
     backendRefs:
     - name: httpbin

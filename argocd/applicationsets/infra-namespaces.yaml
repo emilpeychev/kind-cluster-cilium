@@ -8,7 +8,7 @@ spec:
     - list:
         elements:
           - name: infra-namespaces
-            path: infra/namespaces
+            path: infra/istio-gateway
   template:
     metadata:
       name: '{{name}}'
