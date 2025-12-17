@@ -4,3 +4,4 @@ kind: Kustomization
 resources:
 - gateway.yaml
 - gatewayapi-standard-install-v1.1.0.yaml
+- namespaces.yaml
