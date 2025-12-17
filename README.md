@@ -18,12 +18,6 @@ kind delete cluster --name cluster-name
 
 [check page to create a config file kind-config.yaml](https://kind.sigs.k8s.io/docs/user/configuration/#a-note-on-cli-parameters-and-configuration-files)
 
-## Select CNI plugin
-
-```sh
-kubectl apply -f https://raw.githubusercontent.com/kubernetes/dashboard/v2.7.0/aio/deploy/recommended.yaml
-```
-
 ### Cilium
 
 ```sh
@@ -40,8 +34,6 @@ cilium install \
 
 - Cilium go to Cilium dir
 - Canal [follow the instructions on the webpage](https://docs.tigera.io/calico/latest/getting-started/kubernetes/flannel/install-for-flannel)
-
-
 
 ## Deploy dashboard
 
@@ -239,4 +231,3 @@ https://172.20.255.203/html
 (Expect cert warning — self-signed)
 
 ```
-

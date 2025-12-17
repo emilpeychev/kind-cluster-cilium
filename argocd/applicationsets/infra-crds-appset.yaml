@@ -8,7 +8,7 @@ spec:
     - list:
         elements:
           - name: infra-crds
-            path: infra/crds
+            path: infra
   template:
     metadata:
       name: '{{name}}'

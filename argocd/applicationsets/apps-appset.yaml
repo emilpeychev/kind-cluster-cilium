@@ -9,7 +9,7 @@ spec:
         repoURL: git@github.com:emilpeychev/kind-cluster-cilium.git
         revision: dev
         directories:
-          - path: apps/*
+          - path: apps
   template:
     metadata:
       annotations:
