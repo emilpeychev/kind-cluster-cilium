@@ -18,8 +18,8 @@ spec:
       project: infra
       source:
         repoURL: git@github.com:emilpeychev/kind-cluster-cilium.git
-        path: '{{path}}'
         targetRevision: dev
+        path: '{{path}}'
       destination:
         server: https://kubernetes.default.svc
       syncPolicy:
