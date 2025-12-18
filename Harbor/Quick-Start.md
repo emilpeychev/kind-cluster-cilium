@@ -6,6 +6,7 @@
 helm repo add harbor https://helm.goharbor.io
 helm repo update
 helm install harbor harbor/harbor \
+  --set harborAdminPassword=Harbor12345 \
   --create-namespace \
   -n harbor \
   -f harbor-values.yaml

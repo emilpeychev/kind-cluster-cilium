@@ -4,12 +4,10 @@ expose:
     enabled: true
     auto:
       commonName: harbor.local
-
-
+Parameters:
+    ParameterName:
+        Type: 
 externalURL: https://harbor.local
-
-
-
 persistence:
   enabled: true
   persistentVolumeClaim:
