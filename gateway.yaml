@@ -6,21 +6,16 @@ metadata:
 spec:
   gatewayClassName: istio
   listeners:
-  - name: http
-    protocol: HTTP
-    port: 80
-    allowedRoutes:
-      namespaces:
-        from: All
   - name: https
     protocol: HTTPS
     port: 443
-    hostname: istio-gateway-istio.istio-gateway
+    hostname: "*.local"
+    allowedRoutes:
+      namespaces:
+        from: All
     tls:
       mode: Terminate
       certificateRefs:
       - kind: Secret
         name: istio-gateway-credentials
-    allowedRoutes:
-      namespaces:
-        from: All
+        namespace: istio-gateway

@@ -1,0 +1,24 @@
+expose:
+  type: ClusterIP
+  tls:
+    enabled: true
+    auto:
+      commonName: harbor.local
+
+
+externalURL: https://harbor.local
+
+
+
+persistence:
+  enabled: true
+  persistentVolumeClaim:
+    registry:
+      size: 10Gi
+    database:
+      size: 5Gi
+    redis:
+      size: 1Gi
+
+trivy:
+  enabled: true

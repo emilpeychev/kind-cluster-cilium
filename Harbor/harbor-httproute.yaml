@@ -1,0 +1,50 @@
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: harbor
+  namespace: harbor
+spec:
+  parentRefs:
+  - name: istio-gateway
+    namespace: istio-gateway
+    sectionName: https
+
+  hostnames:
+  - harbor.local
+
+  rules:
+  # 1️⃣ Harbor API
+  - matches:
+    - path:
+        type: PathPrefix
+        value: /api/
+    backendRefs:
+    - name: harbor-core
+      port: 80
+
+  # 2️⃣ Harbor internal services (used by UI)
+  - matches:
+    - path:
+        type: PathPrefix
+        value: /service/
+    backendRefs:
+    - name: harbor-core
+      port: 80
+
+  # 3️⃣ Docker / OCI registry
+  - matches:
+    - path:
+        type: PathPrefix
+        value: /v2/
+    backendRefs:
+    - name: harbor-registry
+      port: 5000
+
+  # 4️⃣ Web UI (catch-all LAST)
+  - matches:
+    - path:
+        type: PathPrefix
+        value: /
+    backendRefs:
+    - name: harbor-portal
+      port: 80

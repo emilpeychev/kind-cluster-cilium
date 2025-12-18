@@ -32,13 +32,6 @@ cilium install \
 
 ```
 
-- Cilium go to Cilium dir
-- Canal [follow the instructions on the webpage](https://docs.tigera.io/calico/latest/getting-started/kubernetes/flannel/install-for-flannel)
-
-## Deploy dashboard
-
-What you should do (step-by-step)
-
 ### Install METAL_LB
 
 ```sh
@@ -79,9 +72,34 @@ curl -v http://<bar-service-EXTERNAL-IP>:8765
 
 ## Select Service mesh
 
+```yaml
+! Very Important Labeling for Istio***
+
+- Istio Ambient: namespaces, labels, and why routing breaks without them
+- What “Ambient Mesh” really means (important mental model)
+
+- Istio Ambient does NOT inject sidecars.
+- Instead, it uses node-level dataplane components:
+
+***ztunnel (L4, mTLS, identity)***
+
+- Waypoint proxies (L7, optional, per-namespace / per-service)
+- Traffic only enters the mesh if the namespace is explicitly opted in.
+- Why you created a dedicated gateway namespace
+```
+
 ```sh
 kubectl create namespace istio-gateway
 kubectl label namespace istio-gateway istio.io/dataplane-mode=ambient
+```
+
+```xml
+***Diagram***
+
+Namespace: istio-gateway
+└── Labeled as "ambient"
+    └── Traffic to/from pods in this namespace
+        is intercepted by ztunnel
 ```
 
 ```sh
@@ -93,8 +111,67 @@ istioctl install \
   --skip-confirmation
 ```
 
+***More on Istio***
+
 - Istio [Install istioctl](https://istio.io/latest/docs/ambient/getting-started/#download-the-istio-cli)
 - Istio [Install Istio over the Canal cni](https://medium.com/@SabujJanaCodes/touring-the-kubernetes-istio-ambient-mesh-part-1-setup-ztunnel-c80336fcfb2d)
+
+## Apply GatewayApi sig
+
+```sh
+kubectl apply --server-side -f https://github.com/kubernetes-sigs/gateway-api/releases/download/v1.4.1/standard-install.yaml
+```
+
+## Add the TLS  from tls directory
+
+- Create and apply `cert.pem` ànd  `key.pem`.
+
+```sh
+cd tls
+# run the scripts with openssl
+```
+
+```yaml
+***Architecture Diagram***  
++-------------------------------------------------------------+
+|                        kind Cluster                         |
+|                                                             |
+|  +-------------------+      +---------------------------+   |
+|  |   Node (Docker)   |      |   Node (Docker)           |   |
+|  |                   |      |                           |   |
+|  |  +-------------+  |      |  +-------------+          |   |
+|  |  |   Pod(s)    |  |      |  |   Pod(s)    |          |   |
+|  |  +-------------+  |      |  +-------------+          |   |
+|  |      |   ^        |      |      |   ^                |   |
+|  |      v   |        |      |      v   |                |   |
+|  |  +-------------+  |      |  +-------------+          |   |
+|  |  |   ztunnel   |  |      |  |   ztunnel   |          |   |
+|  |  +-------------+  |      |  +-------------+          |   |
+|  +-------------------+      +---------------------------+   |
+|         |   ^                          |   ^                |
+|         |   |                          |   |                |
+|         v   |                          v   |                |
+|  +-----------------------------------------------------+    |
+|  |                MetalLB (LoadBalancer)               |    |
+|  +-----------------------------------------------------+    |
+|         |                                              |    |
+|         v                                              v    |
+|  +-----------------------------------------------------+    |
+|  |           Istio Gateway (ambient, L4/L7)            |    |
+|  +-----------------------------------------------------+    |
+|                                                             |
++-------------------------------------------------------------+
+```
+
+***Legend:***
+
+- Pod(s): Your workloads (no sidecars)
+- ztunnel: L4 overlay, mTLS, identity (ambient mode)
+- MetalLB: Provides external IPs for LoadBalancer services in kind
+- Istio Gateway: Handles ingress/egress, runs in ambient mode (no sidecars)
+- All networking is Cilium-powered (CNI)
+- Traffic: Pod <-> ztunnel <-> Gateway <-> MetalLB <-> External
+
 
 ## Deploy httpbin (demo app)
 
@@ -165,6 +242,7 @@ spec:
   - name: http
     protocol: HTTP
     port: 80
+
   - name: https
     protocol: HTTPS
     port: 443
@@ -174,32 +252,48 @@ spec:
       certificateRefs:
       - kind: Secret
         name: istio-gateway-credentials
-# HTTPRoute
+        namespace: istio-gateway
+
+# Deploy HTTPRoute Deployment and service
 
 ---
-apiVersion: gateway.networking.k8s.io/v1
-kind: HTTPRoute
+apiVersion: apps/v1
+kind: Deployment
 metadata:
   name: httpbin
-  namespace: istio
+  namespace: default
 spec:
-  hostnames:
-  - istio-gateway-istio.istio-gateway
-  parentRefs:
-  - name: istio-gateway
-    namespace: istio-gateway
-  rules:
-  - matches:
-    - path:
-        type: PathPrefix
-        value: /
-    backendRefs:
-    - name: httpbin
-      port: 80
+  replicas: 1
+  selector:
+    matchLabels:
+      app: httpbin
+  template:
+    metadata:
+      labels:
+        app: httpbin
+    spec:
+      containers:
+      - name: httpbin
+        image: postmanlabs/httpbin
+        ports:
+        - containerPort: 80
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: httpbin
+  namespace: default
+spec:
+  selector:
+    app: httpbin
+  ports:
+  - port: 80
+    targetPort: 80
+
 
 # Apply
 kubectl apply -f gateway.yaml
-kubectl apply -f httproute.yaml
+kubectl apply -f httpbin-test.yaml
 
 ```
 
