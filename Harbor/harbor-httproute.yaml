@@ -13,34 +13,25 @@ spec:
   - harbor.local
 
   rules:
-  # 1️⃣ Harbor API
+  # API / registry / controller → core
   - matches:
     - path:
         type: PathPrefix
         value: /api/
-    backendRefs:
-    - name: harbor-nginx
-      port: 80
-
-  # 2️⃣ Harbor internal services (used by UI)
-  - matches:
     - path:
         type: PathPrefix
         value: /service/
+    - path:
+        type: PathPrefix
+        value: /v2/
+    - path:
+        type: PathPrefix
+        value: /c/
     backendRefs:
     - name: harbor-core
       port: 80
 
-  # 3️⃣ Docker / OCI registry
-  - matches:
-    - path:
-        type: PathPrefix
-        value: /v2/
-    backendRefs:
-    - name: harbor-registry
-      port: 5000
-
-  # 4️⃣ Web UI (catch-all LAST)
+  # UI → portal
   - matches:
     - path:
         type: PathPrefix
@@ -48,3 +39,4 @@ spec:
     backendRefs:
     - name: harbor-portal
       port: 80
+
