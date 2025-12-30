@@ -29,9 +29,8 @@ sudo mv tkn /usr/local/bin/
 tkn version
 ```
 
-# Install Git Clone Task
+## Install Git Clone Task
 
 ```sh
 kubectl apply -f https://github.com/tektoncd/catalog/raw/main/task/git-clone/0.10/git-clone.yaml
 ```
-
