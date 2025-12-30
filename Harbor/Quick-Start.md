@@ -39,3 +39,59 @@ kubectl patch pvc harbor-registry -n harbor \
 
 kubectl get pvc -n harbor
 ```
+
+## Harbor hTTPRoute architecture
+
+- Mapping of paths to Harbor services is core to proper routing.
+- Below is the exact HTTPRoute pattern.
+- `NOTHING ELSE is WORKING` except this.
+
+```yaml
+Routing model (from Harbor Helm chart)
+
+/api/, /service/, /v2/, /c/ → harbor-core
+```
+
+```sh
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: harbor
+  namespace: harbor
+spec:
+  parentRefs:
+  - name: istio-gateway
+    namespace: istio-gateway
+    sectionName: https
+
+  hostnames:
+  - harbor.local
+
+  rules:
+  # API / registry / controller → core
+  - matches:
+    - path:
+        type: PathPrefix
+        value: /api/
+    - path:
+        type: PathPrefix
+        value: /service/
+    - path:
+        type: PathPrefix
+        value: /v2/
+    - path:
+        type: PathPrefix
+        value: /c/
+    backendRefs:
+    - name: harbor-core
+      port: 80
+
+  # UI → portal
+  - matches:
+    - path:
+        type: PathPrefix
+        value: /
+    backendRefs:
+    - name: harbor-portal
+      port: 80
+    ```
