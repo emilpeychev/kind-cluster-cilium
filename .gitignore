@@ -1,2 +1,27 @@
-.vscode
-/tls
+# Editor settings
+.vscode/
+.idea/
+
+# Generated TLS material
+tls/*.pem
+tls/*.key
+tls/*.crt
+tls/*.csr
+tls/*.srl
+tls/*.csr
+tls/key.pem
+tls/cert.pem
+tls/ca.crt
+tls/ca.srl
+# OS/editor noise
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+# Logs and temp files
+*.log
+*.tmp
+
+# Archives and bundles
+*.tar.gz
+*.tgz
