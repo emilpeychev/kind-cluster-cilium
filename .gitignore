@@ -3,21 +3,23 @@
 .idea/
 
 # Generated TLS material
-tls/*.pem
-tls/*.key
-tls/*.crt
-tls/*.csr
-tls/*.srl
-tls/*.csr
-tls/key.pem
-tls/cert.pem
-tls/ca.crt
-tls/ca.srl
+# Generated TLS material (ignore private keys and certs)
+/tls/*.pem
+/tls/*.key
+/tls/*.crt
+/tls/*.csr
+/tls/*.srl
+/tls/key.pem
+/tls/cert.pem
+/tls/ca.crt
+/tls/ca.srl
 # OS/editor noise
 .DS_Store
 Thumbs.db
 *.swp
 *.swo
+# additional editor temp files
+*~
 # Logs and temp files
 *.log
 *.tmp
@@ -25,3 +27,18 @@ Thumbs.db
 # Archives and bundles
 *.tar.gz
 *.tgz
+*.zip
+
+# Environment and local configs
+.env
+.kube/
+.kubeconfig
+
+# Local tooling / build artifacts
+node_modules/
+dist/
+build/
+
+# Kind / cluster state
+kind/
+.kind/
