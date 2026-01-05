@@ -256,6 +256,17 @@ kubectl apply -f https://storage.googleapis.com/tekton-releases/pipeline/latest/
 kubectl apply -f https://infra.tekton.dev/tekton-releases/dashboard/latest/release.yaml
 kubectl apply -f Tekton/tekton-dashboard-httproute.yaml
 
+echo "================================================"
+echo " Add Harbor Docker registry secret to Tekton Pipelines"
+echo "================================================"
+# Wait for tekton-pipelines namespace to be ready
+kubectl wait --for=condition=established --timeout=60s crd/pipelines.tekton.dev 2>/dev/null || sleep 30
+kubectl create secret docker-registry harbor-registry \
+  --docker-server=harbor-core.harbor.svc.cluster.local \
+  --docker-username=admin \
+  --docker-password=Harbor12345 \
+  -n tekton-pipelines \
+  --dry-run=client -o yaml | kubectl apply -f -
 
 echo "================================================"
 echo "* Setup ArgoCD URL: https://argocd.local"

@@ -1,0 +1,48 @@
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  name: clone-build-push
+  namespace: tekton-pipelines
+spec:
+  workspaces: 
+    - name: shared-data
+  params:
+    - name: GIT_URL
+      type: string
+    - name: GIT_BRANCH
+      type: string
+      default: main
+    - name: IMAGE_URL
+      type: string
+
+  tasks: 
+    - name: clone-repo
+      taskRef:
+        name: clone-repo
+      workspaces:
+        - name: output
+          workspace: shared-data
+      params:
+        - name: GIT_URL
+          value: $(params.GIT_URL)
+        - name: GIT_BRANCH
+          value: $(params.GIT_BRANCH)
+    - name: build-and-push-image
+      runAfter:
+        - clone-repo
+      taskRef:
+        name: build-and-push-image
+      workspaces:
+        - name: source
+          workspace: shared-data
+      params:
+        - name: IMAGE_URL
+          value: $(params.IMAGE_URL)
+    - name: push-app-to-registry
+      runAfter:
+        - build-and-push-image
+      taskRef:
+        name: deploy-app
+      params:
+        - name: IMAGE_URL
+          value: $(params.IMAGE_URL)

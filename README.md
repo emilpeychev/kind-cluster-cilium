@@ -1,26 +1,60 @@
-# kind-cluster-setups
+# <Local Kubernetes platform on Kind with Cilium CNI, Istio & SIG Gateway APIs, and a full GitOps + CI/CD toolchain>
 
-## Setup
+---
+[![Yettel](https://img.shields.io/badge/POC-Yettel-B4FF00?style=flat-rounded&logo=cloud&logoColor=purple)](https://www.yettel.bg/)
+
+<!-- Platform -->
+[![Kubernetes](https://img.shields.io/badge/Kubernetes-Kind-326CE5?style=flat-rounded&logo=kubernetes&logoColor=white)](https://kind.sigs.k8s.io/)
+[![Kind](https://img.shields.io/badge/Local-Kind-FCA121?style=flat-rounded&logo=kind&logoColor=white)](https://kind.sigs.k8s.io/)
+[![Docker](https://img.shields.io/badge/Container-Docker-2496ED?style=flat-rounded&logo=docker&logoColor=white)](https://www.docker.com/)
+<!-- Networking -->
+[![Cilium](https://img.shields.io/badge/CNI-Cilium-F5A623?style=flat-rounded&logo=cilium&logoColor=white)](https://cilium.io/)
+[![Istio](https://img.shields.io/badge/ServiceMesh-Istio-466BB0?style=flat-rounded&logo=istio&logoColor=white)](https://istio.io/)
+[![Gateway API](https://img.shields.io/badge/Gateway-SIG_API-1A1A1A?style=flat-rounded)](https://gateway-api.sigs.k8s.io/)
+[![MetalLB](https://img.shields.io/badge/LoadBalancer-MetalLB-3E8EDE?style=flat-rounded&logo=metallb&logoColor=white)](https://metallb.io/)
+<!-- Delivery -->
+[![Harbor](https://img.shields.io/badge/Registry-Harbor-60B932?style=flat-rounded&logo=harbor&logoColor=white)](https://goharbor.io/)
+[![Tekton](https://img.shields.io/badge/CI-Tekton-FD495C?style=flat-rounded&logo=tekton&logoColor=white)](https://tekton.dev/)
+[![ArgoCD](https://img.shields.io/badge/GitOps-ArgoCD-FE7338?style=flat-rounded&logo=argo&logoColor=white)](https://argo-cd.readthedocs.io/)
+
+---
+
+## Ensure Docker "kind" network exists with a fixed subnet
+
+```sh
+docker network inspect kind >/dev/null 2>&1 || \
+docker network create kind --subnet 172.20.0.0/16
+
+# Verify the network
+docker network inspect kind | grep Subnet
+
+```
+
+## Create kind cluster with Cilium CNI
 
 ***Creation***
 
 ```sh
-kind create cluster --name cluster-name
+ kind create cluster --config=kind-config.yaml 
 ```
 
 ***Deletion***
 
 ```sh
-kind delete cluster --name cluster-name 
+kind delete cluster --name <cluster-name> 
 ```
 
 ***Customize your cluster***
 
 [check page to create a config file kind-config.yaml](https://kind.sigs.k8s.io/docs/user/configuration/#a-note-on-cli-parameters-and-configuration-files)
 
-### Cilium
+### Install METAL_LB
 
 ```sh
+# 1. Install MetalLB native mode
+kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/v0.14.5/config/manifests/metallb-native.yaml
+
+# 2. Cilium CNI installation with kube-proxy replacement
 cilium install \
   --version 1.18.4 \
   --set kubeProxyReplacement=true \
@@ -30,15 +64,11 @@ cilium install \
   --set ipam.operator.clusterPoolIPv4PodCIDRList=10.244.0.0/16 \
   --set k8s.requireIPv4PodCIDR=true
 
-```
+ cilium status --wait
 
-### Install METAL_LB
 
-```sh
-kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/v0.14.5/config/manifests/metallb-native.yaml
-
-# Create a new IPAddressPool in the correct subnet:
-# Use an IP range from 172.20.0.0/16 that is not used by your nodes (e.g., 172.20.255.200-172.20.255.250):
+# 3. Create a new IPAddressPool in the correct subnet:
+# 4. Use an IP range from 172.20.0.0/16 that is not used by your nodes (e.g., 172.20.255.200-172.20.255.250):
 
 cat <<EOF | kubectl apply -f -
 apiVersion: metallb.io/v1beta1
@@ -55,6 +85,11 @@ kind: L2Advertisement
 metadata:
   name: l2adv
   namespace: metallb-system
+spec:
+  ipAddressPools:
+  - kind-pool
+   interfaces:
+  - eth0
 EOF
 ```
 
@@ -88,6 +123,8 @@ curl -v http://<bar-service-EXTERNAL-IP>:8765
 - Why you created a dedicated gateway namespace
 ```
 
+# Create the istio-gateway namespace and label it for ambient mode
+
 ```sh
 kubectl create namespace istio-gateway
 kubectl label namespace istio-gateway istio.io/dataplane-mode=ambient
@@ -103,6 +140,11 @@ Namespace: istio-gateway
 ```
 
 ```sh
+# REQUIRED: Istio will NOT create this namespace
+kubectl create namespace istio-gateway || true
+kubectl label namespace istio-gateway istio.io/dataplane-mode=ambient --overwrite
+
+# Install Istio Ambient with istioctl
 istioctl install \
   --set profile=ambient \
   --set 'components.ingressGateways[0].name=istio-ingressgateway' \
@@ -172,8 +214,7 @@ cd tls
 - All networking is Cilium-powered (CNI)
 - Traffic: Pod <-> ztunnel <-> Gateway <-> MetalLB <-> External
 
-
-## Deploy httpbin (demo app)
+## Deploy httpbin (test app)
 
 ```sh
 apiVersion: apps/v1

@@ -1,0 +1,67 @@
+apiVersion: tekton.dev/v1
+kind: Task
+metadata:
+  name: build-and-push-image
+  namespace: tekton-pipelines
+spec:
+  workspaces:
+    - name: source
+  params:
+    - name: IMAGE_URL
+      type: string
+    - name: DOCKERFILE_PATH
+      type: string
+      default: demo-app/Dockerfile
+    - name: CONTEXT_PATH
+      type: string
+      default: demo-app
+  steps:
+    - name: build-and-push
+      # Use debug image which has a shell for script execution
+      image: gcr.io/kaniko-project/executor:v1.12.0-debug
+      # Kaniko requires root to chown files during build
+      securityContext:
+        runAsUser: 0
+      env:
+        - name: HOME
+          value: /kaniko
+      # mount path will be provided by TaskRun via a volume named docker-config
+      volumeMounts:
+        - name: docker-config-secret
+          mountPath: /docker-config-secret
+        - name: kaniko-cache
+          mountPath: /cache
+      script: |
+        #!/busybox/sh
+        # Copy docker config from read-only secret to writable location
+        mkdir -p /kaniko/.docker
+        cp /docker-config-secret/config.json /kaniko/.docker/config.json
+        echo "=== Docker config ==="
+        cat /kaniko/.docker/config.json
+        echo ""
+        echo "=== Workspace contents ==="
+        ls -la $(workspaces.source.path)
+        echo "=== demo-app contents ==="
+        ls -la $(workspaces.source.path)/demo-app || echo "demo-app folder not found"
+        echo "=== Checking Dockerfile ==="
+        cat $(workspaces.source.path)/$(params.DOCKERFILE_PATH) || echo "Dockerfile not found"
+        echo "=== Building from $(workspaces.source.path)/$(params.CONTEXT_PATH) ==="
+        /kaniko/executor \
+          --context=$(workspaces.source.path)/$(params.CONTEXT_PATH) \
+          --dockerfile=$(workspaces.source.path)/$(params.DOCKERFILE_PATH) \
+          --destination=$(params.IMAGE_URL) \
+          --cache=false \
+          --use-new-run \
+          --insecure \
+          --skip-tls-verify \
+          --verbosity=info
+  # Mount harbor registry secret for authentication
+  volumes:
+    - name: docker-config-secret
+      secret:
+        secretName: harbor-registry
+        items:
+          - key: .dockerconfigjson
+            path: config.json
+    - name: kaniko-cache
+      emptyDir: {}

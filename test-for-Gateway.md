@@ -91,9 +91,12 @@ Traffic can be forwarded upstream
 
 6️⃣ End-to-end HTTPS routing
 Test
+
+```sh
 curl -vk \
   --resolve istio-gateway-istio.istio-gateway:443:172.20.255.201 \
   https://istio-gateway-istio.istio-gateway/get
+```
 
 Result
 HTTP/2 200
