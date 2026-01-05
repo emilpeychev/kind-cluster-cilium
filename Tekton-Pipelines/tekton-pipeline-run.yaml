@@ -19,7 +19,7 @@ spec:
         - ReadWriteOnce
         resources:
           requests:
-            storage: 1Gi
+            storage: "1Gi"
   # Parameters for the Pipeline
   params:
   - name: GIT_URL
