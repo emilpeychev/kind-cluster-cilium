@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: argocd-rbac-cm
+  namespace: argocd
+  labels:
+    app.kubernetes.io/name: argocd-rbac-cm
+    app.kubernetes.io/part-of: argocd
+data:
+  # Grant admin role to all authenticated users
+  policy.default: role:admin
+  # Optional: Add custom RBAC policies here
+  # policy.csv: |
+  #   p, role:org-admin, applications, *, */*, allow
+  #   g, my-org:team-alpha, role:org-admin

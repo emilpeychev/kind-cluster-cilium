@@ -1,0 +1,29 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: clone-repo
+  namespace: tekton-pipelines
+spec:
+  workspaces:
+    - name: output
+  params:
+    - name: GIT_BRANCH
+      type: string
+      default: dev
+    - name: GIT_URL
+      type: string
+  steps:
+    - name: git-clone
+      image: alpine/git
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65532
+        allowPrivilegeEscalation: false
+        capabilities:
+          drop:
+            - ALL
+        seccompProfile:
+          type: RuntimeDefault
+      script: |
+        #!/bin/sh
+        git clone --branch $(params.GIT_BRANCH) $(params.GIT_URL) $(workspaces.output.path)

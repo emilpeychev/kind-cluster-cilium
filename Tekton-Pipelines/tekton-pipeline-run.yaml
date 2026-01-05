@@ -1,0 +1,30 @@
+---
+apiVersion: tekton.dev/v1beta1
+kind: PipelineRun
+metadata:
+  name: clone-build-push-run
+  namespace: tekton-pipelines
+spec:
+  pipelineRef:
+    name: clone-build-push
+  serviceAccountName: pipeline
+  podTemplate:
+    securityContext:
+      fsGroup: 65532
+  workspaces:
+  - name: shared-data
+    volumeClaimTemplate:
+      spec:
+        accessModes:
+        - ReadWriteOnce
+        resources:
+          requests:
+            storage: 1Gi
+  # Parameters for the Pipeline
+  params:
+  - name: GIT_URL
+    value: https://github.com/emilpeychev/kind-cluster-cilium.git
+  - name: GIT_BRANCH
+    value: dev
+  - name: IMAGE_URL
+    value: harbor-core.harbor.svc.cluster.local/library/demo-app:latest
