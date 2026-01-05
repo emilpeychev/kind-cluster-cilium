@@ -19,6 +19,8 @@ spec:
         resources:
           requests:
             storage: 1Gi
+            
+  # Parameters for the Pipeline
   params:
   - name: GIT_URL
     value: https://github.com/emilpeychev/kind-cluster-cilium.git

@@ -2,17 +2,21 @@
 .vscode/
 .idea/
 
-# Generated TLS material
 # Generated TLS material (ignore private keys and certs)
-/tls/*.pem
-/tls/*.key
-/tls/*.crt
-/tls/*.csr
-/tls/*.srl
-/tls/key.pem
-/tls/cert.pem
-/tls/ca.crt
-/tls/ca.srl
+tls/*.pem
+tls/*.key
+tls/*.crt
+tls/*.csr
+tls/*.srl
+
+# Secrets - never commit these
+*-secret.yaml
+*secret*.yaml
+*.secret
+.env*
+secrets/
+**/secrets/
+
 # OS/editor noise
 .DS_Store
 Thumbs.db

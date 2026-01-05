@@ -16,12 +16,14 @@ kubectl apply -f https://infra.tekton.dev/tekton-releases/dashboard/latest/relea
 ## Install Tekton cli
 
 ```sh
-# Linux
-cd /temp
-# Get the tar.xz
-curl -LO https://github.com/tektoncd/cli/releases/download/v0.43.0/tkn_0.43.0_Darwin_all.tar.gz
-# Extract tkn to your PATH (e.g. /usr/local/bin)
-sudo tar xvzf tkn_0.43.0_Darwin_all.tar.gz -C /usr/local/bin tkn
+# Linux AMD64
+cd /tmp
+curl -LO https://github.com/tektoncd/cli/releases/download/v0.43.0/tkn_0.43.0_Linux_x86_64.tar.gz
+sudo tar xvzf tkn_0.43.0_Linux_x86_64.tar.gz -C /usr/local/bin tkn
+
+# macOS (alternative)
+# curl -LO https://github.com/tektoncd/cli/releases/download/v0.43.0/tkn_0.43.0_Darwin_all.tar.gz
+# sudo tar xvzf tkn_0.43.0_Darwin_all.tar.gz -C /usr/local/bin tkn
 ```
 
 ## Verify installation
@@ -30,8 +32,8 @@ sudo tar xvzf tkn_0.43.0_Darwin_all.tar.gz -C /usr/local/bin tkn
 tkn version
 ```
 
-## Install Git  clone-read Task
+## Install Git clone Task
 
 ```sh
-kubectl apply -f https://github.com/tektoncd/catalog/raw/main/task/git- clone-read/0.10/git- clone-read.yaml
+kubectl apply -f https://github.com/tektoncd/catalog/raw/main/task/git-clone/0.9/git-clone.yaml
 ```
