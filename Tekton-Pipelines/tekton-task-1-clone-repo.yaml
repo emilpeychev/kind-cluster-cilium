@@ -1,0 +1,49 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: clone-repo
+  namespace: tekton-pipelines
+spec:
+  workspaces:
+    - name: output
+  params:
+    - name: GIT_BRANCH
+      type: string
+      default: dev
+    - name: GIT_URL
+      type: string
+  # steps:
+  #   - name: git-clone
+  #     image: cgr.dev/chainguard/git:latest
+  #     securityContext:
+  #       runAsNonRoot: true
+  #       runAsUser: 65532
+  #     script: |
+  #       #!/bin/sh
+  #       git clone --branch $(params.GIT_BRANCH) $(params.GIT_URL) $(workspaces.output.path)
+
+  steps:
+    - name: git-clone
+      image: cgr.dev/chainguard/git:latest
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65532
+        allowPrivilegeEscalation: false
+        capabilities:
+          drop:
+            - ALL
+        seccompProfile:
+          type: RuntimeDefault
+      script: |
+        #!/bin/sh
+        set -e
+
+        git clone $(params.GIT_URL) $(workspaces.output.path)
+        git config --global --add safe.directory $(workspaces.output.path)
+        cd $(workspaces.output.path)
+
+        # Get default branch without sed/awk
+        git checkout --detach origin/HEAD
+
+
+
