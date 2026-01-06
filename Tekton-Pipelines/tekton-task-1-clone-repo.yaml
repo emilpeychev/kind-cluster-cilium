@@ -21,7 +21,6 @@ spec:
   #     script: |
   #       #!/bin/sh
   #       git clone --branch $(params.GIT_BRANCH) $(params.GIT_URL) $(workspaces.output.path)
-
   steps:
     - name: git-clone
       image: cgr.dev/chainguard/git:latest
@@ -37,13 +36,9 @@ spec:
       script: |
         #!/bin/sh
         set -e
-
         git clone $(params.GIT_URL) $(workspaces.output.path)
         git config --global --add safe.directory $(workspaces.output.path)
         cd $(workspaces.output.path)
 
         # Get default branch without sed/awk
         git checkout --detach origin/HEAD
-
-
-
