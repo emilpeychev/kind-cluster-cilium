@@ -38,11 +38,3 @@ spec:
       params:
         - name: IMAGE_URL
           value: $(params.IMAGE_URL)
-    - name: push-app-to-registry
-      runAfter:
-        - build-and-push-image
-      taskRef:
-        name: deploy-app
-      params:
-        - name: IMAGE_URL
-          value: $(params.IMAGE_URL)
