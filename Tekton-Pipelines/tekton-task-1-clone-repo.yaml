@@ -2,14 +2,14 @@ apiVersion: tekton.dev/v1beta1
 kind: Task
 metadata:
   name: clone-repo
-  namespace: tekton-pipelines
+  namespace: tekton-builds
 spec:
   workspaces:
     - name: output
   params:
     - name: GIT_BRANCH
       type: string
-      default: new-branch
+      default: master
     - name: GIT_URL
       type: string
   steps:

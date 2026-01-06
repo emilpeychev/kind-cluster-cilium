@@ -2,7 +2,7 @@ apiVersion: tekton.dev/v1beta1
 kind: Pipeline
 metadata:
   name: clone-build-push
-  namespace: tekton-pipelines
+  namespace: tekton-builds
 spec:
   workspaces: 
     - name: shared-data
@@ -35,14 +35,6 @@ spec:
       workspaces:
         - name: source
           workspace: shared-data
-      params:
-        - name: IMAGE_URL
-          value: $(params.IMAGE_URL)
-    - name: push-app-to-registry
-      runAfter:
-        - build-and-push-image
-      taskRef:
-        name: deploy-app
       params:
         - name: IMAGE_URL
           value: $(params.IMAGE_URL)
