@@ -8,7 +8,7 @@ spec:
     - list:
         elements:
           - name: demo-apps
-            path: apps
+            path: ArgoCD-demo-apps/apps
   template:
     metadata:
       name: '{{name}}'
@@ -16,7 +16,7 @@ spec:
       project: demo-apps
       source:
         repoURL: git@github.com:emilpeychev/kind-cluster-cilium.git
-        targetRevision: master
+        targetRevision: argocd-app
         path: '{{path}}'
       destination:
         server: https://kubernetes.default.svc
