@@ -2,9 +2,10 @@
 apiVersion: tekton.dev/v1beta1
 kind: PipelineRun
 metadata:
-  name: clone-build-push-run
+  name: clone-build-push-run-2
   namespace: tekton-builds
 spec:
+  serviceAccountName: pipeline
   pipelineRef:
     name: clone-build-push
   serviceAccountName: pipeline

@@ -246,27 +246,61 @@ helm install harbor harbor/harbor --version 1.18.1 \
 kubectl apply -f Harbor/harbor-httproute.yaml
 
 echo "================================================"
-echo "* Setup TektonPipelines URL: https://tekton.local"
+echo "* Setup Tekton Pipelines: https://tekton.local"
 echo "================================================"
 
-# Add entry to /etc/hosts
+# /etc/hosts
 grep -q "tekton.local" /etc/hosts || echo "172.20.255.201 tekton.local" | sudo tee -a /etc/hosts
 
+# Install Tekton Pipelines
 kubectl apply -f https://storage.googleapis.com/tekton-releases/pipeline/latest/release.yaml
+
+# Wait for controller
+kubectl wait --for=condition=available --timeout=300s \
+  deployment/tekton-pipelines-controller -n tekton-pipelines
+
+# Enable securityContext support
+echo "==> Enabling Tekton securityContext support"
+kubectl patch configmap feature-flags -n tekton-pipelines \
+  --type merge \
+  -p '{"data":{"set-security-context":"true"}}'
+
+# Wait for CRDs
+kubectl wait --for=condition=established --timeout=120s crd/pipelines.tekton.dev
+
+# Install Tekton Dashboard
 kubectl apply -f https://infra.tekton.dev/tekton-releases/dashboard/latest/release.yaml
 kubectl apply -f Tekton/tekton-dashboard-httproute.yaml
 
+sleep 5
+
 echo "================================================"
-echo " Add Harbor Docker registry secret to Tekton Pipelines"
+echo " Create tekton-builds namespace (PSA baseline)"
 echo "================================================"
-# Wait for tekton-pipelines namespace to be ready
-kubectl wait --for=condition=established --timeout=60s crd/pipelines.tekton.dev 2>/dev/null || sleep 30
+
+kubectl create namespace tekton-builds --dry-run=client -o yaml | kubectl apply -f -
+kubectl label ns tekton-builds \
+  pod-security.kubernetes.io/enforce=baseline \
+  pod-security.kubernetes.io/audit=baseline \
+  pod-security.kubernetes.io/warn=baseline \
+  --overwrite
+sleep 5
+
+echo "================================================"
+echo " Add Harbor registry secret to tekton-builds"
+echo "================================================"
+
 kubectl create secret docker-registry harbor-registry \
   --docker-server=harbor-core.harbor.svc.cluster.local \
   --docker-username=admin \
   --docker-password=Harbor12345 \
-  -n tekton-pipelines \
+  -n tekton-builds \
   --dry-run=client -o yaml | kubectl apply -f -
+
+sleep 1
+# Apply Tekton Pipeline resources
+kubectl apply -f Tekton-Pipelines/configs/
+sleep 1
 
 echo "================================================"
 echo "* Setup ArgoCD URL: https://argocd.local"
