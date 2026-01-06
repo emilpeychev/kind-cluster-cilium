@@ -7,7 +7,7 @@ tls/*.pem
 tls/*.key
 tls/*.crt
 tls/*.csr
-tls/*.srs
+tls/*.crs
 tls/*.srl
 
 
