@@ -9,7 +9,7 @@ spec:
   params:
     - name: GIT_BRANCH
       type: string
-      default: new-branch
+      default: master
     - name: GIT_URL
       type: string
   steps:
