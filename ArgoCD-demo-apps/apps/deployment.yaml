@@ -1,0 +1,23 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: demo-app1
+  namespace: demo-apps
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: demo-app1
+  template:
+    metadata:
+      labels:
+        app: demo-app1
+    spec:
+      imagePullSecrets:
+        - name: harbor-regcred
+      containers:
+        - name: app
+          image: harbor.local/library/demo-app:timestamp
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 80

@@ -1,0 +1,14 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: demo-apps
+  namespace: argocd
+spec:
+  description: Demo Apps project
+
+  sourceRepos:
+    - git@github.com:emilpeychev/kind-cluster-cilium.git
+
+  destinations:
+    - namespace: demo-*
+      server: https://kubernetes.default.svc
