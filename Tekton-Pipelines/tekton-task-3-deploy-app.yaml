@@ -2,7 +2,7 @@ apiVersion: tekton.dev/v1
 kind: Task
 metadata:
   name: deploy-app
-  namespace: tekton-pipelines
+  namespace: tekton-builds
 spec:
   params:
     - name: IMAGE_URL

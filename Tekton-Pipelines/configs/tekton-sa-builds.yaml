@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: pipeline
+  namespace: tekton-builds
+imagePullSecrets:
+  - name: harbor-registry
+secrets:
+  - name: harbor-registry
