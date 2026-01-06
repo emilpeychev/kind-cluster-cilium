@@ -16,7 +16,7 @@ spec:
       project: demo-apps
       source:
         repoURL: git@github.com:emilpeychev/kind-cluster-cilium.git
-        targetRevision: argocd-app
+        targetRevision: master
         path: '{{path}}'
       destination:
         server: https://kubernetes.default.svc
