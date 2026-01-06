@@ -12,6 +12,26 @@ Prerequisites:
   -n tekton-pipelines
 ```
 
+## Tekton Namespaces
+
+***default***
+
+- tekton-pipelines
+
+***runtime***
+
+- tekton-builds
+
+```sh
+kubectl create namespace tekton-builds
+kubectl label ns tekton-builds \
+  pod-security.kubernetes.io/enforce=baseline \
+  pod-security.kubernetes.io/audit=baseline \
+  pod-security.kubernetes.io/warn=baseline
+```
+
+
+
 # Create Docker Registry Secret
 
 ```sh
@@ -82,3 +102,4 @@ kubectl create secret docker-registry harbor-registry \
 ```sh
 
 kubectl apply -n tekton-pipelines \
+
