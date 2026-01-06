@@ -17,7 +17,7 @@ spec:
         - name: harbor-regcred
       containers:
         - name: app
-          image: harbor-core.harbor.svc.cluster.local/library/demo-app:latest
+          image: harbor-registry.harbor.svc.cluster.local:5000/library/demo-app:latest
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 80
