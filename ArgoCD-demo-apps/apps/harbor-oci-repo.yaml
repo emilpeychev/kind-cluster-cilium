@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: harbor-oci-registry
+  namespace: argocd
+  labels:
+    argocd.argoproj.io/secret-type: repository
+stringData:
+  type: helm
+  name: harbor-oci-registry
+  url: harbor.com
+  enableOCI: "true"
+  project: demo-apps
+  username: admin
+  password: Harbor12345
+  insecure: "true"
