@@ -259,14 +259,35 @@ kubectl apply -f https://storage.googleapis.com/tekton-releases/pipeline/latest/
 kubectl wait --for=condition=available --timeout=300s \
   deployment/tekton-pipelines-controller -n tekton-pipelines
 
-# Enable securityContext support
-echo "==> Enabling Tekton securityContext support"
-kubectl patch configmap feature-flags -n tekton-pipelines \
-  --type merge \
-  -p '{"data":{"set-security-context":"true"}}'
-
 # Wait for CRDs
 kubectl wait --for=condition=established --timeout=120s crd/pipelines.tekton.dev
+
+echo "==> Waiting for Tekton controller + webhook to be ready"
+
+kubectl wait --for=condition=available --timeout=300s \
+  deployment/tekton-pipelines-controller -n tekton-pipelines
+
+kubectl wait --for=condition=available --timeout=300s \
+  deployment/tekton-pipelines-webhook -n tekton-pipelines
+
+echo "==> Waiting for Tekton webhook service endpoints"
+until kubectl -n tekton-pipelines get endpoints tekton-pipelines-webhook \
+  -o jsonpath='{.subsets[0].addresses[0].ip}' 2>/dev/null | grep -qE '^[0-9]'; do
+  echo "  ...still waiting for endpoints"
+  sleep 2
+done
+
+echo "==> Enabling Tekton securityContext support (with retry)"
+for i in {1..30}; do
+  if kubectl patch configmap feature-flags -n tekton-pipelines \
+    --type merge \
+    -p '{"data":{"set-security-context":"true"}}'; then
+    echo "✅ Patched feature-flags"
+    break
+  fi
+  echo "  patch failed (webhook not reachable yet). retry $i/30..."
+  sleep 2
+done
 
 # Install Tekton Dashboard
 kubectl apply -f https://infra.tekton.dev/tekton-releases/dashboard/latest/release.yaml
