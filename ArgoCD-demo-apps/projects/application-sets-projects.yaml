@@ -1,6 +1,8 @@
 apiVersion: argoproj.io/v1alpha1
 kind: AppProject
 metadata:
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
   name: demo-apps
   namespace: argocd
 spec:
@@ -10,5 +12,10 @@ spec:
     - git@github.com:emilpeychev/kind-cluster-cilium.git
 
   destinations:
-    - namespace: demo-*
+    - namespace: "*"
       server: https://kubernetes.default.svc
+  roles:
+    - name: admin
+      description: Full access for local admin
+      policies:
+        - p, proj:demo-apps:admin, applications, *, demo-apps/*, allow
