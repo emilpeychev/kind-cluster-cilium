@@ -8,9 +8,8 @@ metadata:
 stringData:
   type: helm
   name: harbor-oci-registry
-  url: harbor.com
+  url: https://harbor.com
   enableOCI: "true"
-  project: demo-apps
-  username: admin
-  password: Harbor12345
-  insecure: "true"
+  username: robot$argocd
+  password: iAGaRwimokQcP0PAmaY2V3fK6gBfkxBQ
+  # insecure: "true"
