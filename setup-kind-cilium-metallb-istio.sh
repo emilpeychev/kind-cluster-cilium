@@ -243,6 +243,24 @@ helm install harbor harbor/harbor --version 1.18.1 \
   --create-namespace \
   -n harbor \
   -f Harbor/harbor-values.yaml
+
+# Wait for Harbor to be ready
+kubectl wait --for=condition=available --timeout=300s deployment/harbor-core -n harbor
+
+# Create Harbor TLS secrets
+kubectl create secret tls harbor-tls \
+  --cert=tls/cert.pem \
+  --key=tls/key.pem \
+  -n harbor --dry-run=client -o yaml | kubectl apply -f -
+
+# Create CA certificate ConfigMap for the installer
+kubectl create configmap harbor-ca-cert \
+  --from-file=ca.crt=tls/ca.crt \
+  -n kube-system --dry-run=client -o yaml | kubectl apply -f -
+
+# Apply Harbor CA installer
+kubectl apply -f Harbor/harbor-ca-installer.yaml
+
 kubectl apply -f Harbor/harbor-httproute.yaml
 
 echo "================================================"
