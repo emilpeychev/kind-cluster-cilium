@@ -1,0 +1,53 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: harbor-ca-installer
+  namespace: kube-system
+spec:
+  selector:
+    matchLabels:
+      name: harbor-ca-installer
+  template:
+    metadata:
+      labels:
+        name: harbor-ca-installer
+    spec:
+      hostNetwork: true
+      containers:
+      - name: ca-installer
+        image: alpine:latest
+        command:
+        - sh
+        - -c
+        - |
+          echo "Installing CA certificate..."
+          cp /ca/ca.crt /host/usr/local/share/ca-certificates/harbor-ca.crt
+          chroot /host update-ca-certificates
+          echo "CA certificate installed, sleeping..."
+          sleep infinity
+        volumeMounts:
+        - name: host-ca-certs
+          mountPath: /host/usr/local/share/ca-certificates
+        - name: host-root
+          mountPath: /host
+        - name: ca-cert
+          mountPath: /ca
+        securityContext:
+          privileged: true
+      volumes:
+      - name: host-ca-certs
+        hostPath:
+          path: /usr/local/share/ca-certificates
+      - name: host-root
+        hostPath:
+          path: /
+      - name: ca-cert
+        configMap:
+          name: harbor-ca-cert
+      tolerations:
+      - key: node-role.kubernetes.io/control-plane
+        operator: Exists
+        effect: NoSchedule
+      - key: node-role.kubernetes.io/master
+        operator: Exists
+        effect: NoSchedule
