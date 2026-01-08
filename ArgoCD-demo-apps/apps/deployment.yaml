@@ -16,11 +16,11 @@ spec:
         app: demo-app1
     spec:
       imagePullSecrets:
-        - name: harbor-regcred-internal
+        - name: harbor-regcred
       containers:
         - name: app
-          image: nginx:alpine
-          imagePullPolicy: IfNotPresent
+          image: harbor.local/demo-apps/demo-app1:latest
+          imagePullPolicy: Always
           ports:
             - containerPort: 80
           resources:

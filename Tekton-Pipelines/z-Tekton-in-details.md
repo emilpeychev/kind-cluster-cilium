@@ -1,53 +1,193 @@
-# Tekton Quick Start
-
-This document describes how Tekton is installed and structured in this cluster, and how CI build workloads are expected to run.
-
----
+# Tekton Pipelines Detailed Architecture
 
 ## Overview
+Tekton Pipelines provides Kubernetes-native CI/CD with strict security boundaries, integrated with Harbor registry, Istio mesh, and Pod Security Admission controls.
 
-The cluster runs **Tekton Pipelines** as the CI engine, integrated with:
-
-* Istio (ambient mode) for ingress
-* Gateway API + HTTPRoute for UI exposure
-* Harbor as the container registry
-* Pod Security Admission (PSA) for workload hardening
-
-A strict separation is maintained between:
-
-* **Control plane** (`tekton-pipelines` namespace)
-* **Build workloads** (`tekton-builds` namespace)
-
----
-
-## Architecture
-
+## Architecture Overview
 ```mermaid
 flowchart TD
-    Dev["Developer / Git Push"]
-
-    subgraph CI["CI System"]
-        TP["Tekton Pipelines Controller"]
-        TDash["Tekton Dashboard"]
+    subgraph "Developer Workflow"
+        DEV[Developer]
+        GIT[Git Repository]
+        DEV --> GIT
     end
 
-    subgraph Builds["tekton-builds namespace"]
-        PR["PipelineRun"]
-        TK["Task / Step Pods"]
-        SA["ServiceAccount: pipeline"]
+    subgraph "Control Plane"
+        TPC[Tekton Pipeline Controller<br/>tekton-pipelines ns]
+        TD[Tekton Dashboard<br/>https://tekton.local]
     end
 
-    subgraph Registry["Harbor"]
-        HR["Harbor Registry"]
+    subgraph "Build Execution"
+        PR[PipelineRun<br/>tekton-builds ns]
+        T1[Clone Task Pod]
+        T2[Build & Push Task Pod]
+        SA[ServiceAccount: pipeline]
     end
 
-    Dev -->|"Triggers"| PR
-    PR -->|"creates"| TK
-    TK -->|"uses SA"| SA
-    SA -->|"pull / push images"| HR
+    subgraph "Container Registry"
+        HR[Harbor Registry<br/>harbor.local]
+        HRS[harbor-registry Secret]
+    end
 
-    TP -->|"watches"| PR
-    TDash -->|"reads status"| TP
+    GIT -->|Trigger| PR
+    TPC -->|Watches| PR
+    PR -->|Creates| T1
+    PR -->|Creates| T2
+    T1 -->|Uses| SA
+    T2 -->|Uses| SA
+    SA -->|References| HRS
+    HRS -->|Auth to| HR
+    T2 -->|Push Image| HR
+    TD -->|Monitor| TPC
+```
+
+## Security Architecture
+```mermaid
+graph TB
+    subgraph "Pod Security Admission"
+        PSA[Baseline Policy<br/>No Privileged Pods]
+    end
+    
+    subgraph "tekton-builds Namespace"
+        SA[pipeline ServiceAccount]
+        IPS[imagePullSecrets<br/>harbor-registry]
+        POD[Task Pods<br/>Restricted Context]
+    end
+    
+    subgraph "tekton-pipelines Namespace"
+        CTRL[Controllers Only<br/>No Build Workloads]
+    end
+    
+    PSA --> POD
+    SA --> IPS
+    IPS --> POD
+```
+
+## Namespace Architecture
+
+### tekton-pipelines (Control Plane)
+- **Purpose**: Tekton controllers and system components
+- **Workloads**: Controllers only, no builds
+- **Configuration**: `set-security-context=true` feature flag
+- **Access**: Internal cluster components
+
+### tekton-builds (Execution Plane)
+- **Purpose**: All CI/CD build workloads
+- **Security**: Pod Security Admission baseline enforcement
+- **ServiceAccount**: `pipeline` with Harbor registry access
+- **Labels**:
+  ```yaml
+  pod-security.kubernetes.io/enforce: baseline
+  pod-security.kubernetes.io/audit: baseline
+  pod-security.kubernetes.io/warn: baseline
+  ```
+
+## Pipeline Execution Flow
+```mermaid
+sequenceDiagram
+    participant Dev as Developer
+    participant PR as PipelineRun
+    participant TC as Tekton Controller
+    participant T1 as Clone Task
+    participant T2 as Build Task
+    participant HR as Harbor Registry
+    participant AC as ArgoCD
+
+    Dev->>PR: Create PipelineRun
+    TC->>PR: Watch and reconcile
+    TC->>T1: Create clone task pod
+    T1->>T1: Clone repository (master branch)
+    TC->>T2: Create build task pod
+    T2->>HR: Build and push image
+    HR->>AC: Image available for sync
+    AC->>AC: Deploy updated image
+```
+
+## Registry Integration
+
+### Harbor Authentication
+```yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: harbor-registry
+  namespace: tekton-builds
+type: kubernetes.io/dockerconfigjson
+data:
+  .dockerconfigjson: <base64-encoded-config>
+```
+
+### ServiceAccount Configuration
+```yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: pipeline
+  namespace: tekton-builds
+imagePullSecrets:
+  - name: harbor-registry
+```
+
+## Dashboard Access
+- **URL**: https://tekton.local
+- **Exposure**: Istio Gateway with HTTPRoute
+- **Authentication**: Cluster RBAC integration
+- **Features**: Pipeline monitoring, logs, status tracking
+
+## Pipeline Components
+
+### Tasks Available
+- **Clone Repository**: Fetches source code from Git
+- **Build & Push**: Builds Docker image and pushes to Harbor
+- **Security Scanning**: Optional vulnerability assessment
+
+### Current Pipeline
+- **Source**: GitHub repository (master branch)
+- **Build**: Docker multi-stage build
+- **Registry**: Harbor at `harbor.local`
+- **Deployment**: ArgoCD GitOps synchronization
+
+## Security Features
+
+### Pod Security Standards
+- **Baseline Enforcement**: Prevents privileged containers
+- **Security Context**: Automatically applied by Tekton
+- **Resource Limits**: CPU and memory constraints
+- **Network Policies**: Future Cilium integration
+
+### RBAC Model
+- **Namespace Isolation**: Strict boundaries between control and execution
+- **ServiceAccount Scoping**: Minimal required permissions
+- **Registry Access**: Secured with pull/push secrets
+
+## Best Practices
+
+### Pipeline Design
+1. **Always specify ServiceAccount** in PipelineRuns
+2. **Use tekton-builds namespace** for all build workloads
+3. **Maintain PSA compliance** - no privileged containers
+4. **Separate concerns** - control plane vs execution plane
+
+### Security Guidelines
+1. **Never weaken PSA policies** for convenience
+2. **Create dedicated namespaces** for privileged workloads if needed
+3. **Regularly rotate registry credentials**
+4. **Monitor pipeline resource usage**
+
+## Integration Points
+- **Git Repository**: Source code and pipeline definitions
+- **Harbor Registry**: Container image storage and scanning
+- **ArgoCD**: Automated deployment synchronization
+- **Istio Gateway**: Secure dashboard access
+- **Cilium CNI**: Network policy enforcement
+
+## Troubleshooting
+
+### Common Issues
+- **Pipeline not starting**: Check ServiceAccount and RBAC
+- **Image pull failures**: Verify harbor-registry secret
+- **PSA violations**: Review task security contexts
+- **Network connectivity**: Validate Cilium network policies
 
 ```
 

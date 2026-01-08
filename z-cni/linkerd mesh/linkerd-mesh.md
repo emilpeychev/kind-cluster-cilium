@@ -1,32 +1,76 @@
-# Install linkerd mesh
+# Linkerd Service Mesh (Alternative)
 
-- Installation please [see the page](https://linkerd.io/2.18/getting-started/)
+## Overview
+Linkerd provides a lightweight service mesh alternative to Istio. This setup uses Istio Ambient instead for better performance and simplified operations.
 
-- Inject pods, deployments
-
-```sh
-# Example
-kubectl get deploy prometheus-kube-state-metrics -n monitoring -o yaml \
-  | linkerd inject - \
-  | kubectl delete -f -
+## Architecture Comparison
+```mermaid
+graph TB
+    subgraph "Linkerd Architecture"
+        LP[Linkerd Proxy<br/>Sidecar Injection]
+        LC[Linkerd Control Plane]
+        LP --> LC
+    end
+    
+    subgraph "Current: Istio Ambient"
+        ZT[ztunnel<br/>Node-level L4]
+        WP[Waypoint Proxy<br/>Optional L7]
+        ZT --> WP
+    end
+    
+    Note[Linkerd → Istio Ambient<br/>Migration for Simplified Ops]
+    Linkerd --> Note
+    Note --> Istio
 ```
 
-- Remove Linkerd mesh
+## Linkerd Installation (Reference Only)
+```bash
+# Install Linkerd CLI
+curl -sL https://run.linkerd.io/install | sh
+export PATH=$PATH:~/.linkerd2/bin
 
-```sh
-# Check for annotation in namespaces and delete
+# Install Linkerd control plane
+linkerd install | kubectl apply -f -
+linkerd check
+```
 
+## Mesh Injection
+```bash
+# Inject deployment
+kubectl get deploy <deployment> -n <namespace> -o yaml \
+  | linkerd inject - \
+  | kubectl apply -f -
+
+# Inject namespace
+kubectl annotate namespace <namespace> linkerd.io/inject=enabled
+```
+
+## Remove Linkerd Mesh
+```bash
+# Remove injection annotations
 for ns in $(kubectl get ns -o jsonpath='{.items[*].metadata.name}'); do
   kubectl annotate ns $ns linkerd.io/inject- --overwrite
 done
 
-```
-
-***Redeploy namespaces***
-
-```sh
+# Restart deployments
 kubectl rollout restart deploy -n <namespace>
 ```
+
+## Why Istio Ambient Instead?
+- **No Sidecars**: Eliminates proxy injection complexity
+- **Better Performance**: eBPF-based networking with lower latency
+- **Simplified Operations**: Fewer components to manage
+- **Gateway API**: Modern ingress with standard APIs
+- **Cilium Integration**: Native eBPF networking stack
+
+## Migration Benefits
+- Reduced resource overhead per pod
+- Simplified troubleshooting and debugging
+- Better integration with Kubernetes networking
+- Future-proof service mesh architecture
+
+## Current Setup
+This workspace uses **Istio v1.28.2 Ambient Mode** instead of Linkerd for service mesh capabilities.
 
 ***Delete the Linkerd namespace***
 
