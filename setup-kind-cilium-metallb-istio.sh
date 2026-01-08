@@ -404,6 +404,9 @@ sleep 2
 kubectl apply -f ArgoCD-demo-apps/applicationsets/
 
 echo "==> Waiting for ArgoCD to sync demo applications"
+
+# Add demo-app1 to known-hosts
+echo "172.20.255.201 demo-app1.local" | sudo tee -a /etc/hosts
 sleep 10
 
 echo "================================================"
