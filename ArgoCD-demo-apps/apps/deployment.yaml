@@ -16,11 +16,17 @@ spec:
         app: demo-app1
     spec:
       imagePullSecrets:
-        - name: harbor-regcred
+        - name: harbor-regcred-internal
       containers:
         - name: app
-          image: harbor-registry.harbor.svc.cluster.local:5000/library/demo-app:latest
-          # image: harbor.local/library/demo-app:latest
+          image: nginx:alpine
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 80
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "200m"
+              memory: "256Mi"

@@ -312,7 +312,7 @@ echo " Add Harbor registry secret to tekton-builds"
 echo "================================================"
 
 kubectl create secret docker-registry harbor-registry \
-  --docker-server=harbor-core.harbor.svc.cluster.local \
+  --docker-server=harbor.local \
   --docker-username=admin \
   --docker-password=Harbor12345 \
   -n tekton-builds \
@@ -380,6 +380,60 @@ EOF
 
 chmod +x /tmp/argocd-login.sh
 /tmp/argocd-login.sh
+
 echo "================================================"
-echo "* ArgoCD setup complete. Access it at: https://argocd.local"
+echo "* Setup ArgoCD Demo Apps"
+echo "================================================"
+
+# Create demo-apps namespace and Harbor registry secret
+echo "==> Creating demo-apps namespace with Harbor registry access"
+kubectl create namespace demo-apps --dry-run=client -o yaml | kubectl apply -f -
+
+# Create Harbor registry secret for demo-apps namespace  
+kubectl create secret docker-registry harbor-regcred \
+  --docker-server=harbor.local \
+  --docker-username=admin \
+  --docker-password=Harbor12345 \
+  -n demo-apps \
+  --dry-run=client -o yaml | kubectl apply -f -
+
+# Apply ArgoCD projects and ApplicationSets
+echo "==> Applying ArgoCD projects and ApplicationSets"
+kubectl apply -f ArgoCD-demo-apps/projects/
+sleep 2
+kubectl apply -f ArgoCD-demo-apps/applicationsets/
+
+echo "==> Waiting for ArgoCD to sync demo applications"
+sleep 10
+
+echo "================================================"
+echo "* Setup and Run Tekton Pipelines"
+echo "================================================"
+
+# Apply Tekton Pipeline definitions and configs (if not already applied)
+echo "==> Applying Tekton Pipeline configurations"
+kubectl apply -f Tekton-Pipelines/tekton-pipeline.yaml
+kubectl apply -f Tekton-Pipelines/tekton-task-1-clone-repo.yaml  
+kubectl apply -f Tekton-Pipelines/tekton-task-2-build-push.yaml
+
+echo "==> Creating and running Tekton PipelineRun"
+kubectl apply -f Tekton-Pipelines/tekton-pipeline-run.yaml
+
+echo "==> Waiting for PipelineRun to start"
+sleep 5
+
+# Check pipeline status
+echo "==> Checking PipelineRun status"
+kubectl get pipelinerun clone-build-push-run -n tekton-builds
+
+echo "==> To monitor pipeline progress, run:"
+echo "    kubectl logs -f -n tekton-builds -l tekton.dev/pipelineRun=clone-build-push-run"
+
+echo "================================================"
+echo "* Platform Setup Complete!"
+echo "================================================"
+echo "* Harbor:    https://harbor.local"
+echo "* ArgoCD:    https://argocd.local" 
+echo "* Tekton:    https://tekton.local"
+echo "* Demo App:  https://demo-app1.local"
 echo "================================================"
