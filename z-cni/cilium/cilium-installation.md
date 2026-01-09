@@ -1,23 +1,76 @@
-# Install Cilium
+# Cilium CNI Installation Guide
 
-```sh
-curl -L --remote-name-all https://github.com/cilium/cilium-cli/releases/latest/download/cilium-linux-amd64.tar.gz{,.sha256sum}
-sha256sum --check cilium-linux-amd64.tar.gz.sha256sum
-tar xzvf cilium-linux-amd64.tar.gz
-sudo mv cilium /usr/local/bin
-cilium install
-## Enable Hubble
+eBPF-powered networking and security for Kubernetes with advanced observability.
 
-cilium hubble enable
-cilium status
+## Architecture
+
+```mermaid
+graph TB
+    subgraph "KIND Cluster Nodes"
+        subgraph "Control Plane"
+            CP[Control Plane]
+            CiliumAgent1[Cilium Agent]
+        end
+        
+        subgraph "Worker Node 1"
+            W1[Worker 1]
+            CiliumAgent2[Cilium Agent]
+        end
+        
+        subgraph "Worker Node 2"
+            W2[Worker 2]
+            CiliumAgent3[Cilium Agent]
+        end
+    end
+    
+    subgraph "eBPF Data Plane"
+        eBPF[eBPF Programs]
+        Kernel[Linux Kernel]
+        Network[Network Stack]
+    end
+    
+    subgraph "Cilium Control Plane"
+        CiliumOperator[Cilium Operator]
+        Hubble[Hubble Observability]
+        KVStore[etcd KV Store]
+    end
+    
+    CiliumAgent1 --> eBPF
+    CiliumAgent2 --> eBPF  
+    CiliumAgent3 --> eBPF
+    eBPF --> Kernel
+    Kernel --> Network
+    CiliumOperator --> CiliumAgent1
+    CiliumOperator --> CiliumAgent2
+    CiliumOperator --> CiliumAgent3
+    Hubble --> CiliumAgent1
+    Hubble --> CiliumAgent2
+    Hubble --> CiliumAgent3
+    CiliumOperator --> KVStore
 ```
 
-* Install Hubble CLI
+## Installation
 
-```sh
-HUBBLE_VERSION=$(curl -s https://raw.githubusercontent.com/cilium/hubble/master/stable.txt)
-HUBBLE_ARCH=amd64
-if [ "$(uname -m)" = "aarch64" ]; then HUBBLE_ARCH=arm64; fi
+1. **Install Cilium CLI**
+   ```bash
+   curl -L --remote-name-all https://github.com/cilium/cilium-cli/releases/latest/download/cilium-linux-amd64.tar.gz{,.sha256sum}
+   sha256sum --check cilium-linux-amd64.tar.gz.sha256sum
+   tar xzvf cilium-linux-amd64.tar.gz
+   sudo mv cilium /usr/local/bin
+   ```
+
+2. **Deploy Cilium to Cluster**
+   ```bash
+   cilium install
+   cilium status
+   ```
+
+3. **Enable Hubble Observability**
+   ```bash
+   cilium hubble enable
+   ```
+
+4. **Install Hubble CLI**
 curl -L --fail --remote-name-all https://github.com/cilium/hubble/releases/download/$HUBBLE_VERSION/hubble-linux-${HUBBLE_ARCH}.tar.gz{,.sha256sum}
 sha256sum --check hubble-linux-${HUBBLE_ARCH}.tar.gz.sha256sum
 sudo tar xzvfC hubble-linux-${HUBBLE_ARCH}.tar.gz /usr/local/bin

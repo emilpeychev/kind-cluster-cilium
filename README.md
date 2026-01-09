@@ -1,34 +1,118 @@
-# <Local Kubernetes platform on Kind with Cilium CNI, Istio & SIG Gateway APIs, and a full GitOps + CI/CD toolchain>
+# GitOps Platform with KIND, Cilium, and Service Mesh
 
----
+Complete local Kubernetes platform for development and testing with modern cloud-native tools.
+
 [![Yettel](https://img.shields.io/badge/POC-Yettel-B4FF00?style=flat-rounded&logo=cloud&logoColor=purple)](https://www.yettel.bg/)
-
-<!-- Platform -->
 [![Kubernetes](https://img.shields.io/badge/Kubernetes-Kind-326CE5?style=flat-rounded&logo=kubernetes&logoColor=white)](https://kind.sigs.k8s.io/)
 [![Kind](https://img.shields.io/badge/Local-Kind-FCA121?style=flat-rounded&logo=kind&logoColor=white)](https://kind.sigs.k8s.io/)
 [![Docker](https://img.shields.io/badge/Container-Docker-2496ED?style=flat-rounded&logo=docker&logoColor=white)](https://www.docker.com/)
-<!-- Networking -->
 [![Cilium](https://img.shields.io/badge/CNI-Cilium-F5A623?style=flat-rounded&logo=cilium&logoColor=white)](https://cilium.io/)
 [![Istio](https://img.shields.io/badge/ServiceMesh-Istio-466BB0?style=flat-rounded&logo=istio&logoColor=white)](https://istio.io/)
 [![Gateway API](https://img.shields.io/badge/Gateway-SIG_API-1A1A1A?style=flat-rounded)](https://gateway-api.sigs.k8s.io/)
 [![MetalLB](https://img.shields.io/badge/LoadBalancer-MetalLB-3E8EDE?style=flat-rounded&logo=metallb&logoColor=white)](https://metallb.io/)
-<!-- Delivery -->
 [![Harbor](https://img.shields.io/badge/Registry-Harbor-60B932?style=flat-rounded&logo=harbor&logoColor=white)](https://goharbor.io/)
 [![Tekton](https://img.shields.io/badge/CI-Tekton-FD495C?style=flat-rounded&logo=tekton&logoColor=white)](https://tekton.dev/)
 [![ArgoCD](https://img.shields.io/badge/GitOps-ArgoCD-FE7338?style=flat-rounded&logo=argo&logoColor=white)](https://argo-cd.readthedocs.io/)
 
----
+## Architecture
 
-## Ensure Docker "kind" network exists with a fixed subnet
-
-```sh
-docker network inspect kind >/dev/null 2>&1 || \
-docker network create kind --subnet 172.20.0.0/16
-
-# Verify the network
-docker network inspect kind | grep Subnet
-
+```mermaid
+graph TB
+    subgraph "Local Development Environment"
+        Dev[Developer]
+        Browser[Web Browser]
+        Docker[Docker Desktop]
+    end
+    
+    subgraph "KIND Cluster - test-cluster-1"
+        subgraph "Control Plane"
+            K8sAPI[Kubernetes API Server]
+            Scheduler[Scheduler]
+            Controller[Controller Manager]
+        end
+        
+        subgraph "Worker Nodes"
+            Node1[Worker Node 1]
+            Node2[Worker Node 2]
+        end
+        
+        subgraph "Networking Layer"
+            Cilium[Cilium eBPF CNI<br/>v1.18.4]
+            MetalLB[MetalLB Load Balancer<br/>172.20.255.200-250]
+        end
+        
+        subgraph "Service Mesh"
+            Istio[Istio Ambient<br/>v1.28.2]
+            Gateway[Gateway API]
+        end
+        
+        subgraph "GitOps & CI/CD"
+            ArgoCD[ArgoCD v3.2.0<br/>GitOps Controller]
+            Tekton[Tekton Pipelines<br/>CI/CD System]
+        end
+        
+        subgraph "Registry & Apps"
+            Harbor[Harbor Registry<br/>v2.12.0]
+            DemoApp[Demo Applications]
+        end
+    end
+    
+    Dev --> Docker
+    Docker --> KIND
+    KIND --> Cilium
+    Cilium --> MetalLB
+    MetalLB --> Istio
+    Istio --> Gateway
+    Gateway --> ArgoCD
+    Gateway --> Harbor
+    Gateway --> DemoApp
+    Tekton --> Harbor
+    ArgoCD --> DemoApp
+    Browser --> Gateway
 ```
+
+## Quick Start
+
+1. **Prepare Docker Network**
+   ```bash
+   docker network inspect kind >/dev/null 2>&1 || \
+   docker network create kind --subnet 172.20.0.0/16
+   ```
+
+2. **Deploy Platform**
+   ```bash
+   ./setup-kind-cilium-metallb-istio.sh
+   ```
+
+3. **Access Services**
+   - ArgoCD: https://argocd.local (admin/admin)
+   - Harbor: https://harbor.local (admin/Harbor12345)  
+   - Demo App: https://demo-app1.local
+
+## Components
+
+| Component | Version | Purpose |
+|-----------|---------|---------|
+| KIND | v0.20.0 | Local Kubernetes cluster |
+| Cilium | v1.18.4 | eBPF-based CNI networking |
+| MetalLB | v0.14.5 | Load balancer for bare metal |
+| Istio | v1.28.2 | Service mesh (Ambient mode) |
+| ArgoCD | v3.2.0 | GitOps continuous delivery |
+| Harbor | v2.12.0 | Container registry |
+| Tekton | Latest | CI/CD pipelines |
+
+## Network Configuration
+
+- **Cluster Network**: 172.20.0.0/16
+- **Load Balancer Pool**: 172.20.255.200-250
+- **Service Mesh**: Gateway API with HTTPS termination
+
+## Prerequisites
+
+- Docker Desktop or Docker Engine
+- kubectl CLI tool
+- 8GB+ RAM available for cluster
+
 
 ## Create kind cluster with Cilium CNI
 
