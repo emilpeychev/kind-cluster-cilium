@@ -1,6 +1,6 @@
 # GitOps Platform with KIND, Cilium, and Service Mesh
 
-Complete local Kubernetes platform for development and testing with modern cloud-native tools.
+A complete local Kubernetes platform for development and testing with modern cloud-native tools including service mesh, GitOps, CI/CD, and container registry.
 
 [![Yettel](https://img.shields.io/badge/POC-Yettel-B4FF00?style=flat-rounded&logo=cloud&logoColor=purple)](https://www.yettel.bg/)
 [![Kubernetes](https://img.shields.io/badge/Kubernetes-Kind-326CE5?style=flat-rounded&logo=kubernetes&logoColor=white)](https://kind.sigs.k8s.io/)
@@ -14,7 +14,32 @@ Complete local Kubernetes platform for development and testing with modern cloud
 [![Tekton](https://img.shields.io/badge/CI-Tekton-FD495C?style=flat-rounded&logo=tekton&logoColor=white)](https://tekton.dev/)
 [![ArgoCD](https://img.shields.io/badge/GitOps-ArgoCD-FE7338?style=flat-rounded&logo=argo&logoColor=white)](https://argo-cd.readthedocs.io/)
 
-## Architecture
+## 📖 Table of Contents
+
+- [Project Description](#-project-description)
+- [Architecture](#-architecture)
+- [Project Components](#-project-components)
+- [Prerequisites](#-prerequisites)
+- [Quick Start](#-quick-start)
+- [Setup Script Details](#-setup-script-details)
+- [Network Configuration](#-network-configuration)
+- [Service Access](#-service-access)
+- [Detailed Guides](#-detailed-guides)
+
+## 🚀 Project Description
+
+This project provides a comprehensive local Kubernetes development platform that mimics production-grade cloud-native infrastructure. It combines modern technologies to create a fully-featured environment suitable for:
+
+- **Cloud-Native Application Development**: Test applications in a realistic service mesh environment
+- **GitOps Workflows**: Practice continuous deployment with ArgoCD
+- **CI/CD Pipeline Development**: Build and test Tekton pipelines
+- **Container Registry Management**: Use Harbor for private image storage
+- **Service Mesh Experimentation**: Explore Istio Ambient mode features
+- **eBPF Networking**: Experience advanced networking with Cilium CNI
+
+The platform is designed to be portable, reproducible, and easy to tear down and recreate, making it perfect for development, testing, and learning purposes.
+
+## 🏗️ Architecture
 
 ```mermaid
 graph TB
@@ -71,382 +96,174 @@ graph TB
     Browser --> Gateway
 ```
 
-## Quick Start
+## 🧩 Project Components
 
-1. **Prepare Docker Network**
-   ```bash
-   docker network inspect kind >/dev/null 2>&1 || \
-   docker network create kind --subnet 172.20.0.0/16
-   ```
+| Component | Version | Purpose | Namespace |
+|-----------|---------|---------|-----------|
+| **KIND** | v0.20.0 | Local Kubernetes cluster | N/A |
+| **Cilium** | v1.18.4 | eBPF-based CNI with kube-proxy replacement | kube-system |
+| **MetalLB** | v0.14.5 | Load balancer for bare metal clusters | metallb-system |
+| **Istio** | v1.28.2 | Service mesh in Ambient mode (no sidecars) | istio-system |
+| **Gateway API** | v1.4.1 | Modern ingress and traffic management | N/A |
+| **ArgoCD** | v3.2.0 | GitOps continuous delivery platform | argocd |
+| **Harbor** | v2.12.0 | Enterprise container registry | harbor |
+| **Tekton** | Latest | Cloud-native CI/CD pipelines | tekton-pipelines |
+| **Kubernetes Dashboard** | Latest | Web-based cluster management UI | kubernetes-dashboard |
 
-2. **Deploy Platform**
-   ```bash
-   ./setup-kind-cilium-metallb-istio.sh
-   ```
+### Key Features
+- **Zero-sidecar Service Mesh**: Istio Ambient mode provides mTLS and observability without pod overhead
+- **eBPF Networking**: Cilium replaces kube-proxy with eBPF for better performance  
+- **Local Load Balancer**: MetalLB provides LoadBalancer services in KIND
+- **Modern Ingress**: Gateway API with HTTPS termination and TLS management
+- **Complete GitOps**: ArgoCD with demo applications and ApplicationSets
+- **CI/CD Pipelines**: Tekton with Harbor registry integration
 
-3. **Access Services**
-   - ArgoCD: https://argocd.local (admin/admin)
-   - Harbor: https://harbor.local (admin/Harbor12345)  
-   - Demo App: https://demo-app1.local
+## 📋 Prerequisites
 
-## Components
+Before running the setup script, ensure you have:
 
-| Component | Version | Purpose |
-|-----------|---------|---------|
-| KIND | v0.20.0 | Local Kubernetes cluster |
-| Cilium | v1.18.4 | eBPF-based CNI networking |
-| MetalLB | v0.14.5 | Load balancer for bare metal |
-| Istio | v1.28.2 | Service mesh (Ambient mode) |
-| ArgoCD | v3.2.0 | GitOps continuous delivery |
-| Harbor | v2.12.0 | Container registry |
-| Tekton | Latest | CI/CD pipelines |
+- **Docker Desktop** or **Docker Engine** running
+- **kubectl** CLI tool installed
+- **kind** CLI tool installed  
+- **cilium** CLI tool installed
+- **istioctl** CLI tool installed
+- **8GB+ RAM** available for the cluster
+- **10GB+ disk space** for container images
 
-## Network Configuration
+### Install Required Tools
 
-- **Cluster Network**: 172.20.0.0/16
-- **Load Balancer Pool**: 172.20.255.200-250
-- **Service Mesh**: Gateway API with HTTPS termination
+```bash
+# Install kind
+curl -Lo ./kind https://kind.sigs.k8s.io/dl/v0.20.0/kind-linux-amd64
+chmod +x ./kind && sudo mv ./kind /usr/local/bin/kind
 
-## Prerequisites
+# Install cilium CLI
+CILIUM_CLI_VERSION=$(curl -s https://raw.githubusercontent.com/cilium/cilium-cli/main/stable.txt)
+curl -L --fail --remote-name-all https://github.com/cilium/cilium-cli/releases/download/${CILIUM_CLI_VERSION}/cilium-linux-amd64.tar.gz
+tar xzvfC cilium-linux-amd64.tar.gz /usr/local/bin
+rm cilium-linux-amd64.tar.gz
 
-- Docker Desktop or Docker Engine
-- kubectl CLI tool
-- 8GB+ RAM available for cluster
-
-
-## Create kind cluster with Cilium CNI
-
-***Creation***
-
-```sh
- kind create cluster --config=kind-config.yaml 
+# Install istioctl
+curl -L https://istio.io/downloadIstio | sh -
+sudo mv istio-*/bin/istioctl /usr/local/bin/
 ```
 
-***Deletion***
+## ⚡ Quick Start
 
-```sh
-kind delete cluster --name <cluster-name> 
+The fastest way to get the entire platform running:
+
+```bash
+# 1. Clone the repository
+git clone <repository-url>
+cd Kind-cluster-cilium
+
+# 2. Make setup script executable
+chmod +x setup-kind-cilium-metallb-istio.sh
+
+# 3. Run the automated setup
+./setup-kind-cilium-metallb-istio.sh
 ```
 
-***Customize your cluster***
+**⏱️ Setup time**: Approximately 10-15 minutes depending on internet speed
 
-[check page to create a config file kind-config.yaml](https://kind.sigs.k8s.io/docs/user/configuration/#a-note-on-cli-parameters-and-configuration-files)
+## 🔧 Setup Script Details
 
-### Install METAL_LB
+The `setup-kind-cilium-metallb-istio.sh` script automates the complete platform deployment. Here's what it does:
 
-```sh
-# 1. Install MetalLB native mode
-kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/v0.14.5/config/manifests/metallb-native.yaml
+### Phase 1: Infrastructure Setup
+1. **Docker Network**: Creates `kind` network with subnet `172.20.0.0/16`
+2. **KIND Cluster**: Deploys 3-node cluster (1 control-plane, 2 workers) using `kind-config.yaml`
+3. **MetalLB**: Installs native MetalLB load balancer
 
-# 2. Cilium CNI installation with kube-proxy replacement
-cilium install \
-  --version 1.18.4 \
-  --set kubeProxyReplacement=true \
-  --set kubeProxyReplacementMode=strict \
-  --set cni.exclusive=false \
-  --set ipam.mode=cluster-pool \
-  --set ipam.operator.clusterPoolIPv4PodCIDRList=10.244.0.0/16 \
-  --set k8s.requireIPv4PodCIDR=true
+### Phase 2: Networking Layer  
+4. **Cilium CNI**: Installs with kube-proxy replacement and eBPF mode
+   - Cluster pool IPAM: `10.244.0.0/16`
+   - Strict kube-proxy replacement enabled
+5. **MetalLB Pool**: Configures L2 advertisement for IP range `172.20.255.200-250`
 
- cilium status --wait
+### Phase 3: Service Mesh & Ingress
+6. **Gateway API**: Installs CRDs for modern ingress management
+7. **Istio Namespace**: Creates `istio-gateway` namespace with ambient mode labels
+8. **Istio Ambient**: Deploys service mesh without sidecars
+   - ztunnel for L4 mTLS and identity
+   - Ingress gateway in `istio-gateway` namespace
 
+### Phase 4: Certificate Management
+9. **Local CA**: Generates self-signed Certificate Authority for HTTPS
+10. **Gateway Certificates**: Creates signed certificates for gateway services
+11. **TLS Secrets**: Stores certificates in Kubernetes secrets
 
-# 3. Create a new IPAddressPool in the correct subnet:
-# 4. Use an IP range from 172.20.0.0/16 that is not used by your nodes (e.g., 172.20.255.200-172.20.255.250):
+### Phase 5: Platform Services
+12. **Harbor Registry**: Deploys with HTTPS endpoint at `harbor.local`
+13. **ArgoCD**: Installs GitOps platform at `argocd.local`
+14. **Tekton Pipelines**: Sets up CI/CD system with demo pipelines
+15. **Demo Applications**: Deploys sample apps with HTTPRoutes
 
-cat <<EOF | kubectl apply -f -
-apiVersion: metallb.io/v1beta1
-kind: IPAddressPool
-metadata:
-  name: kind-pool
-  namespace: metallb-system
-spec:
-  addresses:
-  - 172.20.255.200-172.20.255.250
----
-apiVersion: metallb.io/v1beta1
-kind: L2Advertisement
-metadata:
-  name: l2adv
-  namespace: metallb-system
-spec:
-  ipAddressPools:
-  - kind-pool
-   interfaces:
-  - eth0
-EOF
-```
+### Script Verification
+The script includes multiple verification steps:
+- Service readiness checks
+- Pod status validation  
+- TLS certificate verification
+- Gateway connectivity tests
 
-### Test
+### Generated Endpoints
+After successful completion, you'll have access to:
+- **ArgoCD**: https://argocd.local (admin/admin)
+- **Harbor**: https://harbor.local (admin/Harbor12345)  
+- **Demo App**: https://demo-app1.local
+- **Tekton Dashboard**: https://tekton-dashboard.local
+- **Kubernetes Dashboard**: via kubectl proxy
 
-```sh
-kubectl run -it --rm --image=busybox:1.28 testbox -- /bin/sh
-# Inside the pod:
-wget -O- http://foo-service:5678
-wget -O- http://bar-service:8765
+## 🌐 Network Configuration
 
-curl -v http://<foo-service-EXTERNAL-IP>:5678
-curl -v http://<bar-service-EXTERNAL-IP>:8765
-```
+### Cluster Networking
+- **KIND Network**: 172.20.0.0/16 (Docker bridge network)
+- **Pod CIDR**: 10.244.0.0/16 (Cilium cluster-pool IPAM)
+- **Service CIDR**: 10.96.0.0/12 (Kubernetes default)
 
-## Select Service mesh
+### Load Balancer Pool
+- **MetalLB Range**: 172.20.255.200-172.20.255.250
+- **Advertisement Mode**: Layer 2 (ARP-based)
+- **Interface**: eth0 (container interface)
 
-```yaml
-! Very Important Labeling for Istio***
+### Service Mesh
+- **Data Plane**: Istio Ambient (ztunnel) - no sidecars
+- **Gateway**: Dedicated namespace with LoadBalancer service
+- **TLS**: Automated certificate management with local CA
+- **Protocols**: HTTP/HTTPS with automatic redirect
 
-- Istio Ambient: namespaces, labels, and why routing breaks without them
-- What “Ambient Mesh” really means (important mental model)
+## 🎯 Service Access
 
-- Istio Ambient does NOT inject sidecars.
-- Instead, it uses node-level dataplane components:
-
-***ztunnel (L4, mTLS, identity)***
-
-- Waypoint proxies (L7, optional, per-namespace / per-service)
-- Traffic only enters the mesh if the namespace is explicitly opted in.
-- Why you created a dedicated gateway namespace
-```
-
-# Create the istio-gateway namespace and label it for ambient mode
-
-```sh
-kubectl create namespace istio-gateway
-kubectl label namespace istio-gateway istio.io/dataplane-mode=ambient
-```
-
-```xml
-***Diagram***
-
-Namespace: istio-gateway
-└── Labeled as "ambient"
-    └── Traffic to/from pods in this namespace
-        is intercepted by ztunnel
-```
-
-```sh
-# REQUIRED: Istio will NOT create this namespace
-kubectl create namespace istio-gateway || true
-kubectl label namespace istio-gateway istio.io/dataplane-mode=ambient --overwrite
-
-# Install Istio Ambient with istioctl
-istioctl install \
-  --set profile=ambient \
-  --set 'components.ingressGateways[0].name=istio-ingressgateway' \
-  --set 'components.ingressGateways[0].enabled=true' \
-  --set 'components.ingressGateways[0].namespace=istio-gateway' \
-  --skip-confirmation
-```
-
-***More on Istio***
-
-- Istio [Install istioctl](https://istio.io/latest/docs/ambient/getting-started/#download-the-istio-cli)
-- Istio [Install Istio over the Canal cni](https://medium.com/@SabujJanaCodes/touring-the-kubernetes-istio-ambient-mesh-part-1-setup-ztunnel-c80336fcfb2d)
-
-## Apply GatewayApi sig
-
-```sh
-kubectl apply --server-side -f https://github.com/kubernetes-sigs/gateway-api/releases/download/v1.4.1/standard-install.yaml
-```
-
-## Add the TLS  from tls directory
-
-- Create and apply `cert.pem` ànd  `key.pem`.
-
-```sh
-cd tls
-# run the scripts with openssl
-```
-
-```yaml
-***Architecture Diagram***  
-+-------------------------------------------------------------+
-|                        kind Cluster                         |
-|                                                             |
-|  +-------------------+      +---------------------------+   |
-|  |   Node (Docker)   |      |   Node (Docker)           |   |
-|  |                   |      |                           |   |
-|  |  +-------------+  |      |  +-------------+          |   |
-|  |  |   Pod(s)    |  |      |  |   Pod(s)    |          |   |
-|  |  +-------------+  |      |  +-------------+          |   |
-|  |      |   ^        |      |      |   ^                |   |
-|  |      v   |        |      |      v   |                |   |
-|  |  +-------------+  |      |  +-------------+          |   |
-|  |  |   ztunnel   |  |      |  |   ztunnel   |          |   |
-|  |  +-------------+  |      |  +-------------+          |   |
-|  +-------------------+      +---------------------------+   |
-|         |   ^                          |   ^                |
-|         |   |                          |   |                |
-|         v   |                          v   |                |
-|  +-----------------------------------------------------+    |
-|  |                MetalLB (LoadBalancer)               |    |
-|  +-----------------------------------------------------+    |
-|         |                                              |    |
-|         v                                              v    |
-|  +-----------------------------------------------------+    |
-|  |           Istio Gateway (ambient, L4/L7)            |    |
-|  +-----------------------------------------------------+    |
-|                                                             |
-+-------------------------------------------------------------+
-```
-
-***Legend:***
-
-- Pod(s): Your workloads (no sidecars)
-- ztunnel: L4 overlay, mTLS, identity (ambient mode)
-- MetalLB: Provides external IPs for LoadBalancer services in kind
-- Istio Gateway: Handles ingress/egress, runs in ambient mode (no sidecars)
-- All networking is Cilium-powered (CNI)
-- Traffic: Pod <-> ztunnel <-> Gateway <-> MetalLB <-> External
-
-## Deploy httpbin (test app)
-
-```sh
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: httpbin
-  namespace: istio
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: httpbin
-  template:
-    metadata:
-      labels:
-        app: httpbin
-    spec:
-      containers:
-      - name: httpbin
-        image: postmanlabs/httpbin
-        ports:
-        - containerPort: 80
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: httpbin
-  namespace: istio
-spec:
-  selector:
-    app: httpbin
-  ports:
-  - port: 80
-    targetPort: 80
-```
-
-## Create TLS cert + secret
-
-```sh
-openssl req -x509 -nodes -days 365 \
-  -newkey rsa:2048 \
-  -subj "/CN=istio-gateway-istio.istio-gateway" \
-  -keyout key.pem \
-  -out cert.pem
-# 
-kubectl create secret tls istio-gateway-credentials \
-  --cert=cert.pem \
-  --key=key.pem \
-  -n istio-gateway
-```
-
-## Gateway API (Gateway + HTTPRoute)
-
-```sh
-
-# Gateway
----
-apiVersion: gateway.networking.k8s.io/v1
-kind: Gateway
-metadata:
-  name: istio-gateway
-  namespace: istio-gateway
-spec:
-  gatewayClassName: istio
-  listeners:
-  - name: http
-    protocol: HTTP
-    port: 80
-
-  - name: https
-    protocol: HTTPS
-    port: 443
-    hostname: istio-gateway-istio.istio-gateway
-    tls:
-      mode: Terminate
-      certificateRefs:
-      - kind: Secret
-        name: istio-gateway-credentials
-        namespace: istio-gateway
-
-# Deploy HTTPRoute Deployment and service
-
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: httpbin
-  namespace: default
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: httpbin
-  template:
-    metadata:
-      labels:
-        app: httpbin
-    spec:
-      containers:
-      - name: httpbin
-        image: postmanlabs/httpbin
-        ports:
-        - containerPort: 80
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: httpbin
-  namespace: default
-spec:
-  selector:
-    app: httpbin
-  ports:
-  - port: 80
-    targetPort: 80
-
-
-# Apply
-kubectl apply -f gateway.yaml
-kubectl apply -f httpbin-test.yaml
-
-```
-
-## Verify services
-
-```sh
+### Local DNS Setup (Recommended)
+Add entries to your `/etc/hosts` file:
+```bash
+# Get LoadBalancer IP
 kubectl get svc -n istio-gateway
+
+# Add to /etc/hosts (replace with actual IP)
+172.20.255.201  argocd.local harbor.local demo-app1.local tekton-dashboard.local
 ```
 
-## Test
-
-```sh
-# Test from inside cluster
-kubectl run -it --rm testbox \
-  --image=busybox:1.28 -- sh -lc \
-  'wget -O- http://istio-gateway-istio.istio-gateway.svc.cluster.local/html'
-
-# Test form host
-curl -vk \
-  --resolve istio-gateway-istio.istio-gateway:443:172.20.255.203 \
-  https://istio-gateway-istio.istio-gateway/html
-
-# Browser (HTTP)
-http://172.20.255.203/html
-
-# Browser (HTTPS)
-https://172.20.255.203/html
-
-(Expect cert warning — self-signed)
-
+### Direct IP Access
+Services are also accessible via their LoadBalancer IPs:
+```bash
+# List all LoadBalancer services  
+kubectl get svc --all-namespaces -o wide | grep LoadBalancer
 ```
+
+## 📚 Detailed Guides
+
+For in-depth information about specific components:
+
+- **[KIND Configuration](z-Quick-Start-KIND.md)** - Cluster setup and configuration
+- **[Gateway API Guide](Gateway-API-Guide.md)** - Modern ingress and routing  
+- **[ArgoCD Setup](ArgoCD/Quick-Start.md)** - GitOps workflow and applications
+- **[Harbor Registry](Harbor/Quick-Start.md)** - Container registry management
+- **[Tekton Pipelines](Tekton-Pipelines/z-Tekton-Pipeline-Details.md)** - CI/CD pipeline development
+- **[TLS Management](tls/z-tls.md)** - Certificate authority and TLS setup
+- **[Cilium CNI](z-cni/cilium/cilium-installation.md)** - eBPF networking configuration
+- **[MetalLB Setup](metalLB/z-Quick-Start.md)** - Load balancer configuration
+
+---
+
+🎉 **Ready to explore modern cloud-native development!** The platform provides a production-like environment for learning and testing Kubernetes, service mesh, GitOps, and CI/CD workflows.
