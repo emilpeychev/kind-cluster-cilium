@@ -25,6 +25,6 @@ spec:
   - name: GIT_URL
     value: https://github.com/emilpeychev/kind-cluster-cilium.git
   - name: GIT_BRANCH
-    value: dev
+    value: master
   - name: IMAGE_URL
-    value: harbor-core.harbor.svc.cluster.local/library/demo-app:latest
+    value: harbor.local/library/demo-app:latest

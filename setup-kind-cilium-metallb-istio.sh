@@ -85,6 +85,9 @@ sleep 2
 # openssl x509 -in tls/cert.pem -noout -text | grep -A2 "Subject Alternative Name"
 # sleep 5
 
+# HARD wait for dataplane convergence
+kubectl wait --for=condition=Ready pod -n kube-system -l k8s-app=cilium --timeout=5m
+kubectl wait --for=condition=Ready node --all --timeout=5m
 
 # Install Istio Ambient
 echo "==> Installing Istio Ambient"
@@ -95,7 +98,11 @@ istioctl install \
   --set 'components.ingressGateways[0].namespace=istio-gateway' \
   --skip-confirmation
 
-sleep 10
+# HARD waits
+kubectl wait -n istio-system --for=condition=available deployment/istiod --timeout=5m
+kubectl wait -n istio-system --for=condition=Ready pod -l app=ztunnel --timeout=5m
+kubectl wait -n istio-gateway --for=condition=available deployment/istio-ingressgateway --timeout=5m
+
 
 echo "==> Creating a local Certificate Authority (CA)"
 echo "This CA is only for your machine."
@@ -215,13 +222,6 @@ sleep 10
 echo "==> Applying Gateway + Routes"
 kubectl apply -f gateway.yaml
 
-# sleep 10
-# # Apply httpbin application and HTTPRoute
-# echo "==> Applying httpbin application and HTTPRoute"
-# kubectl apply -f httpbin.yaml
-# kubectl apply -f httproute-httpbin.yaml
-
-
 echo
 echo "================================================"
 echo "✔ Cluster setup complete"
@@ -239,11 +239,52 @@ grep -q "harbor.local" /etc/hosts || echo "172.20.255.201 harbor.local" | sudo t
 
 helm repo add harbor https://helm.goharbor.io
 helm repo update
-helm install harbor harbor/harbor --version 1.18.1 \
-  --create-namespace \
+helm install harbor harbor/harbor --version 1.18.1 --create-namespace \
   -n harbor \
   -f Harbor/harbor-values.yaml
+
+# Create Harbor TLS secrets
+kubectl create secret tls harbor-tls \
+  --cert=tls/cert.pem \
+  --key=tls/key.pem \
+  -n harbor --dry-run=client -o yaml | kubectl apply -f -
+
+# Create CA certificate ConfigMap for the installer
+kubectl create configmap harbor-ca-cert \
+  --from-file=ca.crt=tls/ca.crt \
+  -n kube-system --dry-run=client -o yaml | kubectl apply -f -
+
+# Apply Harbor CA installer
+kubectl apply -f Harbor/harbor-ca-installer.yaml
+echo "==> Waiting for CA installer to be ready on all nodes..."
+kubectl rollout status daemonset/harbor-ca-installer -n kube-system --timeout=300s || {
+    echo "WARNING: CA installer timed out. Checking pod status..."
+    kubectl get pods -n kube-system -l name=harbor-ca-installer
+    kubectl describe pods -n kube-system -l name=harbor-ca-installer
+    echo "Continuing with setup despite CA installer timeout..."
+}
+
 kubectl apply -f Harbor/harbor-httproute.yaml
+
+# Restart containerd on all nodes to pick up new CA certificates
+echo "==> Restarting containerd on all nodes to trust Harbor CA"
+docker exec test-cluster-1-control-plane systemctl restart containerd || echo "WARNING: Failed to restart containerd on control-plane"
+docker exec test-cluster-1-worker systemctl restart containerd || echo "WARNING: Failed to restart containerd on worker"
+docker exec test-cluster-1-worker2 systemctl restart containerd || echo "WARNING: Failed to restart containerd on worker2"
+echo "==> Containerd restarted on all nodes"
+
+sleep 15
+# Create demo-apps namespace and Harbor registry secret
+echo "==> Setting up demo-apps namespace and Harbor credentials"
+kubectl create namespace demo-apps --dry-run=client -o yaml | kubectl apply -f -
+
+kubectl create secret docker-registry harbor-regcred \
+  --docker-server=harbor.local \
+  --docker-username=admin \
+  --docker-password=Harbor12345 \
+  -n demo-apps \
+  --dry-run=client -o yaml | kubectl apply -f -
+
 
 echo "================================================"
 echo "* Setup Tekton Pipelines: https://tekton.local"
@@ -312,7 +353,7 @@ echo " Add Harbor registry secret to tekton-builds"
 echo "================================================"
 
 kubectl create secret docker-registry harbor-registry \
-  --docker-server=harbor-core.harbor.svc.cluster.local \
+  --docker-server=harbor.local \
   --docker-username=admin \
   --docker-password=Harbor12345 \
   -n tekton-builds \
@@ -320,14 +361,30 @@ kubectl create secret docker-registry harbor-registry \
 
 sleep 1
 # Apply Tekton Pipeline resources
+echo "==> Deploying Tekton ServiceAccounts, Pipeline, and Tasks"
 kubectl apply -f Tekton-Pipelines/configs/
+kubectl apply -f Tekton-Pipelines/tekton-pipeline.yaml
+kubectl apply -f Tekton-Pipelines/tekton-task-1-clone-repo.yaml
+kubectl apply -f Tekton-Pipelines/tekton-task-2-build-push.yaml
+sleep 2
+
+echo "==> Running initial Tekton pipeline to build demo app image"
+kubectl create -f Tekton-Pipelines/tekton-pipeline-run.yaml
+
+echo "==> Waiting for pipeline to complete..."
+kubectl wait --for=condition=Succeeded --timeout=300s pipelinerun/clone-build-push-run -n tekton-builds || {
+    echo "WARNING: Pipeline did not complete successfully. Check with:"
+    echo "kubectl get pipelineruns -n tekton-builds"
+    echo "kubectl logs -f pipelinerun/clone-build-push-run -n tekton-builds"
+}
 sleep 1
 
 echo "================================================"
 echo "* Setup ArgoCD URL: https://argocd.local"
 echo "================================================"
-# Add entry to /etc/hosts
+# Add entries to /etc/hosts
 grep -q "argocd.local" /etc/hosts || echo "172.20.255.201 argocd.local" | sudo tee -a /etc/hosts
+grep -q "demo-app1.local" /etc/hosts || echo "172.20.255.201 demo-app1.local" | sudo tee -a /etc/hosts
 # 1. Install ArgoCD
 kubectl create namespace argocd --dry-run=client -o yaml | kubectl apply -f -
 kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/v3.2.0/manifests/install.yaml
@@ -336,7 +393,7 @@ kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/v3
 kubectl wait --for=condition=available --timeout=300s deployment/argocd-server -n argocd
 
 # 3. Apply custom configurations via Kustomize
-kubectl apply -k ArgoCD
+kubectl apply -k ArgoCD/
 sleep 1
 kubectl rollout restart deployment/argocd-server -n argocd
 kubectl rollout status deployment/argocd-server -n argocd
@@ -380,6 +437,29 @@ EOF
 
 chmod +x /tmp/argocd-login.sh
 /tmp/argocd-login.sh
+
 echo "================================================"
-echo "* ArgoCD setup complete. Access it at: https://argocd.local"
+echo "* Deploying ArgoCD Applications"
+echo "================================================"
+
+# Deploy ArgoCD Project and ApplicationSet
+kubectl apply -f ArgoCD-demo-apps/projects/application-sets-projects.yaml
+kubectl apply -f ArgoCD-demo-apps/applicationsets/application-sets.yaml
+kubectl apply -k ArgoCD-demo-apps/apps/
+
+echo "==> Waiting for ArgoCD Applications to be created..."
+sleep 10
+
+# Show ArgoCD Applications status
+kubectl get applications -n argocd
+
+echo "================================================"
+echo "* Setup Complete! Access your applications:"
+echo "* ArgoCD: https://argocd.local"
+echo "* Harbor: https://harbor.local"
+echo "* Tekton: https://tekton.local"
+echo "* Demo App: https://demo-app1.local"
+echo "================================================"
+echo "* To run a Tekton pipeline:"
+echo "kubectl create -f Tekton-Pipelines/tekton-pipeline-run.yaml"
 echo "================================================"
