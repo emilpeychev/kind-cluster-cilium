@@ -1,11 +1,13 @@
 kind: Cluster
 apiVersion: kind.x-k8s.io/v1alpha4
 name: test-cluster-1
+
 networking:
-  disableDefaultCNI: true   # Important for Cilium
-  kubeProxyMode: "none" # set to none
+  disableDefaultCNI: true
+  kubeProxyMode: "none"
   podSubnet: "10.244.0.0/16"
   serviceSubnet: "10.96.0.0/12"
+
 nodes:
   - role: control-plane
     image: kindest/node:v1.33.0
@@ -18,11 +20,33 @@ nodes:
         hostPort: 443
         protocol: TCP
         listenAddress: "127.0.0.1"
+    kubeadmConfigPatches:
+      - |
+        kind: InitConfiguration
+        nodeRegistration:
+          kubeletExtraArgs:
+            system-reserved: "cpu=500m,memory=1Gi"
+            kube-reserved: "cpu=500m,memory=1Gi"
+            eviction-hard: "memory.available<500Mi"
 
   - role: worker
     image: kindest/node:v1.33.0
+    kubeadmConfigPatches:
+      - |
+        kind: JoinConfiguration
+        nodeRegistration:
+          kubeletExtraArgs:
+            system-reserved: "cpu=300m,memory=512Mi"
+            kube-reserved: "cpu=300m,memory=512Mi"
+            eviction-hard: "memory.available<300Mi"
 
   - role: worker
     image: kindest/node:v1.33.0
-  
-    
+    kubeadmConfigPatches:
+      - |
+        kind: JoinConfiguration
+        nodeRegistration:
+          kubeletExtraArgs:
+            system-reserved: "cpu=300m,memory=512Mi"
+            kube-reserved: "cpu=300m,memory=512Mi"
+            eviction-hard: "memory.available<300Mi"

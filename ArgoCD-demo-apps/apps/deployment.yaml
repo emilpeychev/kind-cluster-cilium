@@ -20,7 +20,7 @@ spec:
       containers:
         - name: app
           image: harbor.local/library/demo-app:latest
-          imagePullPolicy: IfNotPresent
+          imagePullPolicy: Always
           ports:
             - containerPort: 80
           resources:
