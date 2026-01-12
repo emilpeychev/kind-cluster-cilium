@@ -49,8 +49,8 @@ sleep 5
 echo "==> Installing Gateway API CRDs"
 kubectl apply --server-side -f \
 https://github.com/kubernetes-sigs/gateway-api/releases/download/v1.4.1/standard-install.yaml
-
 sleep 5
+
 # Create istio-gateway namespace
 echo "==> Creating istio-gateway namespace (ambient)"
 kubectl create namespace istio-gateway --dry-run=client -o yaml | kubectl apply -f -
@@ -103,6 +103,10 @@ kubectl wait -n istio-system --for=condition=available deployment/istiod --timeo
 kubectl wait -n istio-system --for=condition=Ready pod -l app=ztunnel --timeout=5m
 kubectl wait -n istio-gateway --for=condition=available deployment/istio-ingressgateway --timeout=5m
 
+kubectl wait svc istio-ingressgateway \
+  -n istio-gateway \
+  --for=jsonpath='{.status.loadBalancer.ingress[0].ip}' \
+  --timeout=120s
 
 echo "==> Creating a local Certificate Authority (CA)"
 echo "This CA is only for your machine."
@@ -222,6 +226,28 @@ sleep 10
 echo "==> Applying Gateway + Routes"
 kubectl apply -f gateway.yaml
 
+# Patch CoreDNS to resolve *.local domains inside the cluster
+echo "==> Patching CoreDNS to resolve *.local domains"
+
+GATEWAY_IP=$(kubectl get svc istio-gateway-istio \
+  -n istio-gateway \
+  -o jsonpath='{.spec.clusterIP}')
+
+if [[ -z "${GATEWAY_IP}" ]]; then
+  echo "ERROR: istio-gateway-istio ClusterIP not found"
+  exit 1
+fi
+
+kubectl get configmap coredns -n kube-system -o json | \
+jq --arg ip "$GATEWAY_IP" '
+  .data.Corefile = ".:53 {\n    errors\n    health {\n       lameduck 5s\n    }\n    ready\n    hosts {\n        " + $ip + " harbor.local argocd.local tekton.local demo-app1.local\n        fallthrough\n    }\n    kubernetes cluster.local in-addr.arpa ip6.arpa {\n       pods insecure\n       fallthrough in-addr.arpa ip6.arpa\n       ttl 30\n    }\n    prometheus :9153\n    forward . /etc/resolv.conf {\n       max_concurrent 1000\n    }\n    cache 30\n    loop\n    reload\n    loadbalance\n}"
+' | kubectl apply -f -
+
+kubectl rollout restart deployment/coredns -n kube-system
+kubectl rollout status deployment/coredns -n kube-system --timeout=60s
+
+echo "==> CoreDNS patched - *.local domains now resolve inside the cluster"
+
 echo
 echo "================================================"
 echo "✔ Cluster setup complete"
@@ -272,6 +298,14 @@ docker exec test-cluster-1-control-plane systemctl restart containerd || echo "W
 docker exec test-cluster-1-worker systemctl restart containerd || echo "WARNING: Failed to restart containerd on worker"
 docker exec test-cluster-1-worker2 systemctl restart containerd || echo "WARNING: Failed to restart containerd on worker2"
 echo "==> Containerd restarted on all nodes"
+
+# Add harbor.local to /etc/hosts on all Kind nodes so containerd can resolve it
+echo "==> Adding harbor.local to Kind nodes /etc/hosts"
+GATEWAY_LB_IP=$(kubectl get svc istio-gateway-istio -n istio-gateway -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+for node in test-cluster-1-control-plane test-cluster-1-worker test-cluster-1-worker2; do
+  docker exec "$node" bash -c "grep -q 'harbor.local' /etc/hosts || echo '${GATEWAY_LB_IP} harbor.local' >> /etc/hosts"
+done
+echo "==> harbor.local added to Kind nodes"
 
 sleep 15
 # Create demo-apps namespace and Harbor registry secret
@@ -366,7 +400,12 @@ kubectl apply -f Tekton-Pipelines/configs/
 kubectl apply -f Tekton-Pipelines/tekton-pipeline.yaml
 kubectl apply -f Tekton-Pipelines/tekton-task-1-clone-repo.yaml
 kubectl apply -f Tekton-Pipelines/tekton-task-2-build-push.yaml
-sleep 2
+sleep 30
+
+echo "==> Waiting for Tekton controllers to stabilize"
+kubectl wait --for=condition=available deployment/tekton-pipelines-controller -n tekton-pipelines
+kubectl wait --for=condition=available deployment/tekton-pipelines-webhook -n tekton-pipelines
+sleep 20
 
 echo "==> Running initial Tekton pipeline to build demo app image"
 kubectl create -f Tekton-Pipelines/tekton-pipeline-run.yaml
