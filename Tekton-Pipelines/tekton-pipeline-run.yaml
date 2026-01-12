@@ -26,5 +26,7 @@ spec:
     value: https://github.com/emilpeychev/kind-cluster-cilium.git
   - name: GIT_BRANCH
     value: master
-  - name: IMAGE_URL
-    value: harbor.local/library/demo-app:latest
+  - name: COMMIT_SHA
+    value: ""  # Optional: specify a commit SHA to checkout, leave empty for latest
+  - name: IMAGE_REPO
+    value: harbor.local/library/demo-app

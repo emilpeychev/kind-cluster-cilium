@@ -12,8 +12,12 @@ spec:
     - name: GIT_BRANCH
       type: string
       default: main
-    - name: IMAGE_URL
+    - name: COMMIT_SHA
       type: string
+      default: ""
+    - name: IMAGE_REPO
+      type: string
+      description: "Base image repository (without tag), e.g. harbor.local/library/demo-app"
 
   tasks: 
     - name: clone-repo
@@ -27,6 +31,8 @@ spec:
           value: $(params.GIT_URL)
         - name: GIT_BRANCH
           value: $(params.GIT_BRANCH)
+        - name: COMMIT_SHA
+          value: $(params.COMMIT_SHA)
     - name: build-and-push-image
       runAfter:
         - clone-repo
@@ -37,4 +43,4 @@ spec:
           workspace: shared-data
       params:
         - name: IMAGE_URL
-          value: $(params.IMAGE_URL)
+          value: $(params.IMAGE_REPO):$(tasks.clone-repo.results.commit)
