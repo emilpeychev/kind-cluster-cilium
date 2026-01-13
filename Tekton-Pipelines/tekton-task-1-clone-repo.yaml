@@ -1,4 +1,3 @@
-
 apiVersion: tekton.dev/v1beta1
 kind: Task
 metadata:
@@ -13,15 +12,9 @@ spec:
       default: master
     - name: GIT_URL
       type: string
-    - name: COMMIT_SHA
-      type: string
-      default: ""
   steps:
     - name: git-clone
       image: alpine/git
-      env:
-        - name: HOME
-          value: /workspace
       securityContext:
         runAsNonRoot: true
         runAsUser: 65532
@@ -33,18 +26,4 @@ spec:
           type: RuntimeDefault
       script: |
         #!/bin/sh
-        set -e
-        git config --global --add safe.directory $(workspaces.output.path)
         git clone --branch $(params.GIT_BRANCH) $(params.GIT_URL) $(workspaces.output.path)
-        cd $(workspaces.output.path)
-        if [ -n "$(params.COMMIT_SHA)" ]; then
-          git checkout $(params.COMMIT_SHA)
-        fi
-        COMMIT=$(git rev-parse --short HEAD)
-        REVISION=$(git rev-parse HEAD)
-        echo -n "$COMMIT" > $(results.commit.path)
-        echo -n "$REVISION" > $(results.revision.path)
-  results:
-  - name: commit
-  - name: revision
-
