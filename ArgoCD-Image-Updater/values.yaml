@@ -1,0 +1,20 @@
+# ArgoCD Image Updater Helm Chart Values
+# Chart: argo/argocd-image-updater
+
+config:
+  logLevel: debug
+  
+  # ArgoCD connection settings
+  argocd:
+    serverAddress: argocd-server.argocd.svc.cluster.local:443
+    insecure: true
+    grpcWeb: true
+  
+  # Registry configuration for Harbor
+  registries:
+    - name: Harbor Local
+      prefix: harbor.local
+      api_url: https://harbor.local
+      insecure: yes
+      credentials: pullsecret:argocd/harbor-registry-creds
+      default: yes
