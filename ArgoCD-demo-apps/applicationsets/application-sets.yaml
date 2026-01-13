@@ -15,7 +15,8 @@ spec:
       annotations:
         argocd-image-updater.argoproj.io/image-list: demo=harbor.local/library/demo-app
         argocd-image-updater.argoproj.io/demo.update-strategy: newest-build
-        argocd-image-updater.argoproj.io/demo.pull-secret: pullsecret:argocd/harbor-registry-creds
+        argocd-image-updater.argoproj.io/demo.allow-tags: regexp:^([a-f0-9]{7})$
+        argocd-image-updater.argoproj.io/write-back-method: git
     spec:
       project: demo-apps
       source:

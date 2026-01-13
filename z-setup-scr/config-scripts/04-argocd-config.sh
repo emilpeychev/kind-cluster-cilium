@@ -80,21 +80,6 @@ echo "================================================"
 echo "* Installing ArgoCD Image Updater"
 echo "================================================"
 
-kubectl apply -k "${REPO_ROOT}/ArgoCD-Image-Updater/" || true
-
-# Apply our Harbor configuration (overwrites upstream empty config)
-kubectl apply -f "${REPO_ROOT}/ArgoCD-Image-Updater/argocd-image-updater-config.yaml"
-
-echo "==> Waiting for ArgoCD Image Updater to be ready..."
-kubectl wait --for=condition=available --timeout=120s deployment/argocd-image-updater-controller -n argocd || {
-    echo "WARNING: Image Updater deployment not ready. Check with:"
-    echo "kubectl get pods -n argocd -l app.kubernetes.io/name=argocd-image-updater"
-}
-
-# Restart to pick up config changes
-kubectl rollout restart deployment/argocd-image-updater-controller -n argocd
-kubectl rollout status deployment/argocd-image-updater-controller -n argocd --timeout=60s
-
 echo "================================================"
 echo "✔ Part 4 Config complete - ArgoCD configured"
 echo "================================================"
@@ -105,6 +90,7 @@ echo "* ArgoCD: https://argocd.local"
 echo "* Harbor: https://harbor.local"
 echo "* Tekton: https://tekton.local"
 echo "* Demo App: https://demo-app1.local"
+
 echo "================================================"
 echo "* To run a Tekton pipeline:"
 echo "kubectl create -f Tekton-Pipelines/tekton-pipeline-run.yaml"
