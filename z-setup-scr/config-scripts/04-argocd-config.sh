@@ -77,10 +77,6 @@ sleep 10
 kubectl get applications -n argocd
 
 echo "================================================"
-echo "* Installing ArgoCD Image Updater"
-echo "================================================"
-
-echo "================================================"
 echo "✔ Part 4 Config complete - ArgoCD configured"
 echo "================================================"
 echo

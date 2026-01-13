@@ -1,0 +1,26 @@
+apiVersion: argocd-image-updater.argoproj.io/v1alpha1
+kind: ImageUpdater
+metadata:
+  name: demo-apps-updater
+  namespace: argocd
+spec:
+  namespace: argocd
+
+  writeBackConfig:
+    method: git
+    gitConfig:
+      branch: master
+      writeBackTarget: kustomization
+
+  applicationRefs:
+    - namePattern: demo-apps
+      images:
+        - alias: demo
+          imageName: library/demo-app
+          commonUpdateSettings:
+            updateStrategy: newest-build
+            allowTags: regexp:^test-.*
+            pullSecret: pullsecret:argocd/harbor-registry-creds
+          manifestTargets:
+            kustomize:
+              name: harbor.local/library/demo-app
