@@ -38,18 +38,12 @@ kubectl wait --for=condition=available --timeout=120s deployment/argocd-image-up
     echo "kubectl get pods -n argocd -l app.kubernetes.io/name=argocd-image-updater"
 }
 
-echo "==> Creating SSH git credentials for Image Updater..."
-repo_secret=$(kubectl get secret -n argocd | awk '/^repo-[0-9]+/ {print $1; exit}')
-if [[ -n "${repo_secret}" ]]; then
-  tmpkey=$(mktemp)
-  trap 'rm -f "$tmpkey"' EXIT
-  kubectl get secret -n argocd "$repo_secret" -o jsonpath='{.data.sshPrivateKey}' | base64 -d > "$tmpkey"
-  kubectl create secret generic ssh-git-creds -n argocd \
-    --from-file=sshPrivateKey="$tmpkey" \
-    --dry-run=client -o yaml | kubectl apply -f -
-else
-  echo "WARNING: No ArgoCD repo secret found, skipping ssh-git-creds creation"
-fi
+echo "==> Creating SSH git credentials for Image Updater (explicit key)..."
+
+kubectl create secret generic argocd-image-updater-ssh \
+  -n argocd \
+  --from-file=sshPrivateKey=$HOME/.ssh/argoCD \
+  --dry-run=client -o yaml | kubectl apply -f -
 
 echo "==> Setting git commit identity for Image Updater..."
 kubectl patch configmap -n argocd argocd-image-updater-config --type merge \
