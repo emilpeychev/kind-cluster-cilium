@@ -3,8 +3,6 @@ kind: Deployment
 metadata:
   annotations:
     argocd.argoproj.io/sync-wave: "2"
-    argocd-image-updater.argoproj.io/image-list: demo=harbor.local/demo-app
-    argocd-image-updater.argoproj.io/demo.update-strategy: newest-build
   name: demo-app1
   namespace: demo-apps
 spec:
@@ -21,7 +19,7 @@ spec:
         - name: harbor-regcred
       containers:
         - name: app
-          image: harbor.local/demo-app:latest
+          image: harbor.local/library/demo-app:latest
           imagePullPolicy: Always
           ports:
             - containerPort: 80

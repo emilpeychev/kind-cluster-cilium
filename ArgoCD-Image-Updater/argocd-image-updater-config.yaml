@@ -14,8 +14,8 @@ data:
         prefix: harbor.local
         api_url: https://harbor.local
         insecure: yes
-        credentials: pullsecret:argocd/harbor-docker-config
-        defaultns: library
+        credentials: pullsecret:argocd/harbor-registry-creds
+        default: yes
   applications_api: argocd
   argocd.server_addr: argocd-server.argocd.svc.cluster.local:443
   argocd.insecure: "true"
