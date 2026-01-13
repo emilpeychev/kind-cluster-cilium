@@ -86,6 +86,7 @@ echo "* ArgoCD: https://argocd.local"
 echo "* Harbor: https://harbor.local"
 echo "* Tekton: https://tekton.local"
 echo "* Demo App: https://demo-app1.local"
+
 echo "================================================"
 echo "* To run a Tekton pipeline:"
 echo "kubectl create -f Tekton-Pipelines/tekton-pipeline-run.yaml"

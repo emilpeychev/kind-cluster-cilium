@@ -68,4 +68,28 @@ kubectl rollout status -n argocd deployment/argocd-image-updater-controller --ti
 echo "================================================"
 echo "✔ Part 4 Install complete - ArgoCD + Image Updater installed"
 echo "================================================"
-echo "Next: Run config-scripts/04-argocd-config.sh"
+
+
+echo "================================================"
+echo "* Installing ArgoCD Image Updater"
+echo "================================================"
+
+helm repo add argo https://argoproj.github.io/argo-helm
+helm repo update
+
+helm upgrade --install argocd-image-updater argo/argocd-image-updater \
+  --namespace argocd \
+  --set config.logLevel=info \
+  --set config.imageUpdater.autoUpdate.enabled=true \
+  --set config.imageUpdater.autoUpdate.method=git \
+  --set config.imageUpdater.git.commit.message="chore: update image tags [skip ci]" \
+  --set config.imageUpdater.git.push.enabled=true \
+  --set config.imageUpdater.git.push.username="argocd-image-updater" \
+  --set config.imageUpdater.git.push.email="argocd-image-updater@local"
+
+kubectl rollout restart deployment argocd-image-updater-controller -n argocd
+kubectl rollout status deployment argocd-image-updater-controller -n argocd --timeout=60s
+
+echo "================================================"
+echo "✔ ArgoCD Image Updater installed"
+echo "================================================"
