@@ -5,3 +5,8 @@ resources:
   - deployment.yaml
   - service.yaml
   - httproute.yaml
+
+images:
+  - name: harbor.local/library/demo-app
+    newName: harbor.local/library/demo-app
+    newTag: latest

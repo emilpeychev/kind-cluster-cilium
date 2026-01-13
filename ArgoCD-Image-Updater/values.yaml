@@ -1,20 +1,79 @@
 # ArgoCD Image Updater Helm Chart Values
 # Chart: argo/argocd-image-updater
 
+image:
+  repository: quay.io/argoprojlabs/argocd-image-updater
+  # tag defaults to chart appVersion (v1.0.2)
+  pullPolicy: IfNotPresent
+
 config:
   logLevel: debug
-  
-  # ArgoCD connection settings
+
   argocd:
     serverAddress: argocd-server.argocd.svc.cluster.local:443
     insecure: true
     grpcWeb: true
-  
-  # Registry configuration for Harbor
+
   registries:
     - name: Harbor Local
-      prefix: harbor.local
       api_url: https://harbor.local
-      insecure: yes
+      # Include the Harbor project in the prefix so Image Updater queries library/demo-app
+      prefix: harbor.local/library
+      insecure: false
       credentials: pullsecret:argocd/harbor-registry-creds
-      default: yes
+      default: true
+
+# Create and mount the Harbor CA into the controller pod (no separate manifests).
+extraObjects:
+  - apiVersion: v1
+    kind: ConfigMap
+    metadata:
+      name: harbor-ca
+      namespace: argocd
+    data:
+      ca.crt: |
+        -----BEGIN CERTIFICATE-----
+        MIIFDzCCAvegAwIBAgIURKbmmnlNiOC45HRYOY34VYoTk0AwDQYJKoZIhvcNAQEL
+        BQAwFzEVMBMGA1UEAwwMTG9jYWwgRGV2IENBMB4XDTI1MTIzMDA5Mzk1M1oXDTI2
+        MTIzMDA5Mzk1M1owFzEVMBMGA1UEAwwMTG9jYWwgRGV2IENBMIICIjANBgkqhkiG
+        9w0BAQEFAAOCAg8AMIICCgKCAgEAuJkZoeaSXh+GP5zeH2ZDc2DgBdvYd0/TtDxT
+        iU7gh34OFGnnl9kaHvzm4Z81+37t6UInflECht2Z6KI2/EjNyovbMGAw+Qg7V2Wu
+        xOycAif7T0JDpxBkrxSI0/UT9uEufT+9bIguiBySbSDdtJLtUj59svqHQKswxuAo
+        4+f53vbArhtOQZPGHUd8H/x8F5ghhWpojagF3XEj43W35CGTaUdYuoEYp5rI/YJN
+        mSKEYsm4zzTvXzD4tRfvF+UuZIZNRN1gBRR2eP22e2ir1rRYApctfpIsjSvG1gCM
+        LIjVfhSVm9h8K+V39uDRd9TSJomChQ3KmJwfhgu2W2795zzQL6gC9lp/X9j5WZYZ
+        wVcY5wbLXMBQ6b8sn6xUhGCZZpC/iEg9FMAbcw99eW/wkyHCTf7iDl+WO444Hoz0
+        BZ43QJepTn1V9ZlZQp/q94jNeSEQe2Shnx4fC5R93CH8OliFlrxfd+svSllmVJsv
+        SBakV5pt2E4K451OUJwvbfs9Y+1Tr75HoHHAbuNygMYxyKdpCQQl/kaxi0QLKFU3
+        3QY86gWwikGA9MMBeWRKGL3UY5/km8c5dMJyj2s9cPDelaIzVNA6VssYZq19a1+H
+        KGmK9EYMK4tsy7JV20YUv4pNke6aGo5Hu65Q4cixk08ESu77WdC/Kn/F8IGUNhIK
+        PsL+CzUCAwEAAaNTMFEwHQYDVR0OBBYEFO4P/I9EKZdkRo8XzGSLQtJMCoxBMB8G
+        A1UdIwQYMBaAFO4P/I9EKZdkRo8XzGSLQtJMCoxBMA8GA1UdEwEB/wQFMAMBAf8w
+        DQYJKoZIhvcNAQELBQADggIBAEhCWZCYI2ptmdQ/EPsTEqRb+PuwRl+R6XnayeSb
+        mP6vUSC5kNCyAIudzo19jrEQFEJyL0RfREt2184GNNrudvmWX393w4KbXKgcz1Vl
+        MHKHRlD4Rxg6/PrgiwqvPv4KzduOxvA20Rv4pzHku8KvjNM08jOGjv5roO/p8cC1
+        U6Z5Q/svSq2mghEi9EaYWa2VBqLhN8dnxYmIklLPwGWli1gl6JZRj20623YekS3V
+        OwBDYlEUQQjlwQXXZBA5eMSlE+TZml1xnOT6SkN+xlHND9BLs6tTSnSXXdQOSqy6
+        n74i2xQq7v2YBqgleoRET78O1VXmEeSKIu34lCfq/SdjsktOBU7NX9wftABjfU8Z
+        xlEb67H1FoG+gU7ipnsvLH1MmmLi92hCVepx5+a7/PsGWhgA+C36/KYNSedPW6aA
+        5HVEugc5FjbfRvAUsD/4+Tvr5lOT3HA0YyyaE3RoBZwIsIqbtHoviuw/CZv53h5L
+        B84qZ8tVp+j7uZrvk6/CQvBSnNLqAMomIhDiRnXvl8glrsFn4ljP1tAHA/vFTeZt
+        toPvefAFC9Y94kbJ5T+OCfneH23lggPubk3aD/hpZzbbo/zV2dwQXa6jQLf1KPOO
+        unnYWmOn61W4iRx8gAfpDoujHekVcIzDcNDx3EXO0iKWLfzO1PfFZFCjGAmC/HHN
+        pM4g
+        -----END CERTIFICATE-----
+
+volumes:
+  - name: harbor-ca
+    configMap:
+      name: harbor-ca
+
+volumeMounts:
+  - name: harbor-ca
+    mountPath: /etc/ssl/certs/harbor-ca.crt
+    subPath: ca.crt
+    readOnly: true
+
+extraEnv:
+  - name: SSL_CERT_FILE
+    value: /etc/ssl/certs/harbor-ca.crt

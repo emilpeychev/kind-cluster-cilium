@@ -12,10 +12,6 @@ spec:
   template:
     metadata:
       name: '{{name}}'
-      annotations:
-        argocd-image-updater.argoproj.io/image-list: demo=harbor.local/library/demo-app
-        argocd-image-updater.argoproj.io/demo.update-strategy: newest-build
-        argocd-image-updater.argoproj.io/demo.pull-secret: pullsecret:argocd/harbor-registry-creds
     spec:
       project: demo-apps
       source:
