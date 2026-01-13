@@ -26,11 +26,12 @@ config:
 # Create and mount the Harbor CA into the controller pod (no separate manifests).
 extraObjects:
   - apiVersion: v1
-    kind: ConfigMap
+    kind: Secret
     metadata:
       name: harbor-ca
       namespace: argocd
-    data:
+    type: Opaque
+    stringData:
       ca.crt: |
         -----BEGIN CERTIFICATE-----
         MIIFDzCCAvegAwIBAgIURKbmmnlNiOC45HRYOY34VYoTk0AwDQYJKoZIhvcNAQEL
@@ -65,8 +66,8 @@ extraObjects:
 
 volumes:
   - name: harbor-ca
-    configMap:
-      name: harbor-ca
+    secret:
+      secretName: harbor-ca
 
 volumeMounts:
   - name: harbor-ca
