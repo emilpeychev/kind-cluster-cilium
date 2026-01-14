@@ -1,0 +1,40 @@
+# ArgoCD Image Updater Helm Chart Values
+# Chart: argo/argocd-image-updater
+
+image:
+  repository: quay.io/argoprojlabs/argocd-image-updater
+  # tag defaults to chart appVersion (v1.0.2)
+  pullPolicy: IfNotPresent
+
+config:
+  logLevel: debug
+
+  argocd:
+    serverAddress: argocd-server.argocd.svc.cluster.local:443
+    insecure: true
+    grpcWeb: true
+
+  registries:
+    - name: Harbor Local
+      api_url: https://harbor.local
+      # Include the Harbor project in the prefix so Image Updater queries library/demo-app
+      prefix: harbor.local/library
+      insecure: false
+      credentials: pullsecret:argocd/harbor-registry-creds
+      default: true
+
+# Use existing Harbor CA ConfigMap created during Harbor setup
+volumes:
+  - name: harbor-ca
+    configMap:
+      name: harbor-ca-cert
+
+volumeMounts:
+  - name: harbor-ca
+    mountPath: /etc/ssl/certs/harbor-ca.crt
+    subPath: ca.crt
+    readOnly: true
+
+extraEnv:
+  - name: SSL_CERT_FILE
+    value: /etc/ssl/certs/harbor-ca.crt

@@ -3,6 +3,13 @@ kind: ApplicationSet
 metadata:
   name: demo-apps
   namespace: argocd
+  annotations:
+    # add image updater annotation to track image updates
+    argocd.argoproj.io/image-updater.io/image-list: "harbor.local/library/demo-app:~version0.1"
+    argocd.argoproj.io/sync-wave: "2"
+  # add finalizer to clean up applications when deleting the ApplicationSet
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
 spec:
   generators:
     - list:

@@ -30,3 +30,5 @@ spec:
     value: ""  # Optional: specify a commit SHA to checkout, leave empty for latest
   - name: IMAGE_REPO
     value: harbor.local/library/demo-app
+  - name: IMAGE_TAG
+    value: version0.1

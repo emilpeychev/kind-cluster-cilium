@@ -18,6 +18,10 @@ spec:
     - name: IMAGE_REPO
       type: string
       description: "Base image repository (without tag), e.g. harbor.local/library/demo-app"
+    - name: IMAGE_TAG
+      type: string
+      default: "version0.1"
+      description: "Semantic version tag for the image"
 
   tasks: 
     - name: clone-repo
@@ -43,4 +47,6 @@ spec:
           workspace: shared-data
       params:
         - name: IMAGE_URL
-          value: $(params.IMAGE_REPO):$(tasks.clone-repo.results.commit)
+          value: $(params.IMAGE_REPO):$(params.IMAGE_TAG)
+        - name: IMAGE_URL_LATEST
+          value: $(params.IMAGE_REPO):latest
