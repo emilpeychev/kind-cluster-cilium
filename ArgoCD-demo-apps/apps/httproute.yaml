@@ -3,8 +3,6 @@ kind: HTTPRoute
 metadata:
   annotations:
     argocd.argoproj.io/sync-wave: "3"
-  finalizers:
-    - resources-finalizer.argocd.argoproj.io
   name: demo-app1
   namespace: demo-apps
 spec:

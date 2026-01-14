@@ -16,7 +16,7 @@ spec:
       type: string
     - name: VERSION
       type: string
-      default: "0.1"
+      default: "v0.1"
   tasks: 
     - name: clone-repo
       taskRef:

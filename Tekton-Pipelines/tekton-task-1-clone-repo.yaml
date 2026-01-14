@@ -18,6 +18,9 @@ spec:
       env:
         - name: HOME
           value: /tekton/home
+      volumeMounts:
+        - name: tekton-home
+          mountPath: /tekton/home
       securityContext:
         runAsNonRoot: true
         runAsUser: 65532
@@ -25,6 +28,8 @@ spec:
         capabilities:
           drop:
             - ALL
+        seccompProfile:
+          type: RuntimeDefault
       script: |
         #!/bin/sh
         set -eu

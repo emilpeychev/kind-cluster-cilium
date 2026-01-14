@@ -28,4 +28,4 @@ spec:
   - name: IMAGE_REPO
     value: harbor.local/library/demo-app
   - name: VERSION
-    value: "0.1"
+    value: "v0.1"

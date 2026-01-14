@@ -17,11 +17,13 @@ spec:
           value: /kaniko
       securityContext:
         runAsUser: 0
+      volumeMounts:
+        - name: docker-config
+          mountPath: /kaniko/.docker
       args:
         - --context=$(workspaces.source.path)/demo-app
         - --dockerfile=$(workspaces.source.path)/demo-app/Dockerfile
         - --destination=$(params.IMAGE)
-        - --destination=$(params.IMAGE):latest
         - --insecure
         - --skip-tls-verify
   volumes:
