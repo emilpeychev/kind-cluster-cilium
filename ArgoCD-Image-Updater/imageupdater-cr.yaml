@@ -15,8 +15,7 @@ spec:
   applicationRefs:
     - namePattern: demo-apps
       images:
-        - alias: demo
-          imageName: harbor.local/library/demo-app
+        - name: harbor.local/library/demo-app
           commonUpdateSettings:
             updateStrategy: newest-build
             allowTags: regexp:^test-.*
