@@ -406,18 +406,8 @@ sleep 30
 echo "==> Waiting for Tekton controllers to stabilize"
 kubectl wait --for=condition=available deployment/tekton-pipelines-controller -n tekton-pipelines
 kubectl wait --for=condition=available deployment/tekton-pipelines-webhook -n tekton-pipelines
-sleep 20
+sleep 5
 
-echo "==> Running initial Tekton pipeline to build demo app image"
-PIPELINE_RUN=$(kubectl create -f Tekton-Pipelines/tekton-pipeline-run.yaml -o name)
-
-echo "==> Waiting for pipeline to complete..."
-kubectl wait --for=condition=Succeeded --timeout=300s "${PIPELINE_RUN}" -n tekton-builds || {
-    echo "WARNING: Pipeline did not complete successfully. Check with:"
-    echo "kubectl get pipelineruns -n tekton-builds"
-    echo "kubectl logs -f ${PIPELINE_RUN} -n tekton-builds"
-}
-sleep 1
 
 echo "================================================"
 echo "* Setup ArgoCD URL: https://argocd.local"
