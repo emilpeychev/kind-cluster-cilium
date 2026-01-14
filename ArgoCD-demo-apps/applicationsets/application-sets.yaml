@@ -14,12 +14,6 @@ spec:
   template:
     metadata:
       name: '{{name}}'
-      annotations:
-        argocd-image-updater.argoproj.io/image-list: demo-app=harbor.local/library/demo-app
-        argocd-image-updater.argoproj.io/demo-app.allow-tags: regexp:^v[0-9]+\.[0-9]+$
-        argocd-image-updater.argoproj.io/demo-app.update-strategy: semver
-        argocd-image-updater.argoproj.io/write-back-method: git:secret:argocd/argocd-image-updater-ssh
-        argocd-image-updater.argoproj.io/git-branch: master
     spec:
       project: demo-apps
       source:

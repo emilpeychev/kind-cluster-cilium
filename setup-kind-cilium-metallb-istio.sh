@@ -240,7 +240,7 @@ fi
 
 kubectl get configmap coredns -n kube-system -o json | \
 jq --arg ip "$GATEWAY_IP" '
-  .data.Corefile = ".:53 {\n    errors\n    health {\n       lameduck 5s\n    }\n    ready\n    hosts {\n        " + $ip + " harbor.local argocd.local tekton.local demo-app1.local\n        fallthrough\n    }\n    kubernetes cluster.local in-addr.arpa ip6.arpa {\n       pods insecure\n       fallthrough in-addr.arpa ip6.arpa\n       ttl 30\n    }\n    prometheus :9153\n    forward . /etc/resolv.conf {\n       max_concurrent 1000\n    }\n    cache 30\n    loop\n    reload\n    loadbalance\n}"
+  .data.Corefile = ".:53 {\n    errors\n    health {\n       lameduck 5s\n    }\n    ready\n    hosts {\n        " + $ip + " harbor.local argocd.local tekton.local demo-app1.local webhooks.local workflows.local\n        fallthrough\n    }\n    kubernetes cluster.local in-addr.arpa ip6.arpa {\n       pods insecure\n       fallthrough in-addr.arpa ip6.arpa\n       ttl 30\n    }\n    prometheus :9153\n    forward . /etc/resolv.conf {\n       max_concurrent 1000\n    }\n    cache 30\n    loop\n    reload\n    loadbalance\n}"
 ' | kubectl apply -f -
 
 kubectl rollout restart deployment/coredns -n kube-system
@@ -481,6 +481,127 @@ chmod +x /tmp/argocd-login.sh
 sleep 5
 
 echo "================================================"
+echo "* Installing Argo Events"
+echo "================================================"
+
+# Add /etc/hosts entries
+grep -q "webhooks.local" /etc/hosts || echo "172.20.255.201 webhooks.local" | sudo tee -a /etc/hosts
+
+# Increase file descriptor limits on Kind nodes for Argo Events
+for node in test-cluster-1-control-plane test-cluster-1-worker test-cluster-1-worker2; do
+  docker exec "$node" bash -c "sysctl -w fs.inotify.max_user_watches=524288" || true
+  docker exec "$node" bash -c "sysctl -w fs.inotify.max_user_instances=512" || true
+done
+
+helm repo add argo https://argoproj.github.io/argo-helm || echo "Helm repo 'argo' already exists"
+
+# Install Argo Events
+helm upgrade --install argo-events argo/argo-events --version 2.4.19 \
+  --create-namespace -n argo-events \
+  -f ArgoDC-Events/values.yaml
+
+echo "==> Waiting for Argo Events controllers to be ready..."
+kubectl wait --for=condition=available --timeout=300s \
+  deployment -l app.kubernetes.io/part-of=argo-events -n argo-events
+
+echo "==> Creating EventBus..."
+kubectl apply -f - <<EOF
+apiVersion: argoproj.io/v1alpha1
+kind: EventBus
+metadata:
+  name: default
+  namespace: argo-events
+spec:
+  nats:
+    native:
+      replicas: 3
+      auth: none
+EOF
+
+sleep 10
+
+echo "==> Deploying RBAC and GitHub integration..."
+kubectl apply -f ArgoDC-Events/rbac.yaml
+
+# Create GitHub secrets
+kubectl create secret generic github-access-token \
+  --from-literal=token="dummy-token" \
+  -n argo-events \
+  --dry-run=client -o yaml | kubectl apply -f -
+
+kubectl create secret generic github-webhook-secret \
+  --from-literal=token="my-webhook-secret-$(date +%s)" \
+  -n argo-events \
+  --dry-run=client -o yaml | kubectl apply -f -
+
+echo "==> Deploying GitHub EventSource and Sensor..."
+kubectl apply -f ArgoDC-Events/github-eventsource.yaml
+sleep 10
+kubectl wait --for=condition=Ready pod -l eventsource-name=github -n argo-events --timeout=120s || true
+
+kubectl apply -f ArgoDC-Events/github-tekton-sensor.yaml
+sleep 10
+kubectl wait --for=condition=Ready pod -l sensor-name=github-tekton-trigger -n argo-events --timeout=120s || true
+
+echo "==> Applying webhook HTTPRoute..."
+kubectl apply -f ArgoDC-Events/webhook-httproute.yaml
+
+echo "================================================"
+echo "* Installing Argo Workflows"
+echo "================================================"
+
+# Add /etc/hosts entries
+grep -q "workflows.local" /etc/hosts || echo "172.20.255.201 workflows.local" | sudo tee -a /etc/hosts
+
+# Install Argo Workflows
+helm upgrade --install argo-workflows argo/argo-workflows \
+  --version 0.45.4 \
+  --create-namespace -n argo-workflows \
+  --set server.secure=false \
+  --set server.extraArgs[0]="--auth-mode=server" \
+  --set server.extraArgs[1]="--secure=false"
+
+kubectl wait --for=condition=available --timeout=300s deployment/argo-server -n argo-workflows
+kubectl apply -f Argo-Workflows/workflows-httproute.yaml
+
+# Create EventBus
+kubectl apply -f - <<EOF
+apiVersion: argoproj.io/v1alpha1
+kind: EventBus
+metadata:
+  name: default
+  namespace: argo-events
+spec:
+  nats:
+    native:
+      replicas: 3
+      auth: none
+EOF
+
+sleep 10
+
+# Configure GitHub webhook integration
+echo "==> Configuring GitHub + Tekton integration..."
+kubectl apply -f ArgoDC-Events/rbac.yaml
+
+# Create secrets for GitHub integration
+kubectl create secret generic github-access-token \
+  --from-literal=token="dummy-for-testing" \
+  -n argo-events --dry-run=client -o yaml | kubectl apply -f -
+
+kubectl create secret generic github-webhook-secret \
+  --from-literal=token="my-webhook-secret-$(date +%s)" \
+  -n argo-events --dry-run=client -o yaml | kubectl apply -f -
+
+# Deploy EventSource and Sensor
+kubectl apply -f ArgoDC-Events/github-eventsource.yaml
+kubectl apply -f ArgoDC-Events/github-tekton-sensor.yaml
+kubectl apply -f ArgoDC-Events/webhook-httproute.yaml
+
+echo "==> Waiting for GitHub EventSource and Sensor..."
+sleep 15
+
+echo "================================================"
 echo "* Deploying ArgoCD Applications"
 echo "================================================"
 
@@ -500,8 +621,17 @@ echo "* Setup Complete! Access your applications:"
 echo "* ArgoCD: https://argocd.local"
 echo "* Harbor: https://harbor.local"
 echo "* Tekton: https://tekton.local"
+echo "* Argo Workflows: https://workflows.local"
+echo "* GitHub Webhooks: https://webhooks.local/push"
 echo "* Demo App: https://demo-app1.local"
 echo "================================================"
-echo "* To run a Tekton pipeline:"
+echo "* Argo Workflows UI: https://workflows.local"
+echo "* Test GitHub webhook:"
+echo "  curl -k -X POST https://webhooks.local/push \\"
+echo "    -H 'Content-Type: application/json' \\"
+echo "    -H 'X-GitHub-Event: push' \\"
+echo "    -d '{\"ref\":\"refs/heads/master\",\"after\":\"test123\"}'"
+echo "================================================"
+echo "* To run a Tekton pipeline manually:"
 echo "kubectl create -f Tekton-Pipelines/tekton-pipeline-run.yaml"
 echo "================================================"
