@@ -1,4 +1,4 @@
-apiVersion: tekton.dev/v1beta1
+apiVersion: tekton.dev/v1
 kind: Pipeline
 metadata:
   name: clone-build-push
@@ -12,18 +12,11 @@ spec:
     - name: GIT_BRANCH
       type: string
       default: master
-    - name: COMMIT_SHA
-      type: string
-      default: ""
-      description: "Optional: checkout a specific commit SHA (leave empty for branch HEAD)"
     - name: IMAGE_REPO
       type: string
-      description: "Base image repository (without tag), e.g. harbor.local/library/demo-app"
-    - name: IMAGE_TAG
+    - name: VERSION
       type: string
       default: "0.1"
-      description: "Image tag/version (e.g. 0.1, 0.2, 1.0.0)"
-
   tasks: 
     - name: clone-repo
       taskRef:
@@ -36,18 +29,14 @@ spec:
           value: $(params.GIT_URL)
         - name: GIT_BRANCH
           value: $(params.GIT_BRANCH)
-        - name: COMMIT_SHA
-          value: $(params.COMMIT_SHA)
-    - name: build-and-push-image
+    - name: build-push
       runAfter:
         - clone-repo
       taskRef:
-        name: build-and-push-image
+        name: build-push
       workspaces:
         - name: source
           workspace: shared-data
       params:
-        - name: IMAGE_URL
-          value: $(params.IMAGE_REPO):$(params.IMAGE_TAG)
-        - name: IMAGE_URL_LATEST
-          value: $(params.IMAGE_REPO):latest
+        - name: IMAGE
+          value: $(params.IMAGE_REPO):$(params.VERSION)

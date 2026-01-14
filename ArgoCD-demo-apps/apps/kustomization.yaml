@@ -7,4 +7,4 @@ resources:
   - httproute.yaml
 images:
   - name: harbor.local/library/demo-app
-    newTag: version0.1
+    newTag: "0.1"

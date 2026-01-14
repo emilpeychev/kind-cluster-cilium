@@ -1,4 +1,4 @@
-apiVersion: tekton.dev/v1beta1
+apiVersion: tekton.dev/v1
 kind: Task
 metadata:
   name: clone-repo
@@ -6,21 +6,18 @@ metadata:
 spec:
   workspaces:
     - name: output
-  results:
-    - name: commit
-      description: "The resolved commit SHA checked out in the workspace"
   params:
+    - name: GIT_URL
+      type: string
     - name: GIT_BRANCH
       type: string
       default: master
-    - name: GIT_URL
-      type: string
-    - name: COMMIT_SHA
-      type: string
-      default: ""
   steps:
-    - name: git-clone
+    - name: clone
       image: alpine/git
+      env:
+        - name: HOME
+          value: /tekton/home
       securityContext:
         runAsNonRoot: true
         runAsUser: 65532
@@ -28,29 +25,11 @@ spec:
         capabilities:
           drop:
             - ALL
-        seccompProfile:
-          type: RuntimeDefault
-      env:
-        - name: HOME
-          value: /tekton/home
-      volumeMounts:
-        - name: tekton-home
-          mountPath: /tekton/home
       script: |
         #!/bin/sh
         set -eu
-        
-        # Allow Git to work with workspace owned by different user
         git config --global --add safe.directory '*'
-        
-        git clone --branch $(params.GIT_BRANCH) $(params.GIT_URL) $(workspaces.output.path)
-
-        cd $(workspaces.output.path)
-        if [ -n "$(params.COMMIT_SHA)" ]; then
-          git checkout "$(params.COMMIT_SHA)"
-        fi
-
-        git rev-parse HEAD > "$(results.commit.path)"
+        git clone --depth 1 --branch $(params.GIT_BRANCH) $(params.GIT_URL) $(workspaces.output.path)
   volumes:
     - name: tekton-home
       emptyDir: {}

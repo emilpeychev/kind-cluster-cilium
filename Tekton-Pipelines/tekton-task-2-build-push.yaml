@@ -1,46 +1,29 @@
 apiVersion: tekton.dev/v1
 kind: Task
 metadata:
-  name: build-and-push-image
+  name: build-push
   namespace: tekton-builds
 spec:
   workspaces:
     - name: source
   params:
-    - name: IMAGE_URL
+    - name: IMAGE
       type: string
-    - name: IMAGE_URL_LATEST
-      type: string
-      default: ""
-    - name: DOCKERFILE_PATH
-      type: string
-      default: demo-app/Dockerfile
-    - name: CONTEXT_PATH
-      type: string
-      default: demo-app
   steps:
-    - name: kaniko-build
+    - name: build
       image: gcr.io/kaniko-project/executor:v1.12.0
-      securityContext:
-        runAsUser: 0
       env:
         - name: HOME
           value: /kaniko
-      volumeMounts:
-        - name: docker-config
-          mountPath: /kaniko/.docker
-      computeResources:
-        limits:
-          cpu: "500m"
-          memory: "2Gi"
+      securityContext:
+        runAsUser: 0
       args:
-        - "--context=$(workspaces.source.path)/$(params.CONTEXT_PATH)"
-        - "--dockerfile=$(workspaces.source.path)/$(params.DOCKERFILE_PATH)"
-        - "--destination=$(params.IMAGE_URL)"
-        - "--destination=$(params.IMAGE_URL_LATEST)"
-        - "--insecure"
-        - "--skip-tls-verify"
-        - "--cache=false"
+        - --context=$(workspaces.source.path)/demo-app
+        - --dockerfile=$(workspaces.source.path)/demo-app/Dockerfile
+        - --destination=$(params.IMAGE)
+        - --destination=$(params.IMAGE):latest
+        - --insecure
+        - --skip-tls-verify
   volumes:
     - name: docker-config
       secret:
