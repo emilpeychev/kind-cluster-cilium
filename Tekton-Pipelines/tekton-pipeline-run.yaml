@@ -1,8 +1,7 @@
----
 apiVersion: tekton.dev/v1beta1
 kind: PipelineRun
 metadata:
-  name: clone-build-push-run
+  generateName: build-
   namespace: tekton-builds
 spec:
   pipelineRef:
@@ -20,11 +19,12 @@ spec:
         resources:
           requests:
             storage: "1Gi"
-  # Parameters for the Pipeline
   params:
   - name: GIT_URL
     value: https://github.com/emilpeychev/kind-cluster-cilium.git
   - name: GIT_BRANCH
     value: master
-  - name: IMAGE_URL
-    value: harbor.local/library/demo-app:latest
+  - name: IMAGE_REPO
+    value: harbor.local/library/demo-app
+  - name: VERSION
+    value: "v0.1"

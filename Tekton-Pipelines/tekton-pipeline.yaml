@@ -11,9 +11,14 @@ spec:
       type: string
     - name: GIT_BRANCH
       type: string
-      default: main
-    - name: IMAGE_URL
+      default: master
+    - name: IMAGE_REPO
       type: string
+      description: "Image repository without tag (e.g., harbor.local/library/demo-app)"
+    - name: VERSION
+      type: string
+      default: "v0.1"
+      description: "Semantic version tag (e.g., v0.1, v0.2)"
 
   tasks: 
     - name: clone-repo
@@ -37,4 +42,4 @@ spec:
           workspace: shared-data
       params:
         - name: IMAGE_URL
-          value: $(params.IMAGE_URL)
+          value: $(params.IMAGE_REPO):$(params.VERSION)

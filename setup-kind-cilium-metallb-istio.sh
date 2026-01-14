@@ -409,13 +409,13 @@ kubectl wait --for=condition=available deployment/tekton-pipelines-webhook -n te
 sleep 20
 
 echo "==> Running initial Tekton pipeline to build demo app image"
-kubectl create -f Tekton-Pipelines/tekton-pipeline-run.yaml
+PIPELINE_RUN=$(kubectl create -f Tekton-Pipelines/tekton-pipeline-run.yaml -o name)
 
 echo "==> Waiting for pipeline to complete..."
-kubectl wait --for=condition=Succeeded --timeout=300s pipelinerun/clone-build-push-run -n tekton-builds || {
+kubectl wait --for=condition=Succeeded --timeout=300s "${PIPELINE_RUN}" -n tekton-builds || {
     echo "WARNING: Pipeline did not complete successfully. Check with:"
     echo "kubectl get pipelineruns -n tekton-builds"
-    echo "kubectl logs -f pipelinerun/clone-build-push-run -n tekton-builds"
+    echo "kubectl logs -f ${PIPELINE_RUN} -n tekton-builds"
 }
 sleep 1
 

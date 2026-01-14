@@ -8,5 +8,4 @@ resources:
 
 images:
   - name: harbor.local/library/demo-app
-    newName: harbor.local/library/demo-app
-    newTag: latest
+    newTag: v0.1
