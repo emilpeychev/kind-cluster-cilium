@@ -3,6 +3,7 @@ kind: Deployment
 metadata:
   annotations:
     argocd.argoproj.io/sync-wave: "2"
+    finalizers.argocd.argoproj.io/resources-finalizer: "true"
   name: demo-app1
   namespace: demo-apps
 spec:
