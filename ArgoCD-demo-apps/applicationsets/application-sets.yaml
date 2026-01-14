@@ -5,7 +5,7 @@ metadata:
   namespace: argocd
   annotations:
     # add image updater annotation to track image updates
-    argocd.argoproj.io/image-updater.io/image-list: "harbor.local/library/demo-app:~version0.1"
+    argocd-image-updater.argoproj.io/image-list: "harbor.local/library/demo-app:~0.1"
     argocd.argoproj.io/sync-wave: "2"
   # add finalizer to clean up applications when deleting the ApplicationSet
   finalizers:

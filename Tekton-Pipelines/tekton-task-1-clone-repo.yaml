@@ -39,6 +39,10 @@ spec:
       script: |
         #!/bin/sh
         set -eu
+        
+        # Allow Git to work with workspace owned by different user
+        git config --global --add safe.directory '*'
+        
         git clone --branch $(params.GIT_BRANCH) $(params.GIT_URL) $(workspaces.output.path)
 
         cd $(workspaces.output.path)

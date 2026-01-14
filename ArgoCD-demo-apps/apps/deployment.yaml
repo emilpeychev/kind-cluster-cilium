@@ -26,7 +26,7 @@ spec:
           type: RuntimeDefault
       containers:
         - name: app
-          image: harbor.local/library/demo-app:~v0.1
+          image: harbor.local/library/demo-app:0.1
           imagePullPolicy: Always
           securityContext:
             allowPrivilegeEscalation: false
