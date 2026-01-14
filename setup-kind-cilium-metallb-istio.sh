@@ -4,6 +4,9 @@ set -euo pipefail
 KIND_SUBNET="172.20.0.0/16"
 METALLB_POOL="172.20.255.200-172.20.255.250"
 
+CLUSTER_NAME="test-cluster-1"
+KUBECTL_CONTEXT="kind-${CLUSTER_NAME}"
+
 echo "==> Ensuring Docker 'kind' network exists"
 
 if docker network inspect kind >/dev/null 2>&1; then
@@ -18,7 +21,12 @@ docker network inspect kind | grep Subnet || true
 # Create kind cluster
 
 echo "==> Creating kind cluster"
-kind create cluster --config=kind-config.yaml
+if kind get clusters 2>/dev/null | grep -qx "${CLUSTER_NAME}"; then
+  echo "==> Kind cluster '${CLUSTER_NAME}' already exists; skipping create"
+  kubectl config use-context "${KUBECTL_CONTEXT}" >/dev/null 2>&1 || true
+else
+  kind create cluster --config=kind-config.yaml
+fi
 
 sleep 5
 # Install MetalLB
@@ -263,11 +271,12 @@ echo "================================================"
 # Add entry to /etc/hosts
 grep -q "harbor.local" /etc/hosts || echo "172.20.255.201 harbor.local" | sudo tee -a /etc/hosts
 
-helm repo add harbor https://helm.goharbor.io
+helm repo add harbor https://helm.goharbor.io --force-update
 helm repo update
-helm install harbor harbor/harbor --version 1.18.1 --create-namespace \
+helm upgrade --install harbor harbor/harbor --version 1.18.1 --create-namespace \
   -n harbor \
-  -f Harbor/harbor-values.yaml
+  -f Harbor/harbor-values.yaml \
+  --wait --timeout 10m
 
 # Create Harbor TLS secrets
 kubectl create secret tls harbor-tls \

@@ -6,12 +6,18 @@ metadata:
 spec:
   workspaces:
     - name: output
+  results:
+    - name: commit
+      description: "The resolved commit SHA checked out in the workspace"
   params:
     - name: GIT_BRANCH
       type: string
       default: master
     - name: GIT_URL
       type: string
+    - name: COMMIT_SHA
+      type: string
+      default: ""
   steps:
     - name: git-clone
       image: alpine/git
@@ -24,6 +30,23 @@ spec:
             - ALL
         seccompProfile:
           type: RuntimeDefault
+      env:
+        - name: HOME
+          value: /tekton/home
+      volumeMounts:
+        - name: tekton-home
+          mountPath: /tekton/home
       script: |
         #!/bin/sh
+        set -eu
         git clone --branch $(params.GIT_BRANCH) $(params.GIT_URL) $(workspaces.output.path)
+
+        cd $(workspaces.output.path)
+        if [ -n "$(params.COMMIT_SHA)" ]; then
+          git checkout "$(params.COMMIT_SHA)"
+        fi
+
+        git rev-parse HEAD > "$(results.commit.path)"
+  volumes:
+    - name: tekton-home
+      emptyDir: {}

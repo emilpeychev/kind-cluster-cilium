@@ -31,4 +31,4 @@ spec:
   - name: IMAGE_REPO
     value: harbor.local/library/demo-app
   - name: IMAGE_TAG
-    value: version0.1
+    value: "0.1"
