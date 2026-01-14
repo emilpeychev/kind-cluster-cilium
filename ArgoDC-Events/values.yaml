@@ -1,0 +1,61 @@
+# Namespace where Argo Events is installed
+namespace: argo-events
+
+# Install CRDs automatically
+crds:
+  install: true
+
+# Controllers
+controller:
+  replicas: 1
+  resources:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 100m
+      memory: 128Mi
+
+eventBus:
+  # Create a default EventBus automatically
+  enabled: true
+  name: default
+  nats:
+    native:
+      replicas: 1
+      auth: none
+
+# EventSource controller
+eventSourceController:
+  replicas: 1
+
+# Sensor controller
+sensorController:
+  replicas: 1
+
+# Metrics (can be enabled later)
+metrics:
+  enabled: false
+
+# RBAC (keep enabled)
+rbac:
+  create: true
+
+# ServiceAccount
+serviceAccount:
+  create: true
+
+# Security context (safe defaults)
+podSecurityContext:
+  runAsNonRoot: true
+
+containerSecurityContext:
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+      - ALL
+
+# Fix for "too many open files" in Kind
+configs:
+  controller:
+    inotifyWaitTime: "5s"

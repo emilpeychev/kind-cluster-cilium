@@ -1,0 +1,57 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Sensor
+metadata:
+  name: github-tekton-trigger
+  namespace: argo-events
+spec:
+  template:
+    serviceAccountName: argo-events-sa
+  dependencies:
+    - name: github-push
+      eventSourceName: github
+      eventName: demo-app
+      filters:
+        data:
+          - path: body.ref
+            type: string
+            value:
+              - "refs/heads/master"
+              - "refs/heads/main"
+  triggers:
+    - template:
+        name: tekton-pipeline-trigger
+        k8s:
+          operation: create
+          source:
+            resource:
+              apiVersion: tekton.dev/v1
+              kind: PipelineRun
+              metadata:
+                generateName: github-triggered-build-
+                namespace: tekton-builds
+              spec:
+                pipelineRef:
+                  name: clone-build-push
+                workspaces:
+                  - name: shared-data
+                    volumeClaimTemplate:
+                      spec:
+                        accessModes:
+                          - ReadWriteOnce
+                        resources:
+                          requests:
+                            storage: 1Gi
+                params:
+                  - name: GIT_URL
+                    value: https://github.com/emilpeychev/kind-cluster-cilium.git
+                  - name: GIT_BRANCH
+                    value: master
+                  - name: IMAGE_REPO
+                    value: harbor.local/library/demo-app
+                  - name: VERSION
+                    value: latest
+          parameters:
+            - src:
+                dependencyName: github-push
+                dataKey: body.after
+              dest: spec.params.3.value  # Maps to VERSION parameter
