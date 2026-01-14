@@ -265,9 +265,10 @@ grep -q "harbor.local" /etc/hosts || echo "172.20.255.201 harbor.local" | sudo t
 
 helm repo add harbor https://helm.goharbor.io
 helm repo update
-helm install harbor harbor/harbor --version 1.18.1 --create-namespace \
+helm upgrade --install harbor harbor/harbor --version 1.18.1 --create-namespace \
   -n harbor \
-  -f Harbor/harbor-values.yaml
+  -f Harbor/harbor-values.yaml \
+  --wait --timeout 10m
 
 # Create Harbor TLS secrets
 kubectl create secret tls harbor-tls \
@@ -449,7 +450,7 @@ set -euo pipefail
 
 NS=${ARGOCD_NAMESPACE:-argocd}
 SERVER=${ARGO_SERVER:-argocd.local}
-SSH_KEY=${ARGOCD_SSH_KEY:-$HOME/.ssh/id_ed25519}
+SSH_KEY=${ARGOCD_SSH_KEY:-$HOME/.ssh/argoCD}
 REPO=${ARGOCD_REPO:-git@github.com:emilpeychev/kind-cluster-cilium.git}
 
 # Get initial admin password
@@ -476,6 +477,35 @@ EOF
 
 chmod +x /tmp/argocd-login.sh
 /tmp/argocd-login.sh
+
+echo "================================================"
+echo "* Installing ArgoCD Image Updater (Helm)"
+echo "================================================"
+
+# Add ArgoCD Helm repo
+helm repo add argo https://argoproj.github.io/argo-helm
+helm repo update
+
+# Copy Harbor CA ConfigMap to argocd namespace for Image Updater
+kubectl get configmap harbor-ca-cert -n kube-system -o yaml | \
+  sed 's/namespace: kube-system/namespace: argocd/' | \
+  kubectl apply -f -
+
+# Create SSH secret for ArgoCD Image Updater Git writeback
+kubectl create secret generic argocd-image-updater-ssh \
+  --from-file=sshPrivateKey=$HOME/.ssh/argoCD \
+  -n argocd \
+  --dry-run=client -o yaml | kubectl apply -f -
+
+# Install ArgoCD Image Updater via Helm with values
+helm upgrade --install argocd-image-updater argo/argocd-image-updater \
+  --version 1.0.4 \
+  --namespace argocd \
+  --values ArgoCD-Image-Updater/values.yaml \
+  --wait
+
+echo "==> ArgoCD Image Updater installed via Helm"
+sleep 5
 
 echo "================================================"
 echo "* Deploying ArgoCD Applications"
