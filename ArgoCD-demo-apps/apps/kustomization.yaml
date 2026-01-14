@@ -7,4 +7,4 @@ resources:
 images:
   - name: harbor.local/library/demo-app
     newTag: v0.1
-    newName: library/demo-app
+
