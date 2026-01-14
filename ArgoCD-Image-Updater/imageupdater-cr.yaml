@@ -15,11 +15,11 @@ spec:
   applicationRefs:
     - namePattern: demo-apps
       images:
-        - name: harbor.local/library/demo-app
+        - alias: demo-app
+          imageName: library/demo-app
           commonUpdateSettings:
-            updateStrategy: newest-build
-            allowTags: regexp:^test-.*
-            pullSecret: pullsecret:argocd/harbor-registry-creds
+            updateStrategy: semver
+            allowTags: regexp:^v[0-9]+\.[0-9]+\.[0-9]+$
           manifestTargets:
             kustomize:
               name: harbor.local/library/demo-app
