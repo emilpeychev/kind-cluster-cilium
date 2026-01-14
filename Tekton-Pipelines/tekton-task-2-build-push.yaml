@@ -9,6 +9,9 @@ spec:
   params:
     - name: IMAGE_URL
       type: string
+    - name: IMAGE_URL_LATEST
+      type: string
+      default: ""
     - name: DOCKERFILE_PATH
       type: string
       default: demo-app/Dockerfile
@@ -26,10 +29,15 @@ spec:
       volumeMounts:
         - name: docker-config
           mountPath: /kaniko/.docker
+      computeResources:
+        limits:
+          cpu: "500m"
+          memory: "2Gi"
       args:
         - "--context=$(workspaces.source.path)/$(params.CONTEXT_PATH)"
         - "--dockerfile=$(workspaces.source.path)/$(params.DOCKERFILE_PATH)"
         - "--destination=$(params.IMAGE_URL)"
+        - "--destination=$(params.IMAGE_URL_LATEST)"
         - "--insecure"
         - "--skip-tls-verify"
         - "--cache=false"

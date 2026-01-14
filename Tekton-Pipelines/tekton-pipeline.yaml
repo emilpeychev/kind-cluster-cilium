@@ -37,4 +37,6 @@ spec:
           workspace: shared-data
       params:
         - name: IMAGE_URL
-          value: $(params.IMAGE_URL)
+          value: $(params.IMAGE_REPO):$(tasks.clone-repo.results.commit)
+        - name: IMAGE_URL_LATEST
+          value: $(params.IMAGE_REPO):latest
