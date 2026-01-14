@@ -11,9 +11,7 @@ tls/*.crs
 tls/*.srl
 
 
-# Secrets - never commit these
-*-secret.yaml
-*secret*.yaml
+# Secrets - never commit these!
 *.secret
 .env*
 secrets/

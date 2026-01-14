@@ -41,6 +41,10 @@ spec:
         - "--insecure"
         - "--skip-tls-verify"
         - "--cache=false"
+      computeResources: 
+        limits:
+          cpu: "1"
+          memory: "2Gi"
   volumes:
     - name: docker-config
       secret:
