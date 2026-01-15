@@ -670,6 +670,25 @@ sleep 10
 kubectl get applications -n argocd
 
 echo "================================================"
+echo "* Setting up GitHub Polling Trigger"
+echo "================================================"
+
+# Deploy GitHub polling CronJob (polls every minute for new commits)
+echo "==> Deploying GitHub polling trigger..."
+kubectl apply -f Tekton-Pipelines/tekton-trigger-cronjob.yaml
+
+# Initialize with current commit to avoid immediate trigger
+echo "==> Initializing poll state with current commit..."
+CURRENT_COMMIT=$(curl -s "https://api.github.com/repos/emilpeychev/kind-cluster-cilium/commits/master" | grep -m1 '"sha"' | cut -d'"' -f4)
+if [ -n "$CURRENT_COMMIT" ]; then
+  kubectl patch configmap github-poll-state -n tekton-builds \
+    --type merge -p '{"data":{"last-commit":"'"${CURRENT_COMMIT}"'"}}' || true
+  echo "==> Poll state initialized to commit: ${CURRENT_COMMIT}"
+else
+  echo "WARNING: Could not fetch current commit from GitHub API"
+fi
+
+echo "================================================"
 echo "* Setup Complete! Access your applications:"
 echo "* ArgoCD: https://argocd.local"
 echo "* Harbor: https://harbor.local"
@@ -677,6 +696,11 @@ echo "* Tekton Dashboard: https://tekton.local"
 echo "* Argo Workflows UI: https://workflows.local (or https://argo-workflows.local)"
 echo "* GitHub Webhooks: https://webhooks.local/push"
 echo "* Demo App: https://demo-app1.local"
+echo "================================================"
+echo ""
+echo "* Automatic CI/CD Flow:"
+echo "  Push to GitHub → CronJob polls (1 min) → Tekton builds → Harbor →"
+echo "  Image Updater detects → ArgoCD deploys"
 echo "================================================"
 echo "* Test GitHub webhook:"
 echo "  curl -k -X POST https://webhooks.local/push \\"

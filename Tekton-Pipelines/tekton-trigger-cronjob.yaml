@@ -6,6 +6,36 @@ metadata:
 data:
   last-commit: ""
 ---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: github-poll-sa
+  namespace: tekton-builds
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: github-poll-role
+  namespace: tekton-builds
+rules:
+  - apiGroups: [""]
+    resources: ["configmaps"]
+    verbs: ["get", "patch", "update"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: github-poll-rolebinding
+  namespace: tekton-builds
+subjects:
+  - kind: ServiceAccount
+    name: github-poll-sa
+    namespace: tekton-builds
+roleRef:
+  kind: Role
+  name: github-poll-role
+  apiGroup: rbac.authorization.k8s.io
+---
 apiVersion: batch/v1
 kind: CronJob
 metadata:
@@ -20,7 +50,7 @@ spec:
     spec:
       template:
         spec:
-          serviceAccountName: tekton-triggers-sa
+          serviceAccountName: github-poll-sa
           restartPolicy: OnFailure
           containers:
             - name: trigger
