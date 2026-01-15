@@ -4,7 +4,4 @@ resources:
   - deployment.yaml
   - service.yaml
   - httproute.yaml
-images:
-  - name: harbor.local/library/demo-app
-    newTag: v0.1
 

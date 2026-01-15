@@ -542,6 +542,7 @@ echo "================================================"
 
 # Add /etc/hosts entries
 grep -q "workflows.local" /etc/hosts || echo "172.20.255.201 workflows.local" | sudo tee -a /etc/hosts
+grep -q "argo-workflows.local" /etc/hosts || echo "172.20.255.201 argo-workflows.local" | sudo tee -a /etc/hosts
 
 # Install Argo Workflows
 helm upgrade --install argo-workflows argo/argo-workflows \
@@ -595,6 +596,68 @@ echo "================================================"
 echo "* Deploying ArgoCD Applications"
 echo "================================================"
 
+# Install ArgoCD Image Updater for dynamic image tags
+echo "==> Installing ArgoCD Image Updater..."
+kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj-labs/argocd-image-updater/v0.15.1/manifests/install.yaml
+
+# Configure Image Updater for Harbor
+kubectl apply -f ArgoCD/image-updater-config.yaml
+
+echo "==> Waiting for ArgoCD Image Updater..."
+kubectl wait --for=condition=available --timeout=120s deployment/argocd-image-updater -n argocd || true
+
+# Build and push initial demo-app image to Harbor
+echo "==> Building and pushing initial demo-app image to Harbor..."
+if command -v docker &> /dev/null; then
+  # Build the demo app
+  docker build -t harbor.local/library/demo-app:latest demo-app/ 2>/dev/null || {
+    echo "WARNING: Could not build demo-app image. Skipping initial image push."
+  }
+  
+  # Push to Harbor (may fail if docker doesn't trust the CA)
+  docker push harbor.local/library/demo-app:latest 2>/dev/null || {
+    echo "INFO: Docker push failed (CA not trusted). Triggering Tekton build instead..."
+    
+    # Trigger a Tekton pipeline run to build and push the image
+    cat <<'PIPELINERUN' | kubectl create -f -
+apiVersion: tekton.dev/v1
+kind: PipelineRun
+metadata:
+  generateName: initial-build-
+  namespace: tekton-builds
+spec:
+  pipelineRef:
+    name: clone-build-push
+  params:
+    - name: GIT_URL
+      value: "https://github.com/emilpeychev/kind-cluster-cilium.git"
+    - name: GIT_BRANCH
+      value: "master"
+    - name: IMAGE_REPO
+      value: "harbor.local/library/demo-app"
+    - name: VERSION
+      value: "latest"
+  workspaces:
+    - name: shared-data
+      volumeClaimTemplate:
+        spec:
+          accessModes:
+            - ReadWriteOnce
+          resources:
+            requests:
+              storage: 1Gi
+  taskRunTemplate:
+    serviceAccountName: tekton-build-sa
+PIPELINERUN
+    echo "==> Initial Tekton build triggered. Waiting for completion..."
+    sleep 10
+    kubectl wait --for=condition=Succeeded --timeout=300s \
+      pipelinerun -l tekton.dev/pipeline=clone-build-push -n tekton-builds || {
+        echo "WARNING: Initial build may still be running. Check with: kubectl get pipelineruns -n tekton-builds"
+      }
+  }
+fi
+
 # Deploy ArgoCD Project and ApplicationSet
 kubectl apply -f ArgoCD-demo-apps/projects/application-sets-projects.yaml
 kubectl apply -f ArgoCD-demo-apps/applicationsets/application-sets.yaml
@@ -610,12 +673,11 @@ echo "================================================"
 echo "* Setup Complete! Access your applications:"
 echo "* ArgoCD: https://argocd.local"
 echo "* Harbor: https://harbor.local"
-echo "* Tekton: https://tekton.local"
-echo "* Argo Workflows: https://workflows.local"
+echo "* Tekton Dashboard: https://tekton.local"
+echo "* Argo Workflows UI: https://workflows.local (or https://argo-workflows.local)"
 echo "* GitHub Webhooks: https://webhooks.local/push"
 echo "* Demo App: https://demo-app1.local"
 echo "================================================"
-echo "* Argo Workflows UI: https://workflows.local"
 echo "* Test GitHub webhook:"
 echo "  curl -k -X POST https://webhooks.local/push \\"
 echo "    -H 'Content-Type: application/json' \\"

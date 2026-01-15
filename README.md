@@ -1,6 +1,6 @@
 # GitOps Platform with KIND, Cilium, and Service Mesh
 
-A complete local Kubernetes platform for development and testing with modern cloud-native tools including service mesh, GitOps, CI/CD, and container registry.
+A complete local Kubernetes platform for development and testing with modern cloud-native tools including service mesh, GitOps, CI/CD, event-driven automation, and container registry.
 
 [![Yettel](https://img.shields.io/badge/POC-Yettel-B4FF00?style=flat-rounded&logo=cloud&logoColor=purple)](https://www.yettel.bg/)
 [![Kubernetes](https://img.shields.io/badge/Kubernetes-Kind-326CE5?style=flat-rounded&logo=kubernetes&logoColor=white)](https://kind.sigs.k8s.io/)
@@ -13,17 +13,21 @@ A complete local Kubernetes platform for development and testing with modern clo
 [![Harbor](https://img.shields.io/badge/Registry-Harbor-60B932?style=flat-rounded&logo=harbor&logoColor=white)](https://goharbor.io/)
 [![Tekton](https://img.shields.io/badge/CI-Tekton-FD495C?style=flat-rounded&logo=tekton&logoColor=white)](https://tekton.dev/)
 [![ArgoCD](https://img.shields.io/badge/GitOps-ArgoCD-FE7338?style=flat-rounded&logo=argo&logoColor=white)](https://argo-cd.readthedocs.io/)
+[![Argo Events](https://img.shields.io/badge/Events-Argo_Events-FE7338?style=flat-rounded&logo=argo&logoColor=white)](https://argoproj.github.io/argo-events/)
+[![Argo Workflows](https://img.shields.io/badge/Workflows-Argo_Workflows-FE7338?style=flat-rounded&logo=argo&logoColor=white)](https://argoproj.github.io/argo-workflows/)
 
 ## 📖 Table of Contents
 
 - [Project Description](#-project-description)
 - [Architecture](#-architecture)
+- [CI/CD Flow](#-cicd-flow)
 - [Project Components](#-project-components)
 - [Prerequisites](#-prerequisites)
 - [Quick Start](#-quick-start)
 - [Setup Script Details](#-setup-script-details)
 - [Network Configuration](#-network-configuration)
 - [Service Access](#-service-access)
+- [Testing the Flow](#-testing-the-flow)
 - [Detailed Guides](#-detailed-guides)
 
 ## 🚀 Project Description
@@ -32,6 +36,7 @@ This project provides a comprehensive local Kubernetes development platform that
 
 - **Cloud-Native Application Development**: Test applications in a realistic service mesh environment
 - **GitOps Workflows**: Practice continuous deployment with ArgoCD
+- **Event-Driven CI/CD**: Automated pipelines triggered by GitHub webhooks via Argo Events
 - **CI/CD Pipeline Development**: Build and test Tekton pipelines
 - **Container Registry Management**: Use Harbor for private image storage
 - **Service Mesh Experimentation**: Explore Istio Ambient mode features
@@ -73,7 +78,10 @@ graph TB
         
         subgraph "GitOps & CI/CD"
             ArgoCD[ArgoCD v3.2.0<br/>GitOps Controller]
+            ArgoEvents[Argo Events<br/>Event-Driven Automation]
+            ArgoWorkflows[Argo Workflows<br/>Workflow Engine]
             Tekton[Tekton Pipelines<br/>CI/CD System]
+            ImageUpdater[ArgoCD Image Updater<br/>Auto Image Updates]
         end
         
         subgraph "Registry & Apps"
@@ -89,12 +97,72 @@ graph TB
     MetalLB --> Istio
     Istio --> Gateway
     Gateway --> ArgoCD
+    Gateway --> ArgoEvents
+    Gateway --> ArgoWorkflows
     Gateway --> Harbor
     Gateway --> DemoApp
+    ArgoEvents --> Tekton
     Tekton --> Harbor
+    ImageUpdater --> Harbor
+    ImageUpdater --> ArgoCD
     ArgoCD --> DemoApp
     Browser --> Gateway
 ```
+
+## 🔄 CI/CD Flow
+
+The platform implements a complete GitOps CI/CD pipeline:
+
+```mermaid
+flowchart LR
+    subgraph Trigger
+        GH[GitHub Webhook]
+    end
+    
+    subgraph "Argo Events"
+        ES[EventSource]
+        EB[EventBus<br/>NATS]
+        SE[Sensor]
+    end
+    
+    subgraph "CI Pipeline"
+        TK[Tekton Pipeline]
+        CL[Clone Repo]
+        BD[Build Image]
+    end
+    
+    subgraph Registry
+        HB[Harbor]
+    end
+    
+    subgraph "CD / GitOps"
+        IU[Image Updater]
+        AC[ArgoCD]
+    end
+    
+    subgraph Application
+        APP[Demo App<br/>Updated]
+    end
+    
+    GH -->|POST /push| ES
+    ES --> EB
+    EB --> SE
+    SE -->|Trigger| TK
+    TK --> CL
+    CL --> BD
+    BD -->|Push| HB
+    HB -->|Detect| IU
+    IU -->|Update| AC
+    AC -->|Sync| APP
+```
+
+**Flow Details:**
+1. **GitHub Webhook** → Pushes to `https://webhooks.local/push`
+2. **Argo Events EventSource** → Receives webhook, publishes to EventBus
+3. **Argo Events Sensor** → Triggers Tekton PipelineRun
+4. **Tekton Pipeline** → Clones repo, builds image, pushes to Harbor
+5. **ArgoCD Image Updater** → Detects new image, updates deployment
+6. **ArgoCD** → Syncs application with new image tag
 
 ## 🧩 Project Components
 
@@ -106,9 +174,11 @@ graph TB
 | **Istio** | v1.28.2 | Service mesh in Ambient mode (no sidecars) | istio-system |
 | **Gateway API** | v1.4.1 | Modern ingress and traffic management | N/A |
 | **ArgoCD** | v3.2.0 | GitOps continuous delivery platform | argocd |
+| **ArgoCD Image Updater** | v0.15.1 | Automatic image tag updates | argocd |
+| **Argo Events** | Latest | Event-driven automation (webhooks) | argo-events |
+| **Argo Workflows** | v0.45.4 | Workflow engine with UI | argo-workflows |
 | **Harbor** | v2.12.0 | Enterprise container registry | harbor |
 | **Tekton** | Latest | Cloud-native CI/CD pipelines | tekton-pipelines |
-| **Kubernetes Dashboard** | Latest | Web-based cluster management UI | kubernetes-dashboard |
 
 ### Key Features
 - **Zero-sidecar Service Mesh**: Istio Ambient mode provides mTLS and observability without pod overhead
@@ -116,6 +186,8 @@ graph TB
 - **Local Load Balancer**: MetalLB provides LoadBalancer services in KIND
 - **Modern Ingress**: Gateway API with HTTPS termination and TLS management
 - **Complete GitOps**: ArgoCD with demo applications and ApplicationSets
+- **Event-Driven CI/CD**: Argo Events triggers Tekton pipelines on GitHub webhooks
+- **Automatic Image Updates**: ArgoCD Image Updater syncs deployments when new images are pushed
 - **CI/CD Pipelines**: Tekton with Harbor registry integration
 
 ## 📋 Prerequisites
@@ -196,8 +268,11 @@ The `setup-kind-cilium-metallb-istio.sh` script automates the complete platform 
 ### Phase 5: Platform Services
 12. **Harbor Registry**: Deploys with HTTPS endpoint at `harbor.local`
 13. **ArgoCD**: Installs GitOps platform at `argocd.local`
-14. **Tekton Pipelines**: Sets up CI/CD system with demo pipelines
-15. **Demo Applications**: Deploys sample apps with HTTPRoutes
+14. **ArgoCD Image Updater**: Automatic image updates from Harbor
+15. **Argo Workflows**: Workflow engine with UI at `workflows.local`
+16. **Argo Events**: Event-driven automation with GitHub webhook integration
+17. **Tekton Pipelines**: Sets up CI/CD system with clone-build-push pipeline
+18. **Demo Applications**: Deploys sample apps with HTTPRoutes
 
 ### Script Verification
 The script includes multiple verification steps:
@@ -210,9 +285,10 @@ The script includes multiple verification steps:
 After successful completion, you'll have access to:
 - **ArgoCD**: https://argocd.local (admin/admin)
 - **Harbor**: https://harbor.local (admin/Harbor12345)  
+- **Argo Workflows UI**: https://workflows.local
+- **Tekton Dashboard**: https://tekton.local
+- **GitHub Webhooks**: https://webhooks.local/push
 - **Demo App**: https://demo-app1.local
-- **Tekton Dashboard**: https://tekton-dashboard.local
-- **Kubernetes Dashboard**: via kubectl proxy
 
 ## 🌐 Network Configuration
 
@@ -241,7 +317,7 @@ Add entries to your `/etc/hosts` file:
 kubectl get svc -n istio-gateway
 
 # Add to /etc/hosts (replace with actual IP)
-172.20.255.201  argocd.local harbor.local demo-app1.local tekton-dashboard.local
+172.20.255.201  argocd.local harbor.local demo-app1.local tekton.local workflows.local webhooks.local
 ```
 
 ### Direct IP Access
@@ -251,19 +327,75 @@ Services are also accessible via their LoadBalancer IPs:
 kubectl get svc --all-namespaces -o wide | grep LoadBalancer
 ```
 
+## 🧪 Testing the Flow
+
+### Test GitHub Webhook → Tekton Build
+
+```bash
+# Trigger a build via webhook
+curl -k -X POST https://webhooks.local/push \
+  -H "Content-Type: application/json" \
+  -H "X-GitHub-Event: push" \
+  -d '{
+    "ref": "refs/heads/master",
+    "after": "test-commit-sha",
+    "repository": {
+      "name": "kind-cluster-cilium",
+      "full_name": "emilpeychev/kind-cluster-cilium",
+      "clone_url": "https://github.com/emilpeychev/kind-cluster-cilium.git"
+    }
+  }'
+```
+
+### Monitor the Pipeline
+```bash
+# Watch Tekton pipeline runs
+kubectl get pipelineruns -n tekton-builds -w
+
+# Check Argo Events sensor logs
+kubectl logs -n argo-events -l sensor-name=github-tekton-trigger --tail=20
+
+# View in Argo Workflows UI
+open https://workflows.local
+```
+
+### Check Harbor for New Image
+```bash
+# List images in Harbor
+curl -k -s https://harbor.local/api/v2.0/projects/library/repositories/demo-app/artifacts | jq '.[].tags[].name'
+```
+
 ## 📚 Detailed Guides
 
 For in-depth information about specific components:
 
-- **[KIND Configuration](z-Quick-Start-KIND.md)** - Cluster setup and configuration
-- **[Gateway API Guide](Gateway-API-Guide.md)** - Modern ingress and routing  
-- **[ArgoCD Setup](ArgoCD/Quick-Start.md)** - GitOps workflow and applications
-- **[Harbor Registry](Harbor/Quick-Start.md)** - Container registry management
+- **[KIND Configuration](bash-script-installation/z-Guides/z-Quick-Start-KIND.md)** - Cluster setup and configuration
+- **[Gateway API Guide](bash-script-installation/z-Guides/Gateway-API-Guide.md)** - Modern ingress and routing  
+- **[ArgoCD Setup](ArgoCD/z-Quick-Start.md)** - GitOps workflow and applications
+- **[Argo Events Integration](ArgoDC-Events/README.md)** - Event-driven automation setup
+- **[Harbor Registry](Harbor/z-Quick-Start.md)** - Container registry management
 - **[Tekton Pipelines](Tekton-Pipelines/z-Tekton-Pipeline-Details.md)** - CI/CD pipeline development
 - **[TLS Management](tls/z-tls.md)** - Certificate authority and TLS setup
-- **[Cilium CNI](z-cni/cilium/cilium-installation.md)** - eBPF networking configuration
+- **[Cilium CNI](bash-script-installation/z-cni/cilium/cilium-installation.md)** - eBPF networking configuration
 - **[MetalLB Setup](metalLB/z-Quick-Start.md)** - Load balancer configuration
+
+## 📁 Repository Structure
+
+```
+├── setup-kind-cilium-metallb-istio.sh  # Main setup script
+├── kind-config.yaml                     # KIND cluster configuration
+├── ArgoCD/                              # ArgoCD configs & Image Updater
+├── ArgoCD-demo-apps/                    # Demo applications for GitOps
+├── ArgoDC-Events/                       # Argo Events (webhooks, sensors)
+├── Argo-Workflows/                      # Argo Workflows UI HTTPRoute
+├── Harbor/                              # Harbor registry configs
+├── Tekton/                              # Tekton dashboard HTTPRoute
+├── Tekton-Pipelines/                    # CI/CD pipeline definitions
+├── metalLB/                             # MetalLB configuration
+├── tls/                                 # TLS certificates and CA
+└── bash-script-installation/            # Guides and additional scripts
+```
 
 ---
 
-🎉 **Ready to explore modern cloud-native development!** The platform provides a production-like environment for learning and testing Kubernetes, service mesh, GitOps, and CI/CD workflows.
+🎉 **Ready to explore modern cloud-native development!** The platform provides a production-like environment for learning and testing Kubernetes, service mesh, GitOps, event-driven automation, and CI/CD workflows.
