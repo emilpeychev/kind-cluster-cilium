@@ -16,8 +16,8 @@ spec:
       name: '{{name}}'
       annotations:
         # ArgoCD Image Updater - auto-update on new image push
-        argocd-image-updater.argoproj.io/image-list: app=harbor.local/library/demo-app:~.*
-        argocd-image-updater.argoproj.io/app.update-strategy: digest
+        argocd-image-updater.argoproj.io/image-list: demo-app=harbor.local/library/demo-app
+        argocd-image-updater.argoproj.io/demo-app.update-strategy: newest-build
         argocd-image-updater.argoproj.io/write-back-method: argocd
     spec:
       project: demo-apps
