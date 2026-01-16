@@ -56,4 +56,4 @@ spec:
             - src:
                 dependencyName: poll-trigger
                 dataKey: body.commit
-              dest: spec.params.3.value
+              dest: spec.params[?(@.name=="VERSION")].value
