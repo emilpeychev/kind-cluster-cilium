@@ -1,0 +1,59 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Sensor
+metadata:
+  name: webhook-poll-tekton
+  namespace: argo-events
+spec:
+  eventBusName: default
+  template:
+    serviceAccountName: argo-events-sa
+  dependencies:
+    - name: poll-trigger
+      eventSourceName: webhook-poll
+      eventName: poll-trigger
+  triggers:
+    - template:
+        name: trigger-tekton-pipeline
+        k8s:
+          operation: create
+          source:
+            resource:
+              apiVersion: tekton.dev/v1
+              kind: PipelineRun
+              metadata:
+                generateName: poll-triggered-
+                namespace: tekton-builds
+                labels:
+                  tekton.dev/pipeline: clone-build-push
+                  triggered-by: argo-events-poll
+              spec:
+                pipelineRef:
+                  name: clone-build-push
+                taskRunTemplate:
+                  serviceAccountName: tekton-build-sa
+                params:
+                  - name: GIT_URL
+                    value: "https://github.com/emilpeychev/kind-cluster-cilium.git"
+                  - name: GIT_BRANCH
+                    value: "master"
+                  - name: IMAGE_REPO
+                    value: "harbor.local/library/demo-app"
+                  - name: VERSION
+                    value: ""
+                workspaces:
+                  - name: shared-data
+                    volumeClaimTemplate:
+                      spec:
+                        accessModes:
+                          - ReadWriteOnce
+                        resources:
+                          requests:
+                            storage: 1Gi
+                  - name: ssh-creds
+                    secret:
+                      secretName: github-deploy-key
+          parameters:
+            - src:
+                dependencyName: poll-trigger
+                dataKey: body.commit
+              dest: spec.params.4.value

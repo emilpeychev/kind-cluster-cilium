@@ -78,19 +78,13 @@ spec:
                   
                   echo "New commit detected! Triggering build..."
                   
-                  # Trigger build via Argo Events webhook
-                  curl -X POST http://github-eventsource-svc.argo-events:12000/push \
+                  # Trigger build via Argo Events generic webhook (no signature required)
+                  curl -X POST http://webhook-poll-eventsource-svc.argo-events:12001/trigger \
                     -H "Content-Type: application/json" \
                     -d '{
-                      "ref": "refs/heads/'"${BRANCH}"'",
-                      "after": "'"${LATEST_COMMIT}"'",
-                      "repository": {
-                        "clone_url": "'"${REPO_URL}"'",
-                        "name": "kind-cluster-cilium"
-                      },
-                      "head_commit": {
-                        "id": "'"${LATEST_COMMIT}"'"
-                      }
+                      "commit": "'"${LATEST_COMMIT}"'",
+                      "branch": "'"${BRANCH}"'",
+                      "repository": "emilpeychev/kind-cluster-cilium"
                     }'
                   
                   # Update ConfigMap with new commit

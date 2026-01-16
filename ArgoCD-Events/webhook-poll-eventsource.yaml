@@ -1,0 +1,16 @@
+apiVersion: argoproj.io/v1alpha1
+kind: EventSource
+metadata:
+  name: webhook-poll
+  namespace: argo-events
+spec:
+  eventBusName: default
+  service:
+    ports:
+      - port: 12001
+        targetPort: 12001
+  webhook:
+    poll-trigger:
+      port: "12001"
+      endpoint: /trigger
+      method: POST

@@ -17,14 +17,21 @@ grep -q "workflows.local" /etc/hosts || echo "$METALLB_IP workflows.local" | sud
 
 # Install Argo Workflows
 kubectl create namespace argo 2>/dev/null || true
-kubectl apply -n argo -f https://github.com/argoproj/argo-workflows/releases/download/v3.6.2/install.yaml
+kubectl apply -n argo -f https://github.com/argoproj/argo-workflows/releases/download/v3.6.2/quick-start-minimal.yaml
 
 # Wait for Argo Workflows to be ready
 log "Waiting for Argo Workflows controller..."
 kubectl wait --for=condition=available --timeout=300s deployment/workflow-controller -n argo
+kubectl wait --for=condition=available --timeout=300s deployment/argo-server -n argo
 
-# Apply argo-server configuration (HTTP mode, server auth)
-kubectl apply -f Argo-Workflows/argo-server-config.yaml
+# Disable TLS on argo-server (gateway handles TLS termination)
+log "Configuring argo-server for HTTP mode..."
+kubectl patch deployment argo-server -n argo --type='json' \
+  -p='[{"op":"add","path":"/spec/template/spec/containers/0/args/-","value":"--secure=false"}]'
+
+# Update readiness probe to use HTTP instead of HTTPS
+kubectl patch deployment argo-server -n argo --type='json' \
+  -p='[{"op":"replace","path":"/spec/template/spec/containers/0/readinessProbe/httpGet/scheme","value":"HTTP"}]'
 
 log "Waiting for Argo Server to restart..."
 kubectl rollout status deployment/argo-server -n argo --timeout=120s
