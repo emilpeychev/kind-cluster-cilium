@@ -39,7 +39,7 @@ spec:
                   - name: IMAGE_REPO
                     value: "harbor.local/library/demo-app"
                   - name: VERSION
-                    value: "latest"
+                    value: ""
                 workspaces:
                   - name: shared-data
                     volumeClaimTemplate:
@@ -56,4 +56,4 @@ spec:
             - src:
                 dependencyName: poll-trigger
                 dataKey: body.commit
-              dest: spec.params.4.value
+              dest: spec.params.3.value
