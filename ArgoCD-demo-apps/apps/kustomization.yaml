@@ -7,4 +7,4 @@ resources:
 
 images:
 - name: harbor.local/library/demo-app
-  newTag: PLACEHOLDER
+  newTag: 0658b15e2ebb973ed0096412ce1485491fa1844b
