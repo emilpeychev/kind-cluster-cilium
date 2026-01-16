@@ -27,6 +27,8 @@ spec:
                 params:
                   - name: GIT_URL
                     value: https://github.com/emilpeychev/kind-cluster-cilium.git
+                  - name: GIT_REPO
+                    value: emilpeychev/kind-cluster-cilium
                   - name: GIT_BRANCH
                     value: master
                   - name: IMAGE_REPO
@@ -42,6 +44,9 @@ spec:
                         resources:
                           requests:
                             storage: 1Gi
+                  - name: ssh-creds
+                    secret:
+                      secretName: github-deploy-key
                 taskRunTemplate:
                   serviceAccountName: pipeline
           parameters:
@@ -49,4 +54,4 @@ spec:
             - src:
                 dependencyName: github-push
                 dataKey: body.after
-              dest: spec.params.3.value
+              dest: spec.params.4.value

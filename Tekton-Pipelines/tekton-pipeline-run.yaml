@@ -19,6 +19,9 @@ spec:
         resources:
           requests:
             storage: "1Gi"
+  - name: ssh-creds
+    secret:
+      secretName: github-deploy-key
   params:
   - name: GIT_URL
     value: https://github.com/emilpeychev/kind-cluster-cilium.git

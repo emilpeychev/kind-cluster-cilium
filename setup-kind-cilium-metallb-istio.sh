@@ -230,7 +230,7 @@ fi
 
 kubectl get configmap coredns -n kube-system -o json | \
 jq --arg ip "$GATEWAY_IP" '
-  .data.Corefile = ".:53 {\n    errors\n    health {\n       lameduck 5s\n    }\n    ready\n    hosts {\n        " + $ip + " harbor.local argocd.local tekton.local demo-app1.local\n        fallthrough\n    }\n    kubernetes cluster.local in-addr.arpa ip6.arpa {\n       pods insecure\n       fallthrough in-addr.arpa ip6.arpa\n       ttl 30\n    }\n    prometheus :9153\n    forward . /etc/resolv.conf {\n       max_concurrent 1000\n    }\n    cache 30\n    loop\n    reload\n    loadbalance\n}"
+  .data.Corefile = ".:53 {\n    errors\n    health {\n       lameduck 5s\n    }\n    ready\n    hosts {\n        " + $ip + " harbor.local argocd.local tekton.local demo-app1.local webhooks.local workflows.local\n        fallthrough\n    }\n    kubernetes cluster.local in-addr.arpa ip6.arpa {\n       pods insecure\n       fallthrough in-addr.arpa ip6.arpa\n       ttl 30\n    }\n    prometheus :9153\n    forward . /etc/resolv.conf {\n       max_concurrent 1000\n    }\n    cache 30\n    loop\n    reload\n    loadbalance\n}"
 ' | kubectl apply -f -
 
 kubectl rollout restart deployment/coredns -n kube-system
@@ -386,11 +386,36 @@ kubectl create secret docker-registry harbor-registry \
 sleep 1
 # Apply Tekton Pipeline resources
 echo "==> Deploying Tekton ServiceAccounts, Pipeline, and Tasks"
-kubectl apply -f Tekton-Pipelines/configs/
+kubectl apply -f Tekton-Pipelines/configs/tekton-sa.yaml
+kubectl apply -f Tekton-Pipelines/configs/tekton-sa-builds.yaml
 kubectl apply -f Tekton-Pipelines/tekton-pipeline.yaml
 kubectl apply -f Tekton-Pipelines/tekton-task-1-clone-repo.yaml
 kubectl apply -f Tekton-Pipelines/tekton-task-2-build-push.yaml
+kubectl apply -f Tekton-Pipelines/tekton-task-3-update-tag.yaml
 sleep 30
+
+# Setup GitHub Deploy Key for git push
+echo "================================================"
+echo "* GitHub Deploy Key Setup"
+echo "================================================"
+DEPLOY_KEY_FILE="$HOME/.ssh/argoCD"
+if [ -f "$DEPLOY_KEY_FILE" ]; then
+  echo "==> Using existing deploy key: $DEPLOY_KEY_FILE"
+else
+  echo "ERROR: Deploy key not found at $DEPLOY_KEY_FILE"
+  echo "Please create a deploy key and add it to GitHub:"
+  echo "  ssh-keygen -t ed25519 -C 'tekton-deploy-key' -f $DEPLOY_KEY_FILE -N ''"
+  echo "  Then add ${DEPLOY_KEY_FILE}.pub to GitHub repo → Settings → Deploy keys (with write access)"
+  exit 1
+fi
+
+# Create the deploy key secret
+echo "==> Creating GitHub deploy key secret..."
+kubectl create secret generic github-deploy-key \
+  --from-file=ssh-privatekey="$DEPLOY_KEY_FILE" \
+  --from-literal=known_hosts="$(ssh-keyscan github.com 2>/dev/null)" \
+  -n tekton-builds \
+  --dry-run=client -o yaml | kubectl apply -f -
 
 echo "==> Waiting for Tekton controllers to stabilize"
 kubectl wait --for=condition=available deployment/tekton-pipelines-controller -n tekton-pipelines
@@ -433,7 +458,7 @@ set -euo pipefail
 
 NS=${ARGOCD_NAMESPACE:-argocd}
 SERVER=${ARGO_SERVER:-argocd.local}
-SSH_KEY=${ARGOCD_SSH_KEY:-$HOME/.ssh/id_ed25519}
+SSH_KEY=${ARGOCD_SSH_KEY:-$HOME/.ssh/argoCD}
 REPO=${ARGOCD_REPO:-git@github.com:emilpeychev/kind-cluster-cilium.git}
 
 # Get initial admin password
@@ -470,7 +495,7 @@ echo "==> Installing ArgoCD Image Updater..."
 kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj-labs/argocd-image-updater/v0.15.1/manifests/install.yaml
 
 # Configure Image Updater for Harbor
-kubectl apply -f ArgoCD/image-updater-config.yaml
+kubectl apply -f ArgoCD-Image-Updater/image-updater-config.yaml
 
 echo "==> Waiting for ArgoCD Image Updater..."
 kubectl wait --for=condition=available --timeout=120s deployment/argocd-image-updater -n argocd || true
@@ -515,6 +540,9 @@ spec:
           resources:
             requests:
               storage: 1Gi
+    - name: ssh-creds
+      secret:
+        secretName: github-deploy-key
   taskRunTemplate:
     serviceAccountName: tekton-build-sa
 PIPELINERUN
@@ -608,3 +636,40 @@ kubectl wait --for=condition=Ready pod -l sensor-name=github-tekton -n argo-even
 
 echo "==> Argo Events setup complete"
 echo "Webhook endpoint: https://webhooks.local/github"
+
+echo "================================================"
+echo "* Setup Argo Workflows: https://workflows.local"
+echo "================================================"
+# Add entry to /etc/hosts
+grep -q "workflows.local" /etc/hosts || echo "172.20.255.200 workflows.local" | sudo tee -a /etc/hosts
+
+# Install Argo Workflows
+kubectl create namespace argo 2>/dev/null || true
+kubectl apply -n argo -f https://github.com/argoproj/argo-workflows/releases/download/v3.6.2/install.yaml
+
+# Wait for Argo Workflows to be ready
+echo "==> Waiting for Argo Workflows controller..."
+kubectl wait --for=condition=available --timeout=300s deployment/workflow-controller -n argo
+
+# Apply argo-server configuration (HTTP mode, server auth)
+kubectl apply -f Argo-Workflows/argo-server-config.yaml
+
+echo "==> Waiting for Argo Server to restart..."
+kubectl rollout status deployment/argo-server -n argo --timeout=120s
+
+# Apply HTTPRoute for Argo Workflows UI
+kubectl apply -f Argo-Workflows/workflows-httproute.yaml
+
+echo "==> Argo Workflows setup complete"
+echo "Argo Workflows UI: https://workflows.local"
+
+echo "================================================"
+echo "* All Setup Complete!"
+echo "================================================"
+echo "* ArgoCD:         https://argocd.local"
+echo "* Harbor:         https://harbor.local"
+echo "* Tekton:         https://tekton.local"
+echo "* Argo Workflows: https://workflows.local"
+echo "* Webhooks:       https://webhooks.local"
+echo "* Demo App:       https://demo-app1.local"
+echo "================================================"

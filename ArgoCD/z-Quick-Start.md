@@ -51,7 +51,7 @@ chmod +x /tmp/argocd-login.sh
 
 ## 6. Add repositories for Git and Helm charts
 
-argocd repo add <git@github.com>:emilpeychev/kind-cluster-cilium.git --ssh-private-key-path ~/.ssh/id_ed25519
+argocd repo add git@github.com:emilpeychev/kind-cluster-cilium.git --ssh-private-key-path ~/.ssh/argoCD
 
 kubectl apply -f argocd/projects/
 kubectl apply -f argocd/applicationsets/

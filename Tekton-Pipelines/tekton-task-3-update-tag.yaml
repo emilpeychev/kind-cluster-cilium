@@ -1,0 +1,87 @@
+# Tekton Task: Update deployment manifest with new image tag and push to git
+apiVersion: tekton.dev/v1
+kind: Task
+metadata:
+  name: update-deployment-tag
+  namespace: tekton-builds
+spec:
+  description: |
+    Updates the deployment manifest with new image tag and commits to git using SSH deploy key
+  params:
+    - name: GIT_REPO
+      type: string
+      description: Git repository in format owner/repo (e.g., emilpeychev/kind-cluster-cilium)
+    - name: GIT_BRANCH
+      type: string
+      default: master
+    - name: IMAGE_TAG
+      type: string
+      description: New image tag to set
+    - name: DEPLOYMENT_PATH
+      type: string
+      default: ArgoCD-demo-apps/apps/kustomization.yaml
+  workspaces:
+    - name: source
+    - name: ssh-directory
+      description: SSH credentials for git push
+  steps:
+    - name: update-and-push
+      image: alpine/git:latest
+      script: |
+        #!/bin/sh
+        set -e
+        
+        # Setup SSH
+        mkdir -p ~/.ssh
+        cp $(workspaces.ssh-directory.path)/ssh-privatekey ~/.ssh/id_rsa
+        chmod 600 ~/.ssh/id_rsa
+        
+        if [ -f "$(workspaces.ssh-directory.path)/known_hosts" ]; then
+          cp $(workspaces.ssh-directory.path)/known_hosts ~/.ssh/known_hosts
+        else
+          ssh-keyscan github.com >> ~/.ssh/known_hosts 2>/dev/null
+        fi
+        
+        # Configure git
+        git config --global user.email "tekton@local"
+        git config --global user.name "Tekton Pipeline"
+        git config --global --add safe.directory "*"
+        
+        cd $(workspaces.source.path)
+        
+        # Clone fresh copy using SSH
+        GIT_SSH_URL="git@github.com:$(params.GIT_REPO).git"
+        rm -rf repo
+        git clone "$GIT_SSH_URL" repo
+        cd repo
+        git checkout $(params.GIT_BRANCH)
+        
+        # Update kustomization.yaml with new tag
+        echo "Updating image tag to: $(params.IMAGE_TAG)"
+        
+        if [ -f "$(params.DEPLOYMENT_PATH)" ]; then
+          # Update newTag in kustomization.yaml
+          sed -i "s/newTag:.*/newTag: $(params.IMAGE_TAG)/" $(params.DEPLOYMENT_PATH)
+          
+          # Also update deployment.yaml directly
+          DEPLOY_PATH=$(dirname $(params.DEPLOYMENT_PATH))/deployment.yaml
+          if [ -f "$DEPLOY_PATH" ]; then
+            sed -i "s|harbor.local/library/demo-app:.*|harbor.local/library/demo-app:$(params.IMAGE_TAG)|" $DEPLOY_PATH
+          fi
+          
+          # Check if there are changes
+          if git diff --quiet; then
+            echo "No changes to commit"
+            exit 0
+          fi
+          
+          # Commit and push
+          git add -A
+          git commit -m "ci: update image tag to $(params.IMAGE_TAG) [skip ci]"
+          git push origin $(params.GIT_BRANCH)
+          
+          echo "Successfully updated and pushed new image tag"
+        else
+          echo "ERROR: $(params.DEPLOYMENT_PATH) not found"
+          exit 1
+        fi

@@ -19,7 +19,7 @@ spec:
         endpoint: /github
         method: POST
         port: "12000"
-        url: https://argoevents.local/github
+        url: https://webhooks.local/github
       events:
         - push
       webhookSecret:

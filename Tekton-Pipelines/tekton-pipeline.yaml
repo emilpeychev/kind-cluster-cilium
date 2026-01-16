@@ -6,9 +6,16 @@ metadata:
 spec:
   workspaces: 
     - name: shared-data
+    - name: ssh-creds
+      description: SSH credentials for git push (deploy key)
   params:
     - name: GIT_URL
       type: string
+      description: HTTPS URL for cloning (e.g., https://github.com/owner/repo.git)
+    - name: GIT_REPO
+      type: string
+      description: Repository in owner/repo format for SSH push
+      default: emilpeychev/kind-cluster-cilium
     - name: GIT_BRANCH
       type: string
       default: master
@@ -43,3 +50,20 @@ spec:
       params:
         - name: IMAGE_URL
           value: $(params.IMAGE_REPO):$(params.VERSION)
+    - name: update-deployment-tag
+      runAfter:
+        - build-and-push-image
+      taskRef:
+        name: update-deployment-tag
+      workspaces:
+        - name: source
+          workspace: shared-data
+        - name: ssh-directory
+          workspace: ssh-creds
+      params:
+        - name: GIT_REPO
+          value: $(params.GIT_REPO)
+        - name: GIT_BRANCH
+          value: $(params.GIT_BRANCH)
+        - name: IMAGE_TAG
+          value: $(params.VERSION)
