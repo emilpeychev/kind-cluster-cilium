@@ -39,7 +39,7 @@ spec:
                   - name: IMAGE_REPO
                     value: "harbor.local/library/demo-app"
                   - name: VERSION
-                    value: ""
+                    value: "latest"
                 workspaces:
                   - name: shared-data
                     volumeClaimTemplate:
