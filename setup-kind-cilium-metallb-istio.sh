@@ -403,14 +403,22 @@ if [ -f "$DEPLOY_KEY_FILE" ]; then
   echo "==> Using existing deploy key: $DEPLOY_KEY_FILE"
 else
   echo "ERROR: Deploy key not found at $DEPLOY_KEY_FILE"
-  echo "Please create a deploy key and add it to GitHub:"
-  echo "  ssh-keygen -t ed25519 -C 'tekton-deploy-key' -f $DEPLOY_KEY_FILE -N ''"
-  echo "  Then add ${DEPLOY_KEY_FILE}.pub to GitHub repo → Settings → Deploy keys (with write access)"
+  echo ""
+  echo "This key is required for Tekton to push image tags back to git."
+  echo "The same key is also used by ArgoCD to access the repository."
+  echo ""
+  echo "To create the key:"
+  echo "  ssh-keygen -t ed25519 -C 'argocd-deploy-key' -f $DEPLOY_KEY_FILE -N ''"
+  echo ""
+  echo "Then add the PUBLIC key to GitHub:"
+  echo "  cat ${DEPLOY_KEY_FILE}.pub"
+  echo "  → GitHub repo → Settings → Deploy keys → Add deploy key"
+  echo "  → Enable 'Allow write access'"
   exit 1
 fi
 
-# Create the deploy key secret
-echo "==> Creating GitHub deploy key secret..."
+# Create the deploy key secret from existing key
+echo "==> Creating GitHub deploy key secret in tekton-builds namespace..."
 kubectl create secret generic github-deploy-key \
   --from-file=ssh-privatekey="$DEPLOY_KEY_FILE" \
   --from-literal=known_hosts="$(ssh-keyscan github.com 2>/dev/null)" \
