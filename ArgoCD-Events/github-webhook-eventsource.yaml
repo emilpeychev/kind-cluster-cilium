@@ -1,0 +1,27 @@
+apiVersion: argoproj.io/v1alpha1
+kind: EventSource
+metadata:
+  name: github
+  namespace: argo-events
+spec:
+  eventBusName: default
+  service:
+    ports:
+      - port: 12000
+        targetPort: 12000
+  github:
+    push:
+      repositories:
+        - owner: emilpeychev
+          names:
+            - kind-cluster-cilium
+      webhook:
+        endpoint: /github
+        method: POST
+        port: "12000"
+        url: https://argoevents.local/github
+      events:
+        - push
+      webhookSecret:
+        name: github-webhook-secret
+        key: secret

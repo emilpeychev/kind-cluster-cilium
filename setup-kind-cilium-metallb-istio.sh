@@ -571,3 +571,40 @@ echo "* To run a Tekton pipeline:"
 echo "kubectl create -f Tekton-Pipelines/tekton-pipeline-run.yaml"
 echo "================================================"
 
+echo "================================================"
+echo "* Setup Argo Events: https://webhooks.local"
+echo "================================================"
+# Add entry to /etc/hosts
+grep -q "webhooks.local" /etc/hosts || echo "172.20.255.200 webhooks.local" | sudo tee -a /etc/hosts
+# Install Argo Events via Helm
+helm repo add argo https://argoproj.github.io/argo-helm
+helm repo update
+helm install argo-events argo/argo-events -n argo-events --create-namespace -f ArgoCD-Events/values.yaml
+# Wait for Argo Events components to be ready
+kubectl wait --for=condition=available --timeout=300s deployment/argo-events-controller-manager -n argo-events
+
+# Create GitHub webhook secret (change this value for production!)
+kubectl create secret generic github-webhook-secret \
+  --from-literal=secret="my-github-webhook-secret-token" \
+  -n argo-events \
+  --dry-run=client -o yaml | kubectl apply -f -
+
+# Create RBAC for Argo Events sensor to create Tekton PipelineRuns
+kubectl apply -f ArgoCD-Events/rbac.yaml
+
+# Apply Argo Events resources (EventBus first, then EventSource, then Sensor)
+kubectl apply -n argo-events -f ArgoCD-Events/jetstream-ventbus.yaml
+echo "==> Waiting for EventBus JetStream to be ready..."
+sleep 30
+kubectl wait --for=condition=Deployed eventbus/default -n argo-events --timeout=120s || echo "EventBus may still be starting..."
+kubectl apply -n argo-events -f ArgoCD-Events/github-webhook-eventsource.yaml
+kubectl apply -n argo-events -f ArgoCD-Events/webhook-httproute.yaml
+kubectl apply -n argo-events -f ArgoCD-Events/github-sensor-debug.yaml
+
+echo "==> Waiting for Argo Events pods to be ready..."
+sleep 10
+kubectl wait --for=condition=Ready pod -l eventsource-name=github -n argo-events --timeout=120s || echo "EventSource pod may still be starting..."
+kubectl wait --for=condition=Ready pod -l sensor-name=github-tekton -n argo-events --timeout=120s || echo "Sensor pod may still be starting..."
+
+echo "==> Argo Events setup complete"
+echo "Webhook endpoint: https://webhooks.local/github"
