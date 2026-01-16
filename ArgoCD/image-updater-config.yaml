@@ -1,0 +1,50 @@
+# ArgoCD Image Updater Configuration for Harbor Registry
+# This configures automatic image updates when new images are pushed to Harbor
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: argocd-image-updater-config
+  namespace: argocd
+data:
+  registries.conf: |
+    registries:
+      - name: Harbor
+        prefix: harbor.local
+        api_url: https://harbor.local
+        credentials: secret:argocd/harbor-creds#creds
+        insecure: yes
+        default: true
+        defaultns: library
+  log.level: info
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: harbor-creds
+  namespace: argocd
+type: Opaque
+stringData:
+  creds: admin:Harbor12345
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: argocd-image-updater-secrets
+rules:
+  - apiGroups: [""]
+    resources: ["secrets"]
+    verbs: ["get", "list"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: argocd-image-updater-secrets
+subjects:
+  - kind: ServiceAccount
+    name: argocd-image-updater
+    namespace: argocd
+roleRef:
+  kind: ClusterRole
+  name: argocd-image-updater-secrets
+  apiGroup: rbac.authorization.k8s.io

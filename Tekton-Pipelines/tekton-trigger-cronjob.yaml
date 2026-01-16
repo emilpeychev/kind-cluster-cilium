@@ -1,0 +1,100 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: github-poll-state
+  namespace: tekton-builds
+data:
+  last-commit: ""
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: github-poll-sa
+  namespace: tekton-builds
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: github-poll-role
+  namespace: tekton-builds
+rules:
+  - apiGroups: [""]
+    resources: ["configmaps"]
+    verbs: ["get", "patch", "update"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: github-poll-rolebinding
+  namespace: tekton-builds
+subjects:
+  - kind: ServiceAccount
+    name: github-poll-sa
+    namespace: tekton-builds
+roleRef:
+  kind: Role
+  name: github-poll-role
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: github-poll-trigger
+  namespace: tekton-builds
+spec:
+  schedule: "*/1 * * * *"  # Every 1 minute
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 1
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          serviceAccountName: github-poll-sa
+          restartPolicy: OnFailure
+          containers:
+            - name: trigger
+              image: bitnami/kubectl:latest
+              command:
+                - /bin/bash
+                - -c
+                - |
+                  set -e
+                  REPO_URL="https://github.com/emilpeychev/kind-cluster-cilium.git"
+                  BRANCH="master"
+                  
+                  # Get latest commit from GitHub
+                  LATEST_COMMIT=$(curl -s "https://api.github.com/repos/emilpeychev/kind-cluster-cilium/commits/${BRANCH}" | grep -m1 '"sha"' | cut -d'"' -f4)
+                  echo "Latest commit on ${BRANCH}: ${LATEST_COMMIT}"
+                  
+                  # Get stored commit from ConfigMap
+                  STORED_COMMIT=$(kubectl get configmap github-poll-state -n tekton-builds -o jsonpath='{.data.last-commit}' 2>/dev/null || echo "")
+                  echo "Stored commit: ${STORED_COMMIT}"
+                  
+                  if [ "$LATEST_COMMIT" = "$STORED_COMMIT" ]; then
+                    echo "No new commits. Skipping."
+                    exit 0
+                  fi
+                  
+                  echo "New commit detected! Triggering build..."
+                  
+                  # Trigger build via Argo Events webhook
+                  curl -X POST http://github-eventsource-svc.argo-events:12000/push \
+                    -H "Content-Type: application/json" \
+                    -d '{
+                      "ref": "refs/heads/'"${BRANCH}"'",
+                      "after": "'"${LATEST_COMMIT}"'",
+                      "repository": {
+                        "clone_url": "'"${REPO_URL}"'",
+                        "name": "kind-cluster-cilium"
+                      },
+                      "head_commit": {
+                        "id": "'"${LATEST_COMMIT}"'"
+                      }
+                    }'
+                  
+                  # Update ConfigMap with new commit
+                  kubectl patch configmap github-poll-state -n tekton-builds \
+                    --type merge -p '{"data":{"last-commit":"'"${LATEST_COMMIT}"'"}}'
+                  
+                  echo "Build triggered and state updated for commit: ${LATEST_COMMIT}"
