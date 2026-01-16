@@ -67,6 +67,10 @@ spec:
           DEPLOY_PATH=$(dirname $(params.DEPLOYMENT_PATH))/deployment.yaml
           if [ -f "$DEPLOY_PATH" ]; then
             sed -i "s|harbor.local/library/demo-app:.*|harbor.local/library/demo-app:$(params.IMAGE_TAG)|" $DEPLOY_PATH
+            
+            # Update restart annotation to force pod rollout
+            TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+            sed -i "s|kubectl.kubernetes.io/restartedAt:.*|kubectl.kubernetes.io/restartedAt: \"$TIMESTAMP\"|" $DEPLOY_PATH
           fi
           
           # Check if there are changes
