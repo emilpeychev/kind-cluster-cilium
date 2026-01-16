@@ -24,4 +24,15 @@
 <body>
   <h1> GitOps Pipeline Test-6!</h1>
 </body>
-</html>
+</html><---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: efs-test-claim
+spec:
+  accessModes:
+    - ReadWriteMany
+  storageClassName: efs-sc
+  resources:
+    requests:
+      storage: trigger 1768581217 -->
