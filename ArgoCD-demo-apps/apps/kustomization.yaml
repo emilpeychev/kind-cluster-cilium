@@ -7,4 +7,4 @@ resources:
 
 images:
 - name: harbor.local/library/demo-app
-  newTag: ce7acb4aed463afcdbed2e4f49f990fa35080fdb
+  newTag: COMMIT_PLACEHOLDER
