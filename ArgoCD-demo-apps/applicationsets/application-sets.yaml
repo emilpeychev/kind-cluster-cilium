@@ -18,6 +18,7 @@ spec:
         # ArgoCD Image Updater - auto-update on new image push
         argocd-image-updater.argoproj.io/image-list: demo-app=harbor.local/library/demo-app
         argocd-image-updater.argoproj.io/demo-app.update-strategy: newest-build
+        argocd-image-updater.argoproj.io/demo-app.kustomize.image-name: harbor.local/library/demo-app
         argocd-image-updater.argoproj.io/write-back-method: argocd
     spec:
       project: demo-apps
@@ -25,6 +26,9 @@ spec:
         repoURL: git@github.com:emilpeychev/kind-cluster-cilium.git
         targetRevision: master
         path: '{{path}}'
+        kustomize:
+          images:
+            - harbor.local/library/demo-app:v0.5
       destination:
         server: https://kubernetes.default.svc
         namespace: demo-apps
