@@ -10,7 +10,11 @@ spec:
     - list:
         elements:
           - name: demo-apps
+            namespace: demo-apps
             path: ArgoCD-demo-apps/apps
+          - name: httpbin-api
+            namespace: httpbin
+            path: ArgoCD-demo-apps/api
   template:
     metadata:
       name: '{{name}}'
@@ -22,7 +26,7 @@ spec:
         path: '{{path}}'
       destination:
         server: https://kubernetes.default.svc
-        namespace: demo-apps
+        namespace: '{{namespace}}'
       syncPolicy:
         automated:
           prune: true
