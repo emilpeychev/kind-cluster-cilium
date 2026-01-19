@@ -9,19 +9,88 @@
       margin: 0;
       min-height: 100vh;
       display: flex;
+      flex-direction: column;
       justify-content: center;
       align-items: center;
       background: linear-gradient(135deg, #11998e 0%, #943db3 100%);
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      color: white;
     }
     h1 {
-      color: white;
       font-size: 3rem;
       text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+      margin-bottom: 2rem;
+    }
+    .info {
+      background: rgba(255,255,255,0.15);
+      backdrop-filter: blur(10px);
+      padding: 2rem;
+      border-radius: 15px;
+      border: 1px solid rgba(255,255,255,0.3);
+      min-width: 400px;
+    }
+    .info p {
+      display: flex;
+      justify-content: space-between;
+      margin: 0.8rem 0;
+      padding: 0.5rem 0;
+      border-bottom: 1px solid rgba(255,255,255,0.2);
+    }
+    .info p:last-child {
+      border-bottom: none;
+    }
+    .label {
+      font-weight: 600;
+      opacity: 0.9;
+    }
+    .value {
+      font-family: 'Courier New', monospace;
+    }
+    #footer {
+      position: fixed;
+      bottom: 20px;
+      font-size: 0.85rem;
+      opacity: 0.7;
+    }
+    .check {
+      margin-top: 1.5rem;
+    }
+    .check label {
+      cursor: pointer;
     }
   </style>
+  <script>
+    var ref;
+    function checkRefresh(){
+      if (document.cookie == "refresh=1") {
+        document.getElementById("check").checked = true;
+        ref = setTimeout(function(){location.reload();}, 1000);
+      }
+    }
+    function changeCookie() {
+      if (document.getElementById("check").checked) {
+        document.cookie = "refresh=1";
+        ref = setTimeout(function(){location.reload();}, 1000);
+      } else {
+        document.cookie = "refresh=0";
+        clearTimeout(ref);
+      }
+    }
+  </script>
 </head>
-<body>
-  <h1>GitOps Pipeline Test-1!</h1>
+<body onload="checkRefresh();">
+  <h1>GitOps Pipeline Demo</h1>
+  <div class="info">
+    <p><span class="label">Server Address:</span> <span class="value">server_address</span></p>
+    <p><span class="label">Server Name:</span> <span class="value">server_hostname</span></p>
+    <p><span class="label">Date:</span> <span class="value">server_date</span></p>
+    <p><span class="label">URI:</span> <span class="value">server_url</span></p>
+  </div>
+  <div class="check">
+    <label><input type="checkbox" id="check" onchange="changeCookie()"> Auto Refresh</label>
+  </div>
+  <div id="footer">
+    Request ID: request_id
+  </div>
 </body>
 </html>
