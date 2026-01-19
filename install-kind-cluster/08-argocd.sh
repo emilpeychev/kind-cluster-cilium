@@ -78,16 +78,6 @@ argocd repo add "$REPO" \
   --ssh-private-key-path "$SSH_KEY" \
   --grpc-web
 
-# Install ArgoCD Image Updater
-log "Installing ArgoCD Image Updater..."
-kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj-labs/argocd-image-updater/v0.15.1/manifests/install.yaml
-
-# Configure Image Updater for Harbor
-kubectl apply -f ArgoCD-Image-Updater/image-updater-config.yaml
-
-log "Waiting for ArgoCD Image Updater..."
-kubectl wait --for=condition=available --timeout=120s deployment/argocd-image-updater -n argocd || true
-
 # Push initial image to Harbor so ArgoCD has something to deploy
 log "Pushing initial image to Harbor..."
 docker pull nginxdemos/hello:latest
