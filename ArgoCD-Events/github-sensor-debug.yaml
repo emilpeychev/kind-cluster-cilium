@@ -49,7 +49,9 @@ spec:
                   - name: IMAGE_REPO
                     value: harbor.local/library/demo-app
                   - name: VERSION
-                    value: placeholder
+                    value: placeholder-timestamp
+                  - name: COMMIT_SHA
+                    value: placeholder-sha
                 workspaces:
                   - name: shared-data
                     volumeClaimTemplate:
@@ -65,8 +67,13 @@ spec:
                 taskRunTemplate:
                   serviceAccountName: tekton-build-sa
           parameters:
-            # Use commit SHA as version tag
+            # Use timestamp as image tag
+            - src:
+                dependencyName: github-push
+                dataTemplate: "{{ now | date \"20060102-150405\" }}"
+              dest: spec.params[?(@.name=="VERSION")].value
+            # Store commit SHA in metadata
             - src:
                 dependencyName: github-push
                 dataKey: body.after
-              dest: spec.params[?(@.name=="VERSION")].value
+              dest: spec.params[?(@.name=="COMMIT_SHA")].value

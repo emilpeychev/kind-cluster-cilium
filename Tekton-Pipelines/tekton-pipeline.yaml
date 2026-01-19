@@ -25,7 +25,11 @@ spec:
     - name: VERSION
       type: string
       default: "v0.1"
-      description: "Semantic version tag (e.g., v0.1, v0.2)"
+      description: "Image tag - timestamp format (e.g., 20260119-153045)"
+    - name: COMMIT_SHA
+      type: string
+      default: "unknown"
+      description: "Git commit SHA for metadata tracking"
 
   tasks: 
     - name: clone-repo
@@ -67,3 +71,5 @@ spec:
           value: $(params.GIT_BRANCH)
         - name: IMAGE_TAG
           value: $(params.VERSION)
+        - name: COMMIT_SHA
+          value: $(params.COMMIT_SHA)

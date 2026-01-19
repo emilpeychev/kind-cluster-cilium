@@ -16,7 +16,11 @@ spec:
       default: master
     - name: IMAGE_TAG
       type: string
-      description: New image tag to set
+      description: New image tag to set (timestamp format)
+    - name: COMMIT_SHA
+      type: string
+      default: "unknown"
+      description: Git commit SHA to store in metadata
     - name: DEPLOYMENT_PATH
       type: string
       default: ArgoCD-demo-apps/apps/kustomization.yaml
@@ -71,6 +75,14 @@ spec:
             # Update restart annotation to force pod rollout
             TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
             sed -i "s|kubectl.kubernetes.io/restartedAt:.*|kubectl.kubernetes.io/restartedAt: \"$TIMESTAMP\"|" $DEPLOY_PATH
+            
+            # Update commit SHA annotation in metadata
+            if grep -q "git.commit-sha:" $DEPLOY_PATH; then
+              sed -i "s|git.commit-sha:.*|git.commit-sha: \"$(params.COMMIT_SHA)\"|" $DEPLOY_PATH
+            else
+              # Add commit SHA annotation if not present
+              sed -i "/kubectl.kubernetes.io\/restartedAt/a\\        git.commit-sha: \"$(params.COMMIT_SHA)\"" $DEPLOY_PATH
+            fi
           fi
           
           # Check if there are changes

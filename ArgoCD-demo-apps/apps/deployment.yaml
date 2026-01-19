@@ -16,6 +16,7 @@ spec:
         app: demo-app1
       annotations:
         kubectl.kubernetes.io/restartedAt: "2026-01-19T15:39:12Z"
+        git.commit-sha: "unknown"
     spec:
       imagePullSecrets:
         - name: harbor-regcred
