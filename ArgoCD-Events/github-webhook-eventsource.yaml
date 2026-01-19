@@ -23,6 +23,5 @@ spec:
         url: https://webhooks.local/github
       events:
         - push
-      webhookSecret:
-        name: github-webhook-secret
-        key: secret
+      # webhookSecret removed for smee.io compatibility
+      # GitHub signature validation requires direct webhook connection

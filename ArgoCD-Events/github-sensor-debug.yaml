@@ -57,7 +57,7 @@ spec:
                     secret:
                       secretName: github-deploy-key
                 taskRunTemplate:
-                  serviceAccountName: pipeline
+                  serviceAccountName: tekton-build-sa
           parameters:
             # Use commit SHA as version tag
             - src:
