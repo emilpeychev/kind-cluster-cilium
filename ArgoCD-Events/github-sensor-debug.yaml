@@ -48,8 +48,6 @@ spec:
                     value: master
                   - name: IMAGE_REPO
                     value: harbor.local/library/demo-app
-                  - name: VERSION
-                    value: placeholder-timestamp
                   - name: COMMIT_SHA
                     value: placeholder-sha
                 workspaces:
@@ -67,12 +65,7 @@ spec:
                 taskRunTemplate:
                   serviceAccountName: tekton-build-sa
           parameters:
-            # Use timestamp as image tag
-            - src:
-                dependencyName: github-push
-                dataTemplate: "{{ now | date \"20060102-150405\" }}"
-              dest: spec.params[?(@.name=="VERSION")].value
-            # Store commit SHA in metadata
+            # Pass commit SHA - timestamp will be generated in the task
             - src:
                 dependencyName: github-push
                 dataKey: body.after

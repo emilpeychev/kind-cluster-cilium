@@ -53,7 +53,7 @@ spec:
           workspace: shared-data
       params:
         - name: IMAGE_URL
-          value: $(params.IMAGE_REPO):$(params.VERSION)
+          value: $(params.IMAGE_REPO):$(tasks.clone-repo.results.timestamp)
     - name: update-deployment-tag
       runAfter:
         - build-and-push-image
@@ -70,6 +70,6 @@ spec:
         - name: GIT_BRANCH
           value: $(params.GIT_BRANCH)
         - name: IMAGE_TAG
-          value: $(params.VERSION)
+          value: $(tasks.clone-repo.results.timestamp)
         - name: COMMIT_SHA
           value: $(params.COMMIT_SHA)
