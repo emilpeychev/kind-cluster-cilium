@@ -15,7 +15,7 @@ spec:
       labels:
         app: demo-app1
       annotations:
-        kubectl.kubernetes.io/restartedAt: "2026-01-19T14:24:27Z"
+        kubectl.kubernetes.io/restartedAt: "2026-01-19T14:25:36Z"
     spec:
       imagePullSecrets:
         - name: harbor-regcred
