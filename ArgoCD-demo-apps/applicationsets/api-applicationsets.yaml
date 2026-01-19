@@ -1,0 +1,28 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: demo-api
+  namespace: argocd
+spec:
+  generators:
+    - list:
+        elements:
+          - name: httpbin
+            namespace: httpbin
+  template:
+    metadata:
+      name: '{{name}}'
+    spec:
+      project: demo-api
+      source:
+        repoURL: https://github.com/emilpeychev/kind-cluster-cilium.git
+        targetRevision: master
+        path: ArgoCD-demo-apps/api
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: '{{namespace}}'
+      syncPolicy:
+        automated:
+          prune: true
+        syncOptions:
+          - CreateNamespace=true
