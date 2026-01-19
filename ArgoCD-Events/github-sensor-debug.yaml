@@ -10,13 +10,19 @@ spec:
     - name: github-push
       eventSourceName: github
       eventName: push
-      # Filter only pushes to master branch
+      # Filter only pushes to master branch, skip bot commits
       filters:
         data:
           - path: body.ref
             type: string
             value:
               - refs/heads/master
+        script: |-
+          local message = event.body.head_commit and event.body.head_commit.message or ""
+          if string.find(message, "%[skip ci%]") or string.find(message, "ci: deploy") then
+            return false
+          end
+          return true
 
   triggers:
     - template:
