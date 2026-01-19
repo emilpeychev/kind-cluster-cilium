@@ -4,10 +4,19 @@ metadata:
   name: github-tekton
   namespace: argo-events
 spec:
+  template:
+    serviceAccountName: argo-events-sa
   dependencies:
     - name: github-push
       eventSourceName: github
       eventName: push
+      # Filter only pushes to master branch
+      filters:
+        data:
+          - path: body.ref
+            type: string
+            value:
+              - refs/heads/master
 
   triggers:
     - template:
@@ -54,4 +63,4 @@ spec:
             - src:
                 dependencyName: github-push
                 dataKey: body.after
-              dest: spec.params.4.value
+              dest: spec.params[?(@.name=="VERSION")].value

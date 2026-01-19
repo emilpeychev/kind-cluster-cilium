@@ -6,9 +6,10 @@ metadata:
 spec:
   eventBusName: default
   service:
+    metadata:
+      name: github-eventsource-svc   # ← Explicit, matches HTTPRoute
     ports:
       - port: 12000
-        targetPort: 12000
   github:
     push:
       repositories:

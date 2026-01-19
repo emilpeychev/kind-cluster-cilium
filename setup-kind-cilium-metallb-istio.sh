@@ -21,6 +21,17 @@ echo "==> Creating kind cluster"
 kind create cluster --config=kind-config.yaml
 
 sleep 5
+
+# Fix inotify limits for Kind clusters (prevents "too many open files" errors)
+echo "==> Increasing inotify limits on Kind nodes..."
+CLUSTER_NAME=$(kind get clusters 2>/dev/null | head -1)
+if [ -n "$CLUSTER_NAME" ]; then
+  for node in $(kind get nodes --name "$CLUSTER_NAME" 2>/dev/null); do
+    docker exec "$node" sysctl -w fs.inotify.max_user_watches=1048576 >/dev/null 2>&1 || true
+    docker exec "$node" sysctl -w fs.inotify.max_user_instances=8192 >/dev/null 2>&1 || true
+  done
+fi
+
 # Install MetalLB
 echo "==> Installing MetalLB (native)"
 kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/v0.14.5/config/manifests/metallb-native.yaml
@@ -578,25 +589,6 @@ kubectl -n argocd get secret argocd-initial-admin-secret \
   -o jsonpath="{.data.password}" | base64 -d; echo
 
 echo "================================================"
-echo "* Setting up GitHub Polling Trigger"
-echo "================================================"
-
-# Deploy GitHub polling CronJob (polls every minute for new commits)
-echo "==> Deploying GitHub polling trigger..."
-kubectl apply -f Tekton-Pipelines/tekton-trigger-cronjob.yaml
-
-# Initialize with current commit to avoid immediate trigger
-echo "==> Initializing poll state with current commit..."
-CURRENT_COMMIT=$(curl -s "https://api.github.com/repos/emilpeychev/kind-cluster-cilium/commits/master" | grep -m1 '"sha"' | cut -d'"' -f4)
-if [ -n "$CURRENT_COMMIT" ]; then
-  kubectl patch configmap github-poll-state -n tekton-builds \
-    --type merge -p '{"data":{"last-commit":"'"${CURRENT_COMMIT}"'"}}' || true
-  echo "==> Poll state initialized to commit: ${CURRENT_COMMIT}"
-else
-  echo "WARNING: Could not fetch current commit from GitHub API"
-fi
-
-echo "================================================"
 echo "* Setup Complete! Access your applications:"
 echo "* ArgoCD: https://argocd.local"
 echo "* Harbor: https://harbor.local"
@@ -619,17 +611,15 @@ helm install argo-events argo/argo-events -n argo-events --create-namespace -f A
 # Wait for Argo Events components to be ready
 kubectl wait --for=condition=available --timeout=300s deployment/argo-events-controller-manager -n argo-events
 
-# Create GitHub webhook secret (change this value for production!)
-kubectl create secret generic github-webhook-secret \
-  --from-literal=secret="my-github-webhook-secret-token" \
-  -n argo-events \
-  --dry-run=client -o yaml | kubectl apply -f -
+# Create service account and webhook secret from manifests
+kubectl apply -f ArgoCD-Events/serviceaccount.yaml
+kubectl apply -f ArgoCD-Events/github-webhook-secret.yaml
 
 # Create RBAC for Argo Events sensor to create Tekton PipelineRuns
 kubectl apply -f ArgoCD-Events/rbac.yaml
 
 # Apply Argo Events resources (EventBus first, then EventSource, then Sensor)
-kubectl apply -n argo-events -f ArgoCD-Events/jetstream-ventbus.yaml
+kubectl apply -n argo-events -f ArgoCD-Events/jetstream-eventbus.yaml
 echo "==> Waiting for EventBus JetStream to be ready..."
 sleep 30
 kubectl wait --for=condition=Deployed eventbus/default -n argo-events --timeout=120s || echo "EventBus may still be starting..."

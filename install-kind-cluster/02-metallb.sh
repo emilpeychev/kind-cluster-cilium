@@ -8,15 +8,10 @@ source "$SCRIPT_DIR/lib.sh"
 
 log "Step 2: Install MetalLB"
 
-# Install MetalLB from local manifest
+# Install MetalLB from upstream (v0.14.5)
 log "Installing MetalLB (native)"
-kubectl apply -f "$ROOT_DIR/metalLB/metallb-native.yaml"
+kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/v0.14.5/config/manifests/metallb-native.yaml
 
 sleep 5
-
-# Wait for MetalLB controller
-log "Waiting for MetalLB controller..."
-kubectl wait --for=condition=available --timeout=10s \
-  deployment/controller -n metallb-system || true
 
 log "MetalLB installed successfully"

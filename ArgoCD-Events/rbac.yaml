@@ -15,7 +15,7 @@ metadata:
   namespace: tekton-builds
 subjects:
   - kind: ServiceAccount
-    name: default
+    name: argo-events-sa
     namespace: argo-events
 roleRef:
   kind: Role
