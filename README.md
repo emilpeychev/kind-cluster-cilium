@@ -81,7 +81,7 @@ graph TB
             ArgoEvents[Argo Events<br/>Event-Driven Automation]
             ArgoWorkflows[Argo Workflows<br/>Workflow Engine]
             Tekton[Tekton Pipelines<br/>CI/CD System]
-            ImageUpdater[ArgoCD Image Updater<br/>Auto Image Updates]
+            Smee[Smee.io<br/>Webhook Forwarder]
         end
         
         subgraph "Registry & Apps"
@@ -101,10 +101,9 @@ graph TB
     Gateway --> ArgoWorkflows
     Gateway --> Harbor
     Gateway --> DemoApp
+    Smee --> ArgoEvents
     ArgoEvents --> Tekton
     Tekton --> Harbor
-    ImageUpdater --> Harbor
-    ImageUpdater --> ArgoCD
     ArgoCD --> DemoApp
     Browser --> Gateway
 ```
@@ -116,12 +115,13 @@ The platform implements a complete GitOps CI/CD pipeline:
 ```mermaid
 flowchart LR
     subgraph Trigger
-        GH[GitHub Webhook]
+        GH[GitHub Push]
+        SM[Smee.io Forwarder]
     end
     
     subgraph "Argo Events"
         ES[EventSource]
-        EB[EventBus<br/>NATS]
+        EB[EventBus<br/>JetStream]
         SE[Sensor]
     end
     
@@ -129,6 +129,7 @@ flowchart LR
         TK[Tekton Pipeline]
         CL[Clone Repo]
         BD[Build Image]
+        UT[Update Tag]
     end
     
     subgraph Registry
@@ -136,7 +137,6 @@ flowchart LR
     end
     
     subgraph "CD / GitOps"
-        IU[Image Updater]
         AC[ArgoCD]
     end
     
@@ -144,25 +144,26 @@ flowchart LR
         APP[Demo App<br/>Updated]
     end
     
-    GH -->|POST /push| ES
+    GH -->|Webhook| SM
+    SM -->|Forward| ES
     ES --> EB
     EB --> SE
     SE -->|Trigger| TK
     TK --> CL
     CL --> BD
     BD -->|Push| HB
-    HB -->|Detect| IU
-    IU -->|Update| AC
+    BD --> UT
+    UT -->|Git Push| AC
     AC -->|Sync| APP
 ```
 
 **Flow Details:**
-1. **GitHub Webhook** → Pushes to `https://webhooks.local/push`
-2. **Argo Events EventSource** → Receives webhook, publishes to EventBus
-3. **Argo Events Sensor** → Triggers Tekton PipelineRun
-4. **Tekton Pipeline** → Clones repo, builds image, pushes to Harbor
-5. **ArgoCD Image Updater** → Detects new image, updates deployment
-6. **ArgoCD** → Syncs application with new image tag
+1. **GitHub Push** → Webhook sent to Smee.io channel
+2. **Smee.io** → Forwards webhook to local port 12000
+3. **Argo Events EventSource** → Receives webhook, publishes to EventBus
+4. **Argo Events Sensor** → Triggers Tekton PipelineRun
+5. **Tekton Pipeline** → Clones repo, builds image, pushes to Harbor, updates deployment tag
+6. **ArgoCD** → Detects git changes, syncs application with new image tag
 
 ## 🧩 Project Components
 
@@ -174,9 +175,8 @@ flowchart LR
 | **Istio** | v1.28.2 | Service mesh in Ambient mode (no sidecars) | istio-system |
 | **Gateway API** | v1.4.1 | Modern ingress and traffic management | N/A |
 | **ArgoCD** | v3.2.0 | GitOps continuous delivery platform | argocd |
-| **ArgoCD Image Updater** | v0.15.1 | Automatic image tag updates | argocd |
 | **Argo Events** | Latest | Event-driven automation (webhooks) | argo-events |
-| **Argo Workflows** | v0.45.4 | Workflow engine with UI | argo-workflows |
+| **Argo Workflows** | v3.6.2 | Workflow engine with UI | argo |
 | **Harbor** | v2.12.0 | Enterprise container registry | harbor |
 | **Tekton** | Latest | Cloud-native CI/CD pipelines | tekton-pipelines |
 
@@ -186,8 +186,7 @@ flowchart LR
 - **Local Load Balancer**: MetalLB provides LoadBalancer services in KIND
 - **Modern Ingress**: Gateway API with HTTPS termination and TLS management
 - **Complete GitOps**: ArgoCD with demo applications and ApplicationSets
-- **Event-Driven CI/CD**: Argo Events triggers Tekton pipelines on GitHub webhooks
-- **Automatic Image Updates**: ArgoCD Image Updater syncs deployments when new images are pushed
+- **Event-Driven CI/CD**: Argo Events + Smee.io triggers Tekton pipelines on GitHub webhooks
 - **CI/CD Pipelines**: Tekton with Harbor registry integration
 
 ## 📋 Prerequisites
@@ -226,69 +225,61 @@ The fastest way to get the entire platform running:
 
 ```bash
 # 1. Clone the repository
-git clone <repository-url>
-cd Kind-cluster-cilium
+git clone git@github.com:emilpeychev/kind-cluster-cilium.git
+cd kind-cluster-cilium
 
-# 2. Make setup script executable
-chmod +x setup-kind-cilium-metallb-istio.sh
+# 2. Run the automated setup (all 11 steps)
+./setup.sh all
 
-# 3. Run the automated setup
-./setup-kind-cilium-metallb-istio.sh
+# Or use interactive menu
+./setup.sh
 ```
 
-**⏱️ Setup time**: Approximately 10-15 minutes depending on internet speed
+**⏱️ Setup time**: Approximately 12-15 minutes depending on internet speed
+
+### Prerequisites
+
+Install these tools before running:
+```bash
+# Required CLI tools
+- docker
+- kubectl
+- kind
+- cilium
+- istioctl
+- helm
+- argocd
+- smee-client (npm install -g smee-client)
+```
 
 ## 🔧 Setup Script Details
 
-The `setup-kind-cilium-metallb-istio.sh` script automates the complete platform deployment. Here's what it does:
+The `setup.sh` script provides an interactive menu or can run all steps automatically:
 
-### Phase 1: Infrastructure Setup
-1. **Docker Network**: Creates `kind` network with subnet `172.20.0.0/16`
-2. **KIND Cluster**: Deploys 3-node cluster (1 control-plane, 2 workers) using `kind-config.yaml`
-3. **MetalLB**: Installs native MetalLB load balancer
+```bash
+./setup.sh           # Interactive menu
+./setup.sh all       # Run all 11 steps
+./setup.sh 1         # Run step 1 only
+./setup.sh 1-5       # Run steps 1 through 5
+./setup.sh 6 7 8     # Run steps 6, 7, and 8
+./setup.sh delete    # Delete the cluster
+```
 
-### Phase 2: Networking Layer  
-4. **Cilium CNI**: Installs with kube-proxy replacement and eBPF mode
-   - Cluster pool IPAM: `10.244.0.0/16`
-   - Strict kube-proxy replacement enabled
-5. **MetalLB Pool**: Configures L2 advertisement for IP range `172.20.255.200-250`
+### Installation Steps
 
-### Phase 3: Service Mesh & Ingress
-6. **Gateway API**: Installs CRDs for modern ingress management
-7. **Istio Namespace**: Creates `istio-gateway` namespace with ambient mode labels
-8. **Istio Ambient**: Deploys service mesh without sidecars
-   - ztunnel for L4 mTLS and identity
-   - Ingress gateway in `istio-gateway` namespace
-
-### Phase 4: Certificate Management
-9. **Local CA**: Generates self-signed Certificate Authority for HTTPS
-10. **Gateway Certificates**: Creates signed certificates for gateway services
-11. **TLS Secrets**: Stores certificates in Kubernetes secrets
-
-### Phase 5: Platform Services
-12. **Harbor Registry**: Deploys with HTTPS endpoint at `harbor.local`
-13. **ArgoCD**: Installs GitOps platform at `argocd.local`
-14. **ArgoCD Image Updater**: Automatic image updates from Harbor
-15. **Argo Workflows**: Workflow engine with UI at `workflows.local`
-16. **Argo Events**: Event-driven automation with GitHub webhook integration
-17. **Tekton Pipelines**: Sets up CI/CD system with clone-build-push pipeline
-18. **Demo Applications**: Deploys sample apps with HTTPRoutes
-
-### Script Verification
-The script includes multiple verification steps:
-- Service readiness checks
-- Pod status validation  
-- TLS certificate verification
-- Gateway connectivity tests
-
-### Generated Endpoints
-After successful completion, you'll have access to:
-- **ArgoCD**: https://argocd.local (admin/admin)
-- **Harbor**: https://harbor.local (admin/Harbor12345)  
-- **Argo Workflows UI**: https://workflows.local
-- **Tekton Dashboard**: https://tekton.local
-- **GitHub Webhooks**: https://webhooks.local/push
-- **Demo App**: https://demo-app1.local
+| Step | Script | Component | Description |
+|------|--------|-----------|-------------|
+| 1 | `01-kind-cluster.sh` | KIND Cluster | 3-node cluster (1 control-plane, 2 workers) |
+| 2 | `02-metallb.sh` | MetalLB | L2 load balancer (172.20.255.200-250) |
+| 3 | `03-cilium.sh` | Cilium CNI | eBPF networking with kube-proxy replacement |
+| 4 | `04-istio.sh` | Istio Ambient | Service mesh without sidecars |
+| 5 | `05-tls-certs.sh` | TLS + CoreDNS | Local CA, certificates, DNS resolution |
+| 6 | `06-harbor.sh` | Harbor Registry | Container registry at harbor.local |
+| 7 | `07-tekton.sh` | Tekton Pipelines | CI/CD with clone-build-push pipeline |
+| 8 | `08-argocd.sh` | ArgoCD | GitOps platform + initial image push |
+| 9 | `09-argo-events.sh` | Argo Events | GitHub webhooks + smee forwarding |
+| 10 | `10-argo-workflows.sh` | Argo Workflows | Workflow engine with UI |
+| 11 | `11-deploy-apps.sh` | Deploy Apps | HTTPBin API and additional apps |
 
 ## 🌐 Network Configuration
 
@@ -310,30 +301,50 @@ After successful completion, you'll have access to:
 
 ## 🎯 Service Access
 
-### Local DNS Setup (Recommended)
-Add entries to your `/etc/hosts` file:
-```bash
-# Get LoadBalancer IP
-kubectl get svc -n istio-gateway
+### Service URLs
 
-# Add to /etc/hosts (replace with actual IP)
-172.20.255.201  argocd.local harbor.local demo-app1.local tekton.local workflows.local webhooks.local
-```
+| Service | URL | Credentials |
+|---------|-----|-------------|
+| ArgoCD | https://argocd.local | admin / `kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath='{.data.password}' \| base64 -d` |
+| Harbor | https://harbor.local | admin / Harbor12345 |
+| Tekton Dashboard | https://tekton.local | - |
+| Argo Workflows | https://workflows.local | - |
+| Demo App | https://demo-app1.local | - |
+| HTTPBin API | https://httpbin.local | - |
+| Webhooks | https://webhooks.local/github | - |
 
-### Direct IP Access
-Services are also accessible via their LoadBalancer IPs:
+### Local DNS Setup
+The setup scripts automatically add entries to `/etc/hosts`:
 ```bash
-# List all LoadBalancer services  
-kubectl get svc --all-namespaces -o wide | grep LoadBalancer
+172.20.255.200  argocd.local harbor.local demo-app1.local tekton.local workflows.local webhooks.local httpbin.local
 ```
 
 ## 🧪 Testing the Flow
 
-### Test GitHub Webhook → Tekton Build
+### Automatic Webhook Triggering
+
+The platform uses Smee.io to forward GitHub webhooks to your local cluster:
+
+```
+GitHub Push → smee.io/1iIhi0YC0IolWxXJ → localhost:12000 → Argo Events → Tekton Pipeline
+```
+
+Simply push to master and watch the pipeline trigger automatically:
+
+```bash
+# Push a change and watch pipelines
+git commit --allow-empty -m "Test webhook trigger"
+git push origin master
+
+# Watch pipeline runs
+kubectl get pipelineruns -n tekton-builds -w
+```
+
+### Manual Webhook Test
 
 ```bash
 # Trigger a build via webhook
-curl -k -X POST https://webhooks.local/push \
+curl -k -X POST https://webhooks.local/github \
   -H "Content-Type: application/json" \
   -H "X-GitHub-Event: push" \
   -d '{
@@ -341,8 +352,7 @@ curl -k -X POST https://webhooks.local/push \
     "after": "test-commit-sha",
     "repository": {
       "name": "kind-cluster-cilium",
-      "full_name": "emilpeychev/kind-cluster-cilium",
-      "clone_url": "https://github.com/emilpeychev/kind-cluster-cilium.git"
+      "full_name": "emilpeychev/kind-cluster-cilium"
     }
   }'
 ```
@@ -353,47 +363,63 @@ curl -k -X POST https://webhooks.local/push \
 kubectl get pipelineruns -n tekton-builds -w
 
 # Check Argo Events sensor logs
-kubectl logs -n argo-events -l sensor-name=github-tekton-trigger --tail=20
+kubectl logs -n argo-events -l sensor-name=github-tekton --tail=20
 
-# View in Argo Workflows UI
-open https://workflows.local
+# View in Tekton Dashboard
+open https://tekton.local
 ```
 
 ### Check Harbor for New Image
 ```bash
 # List images in Harbor
-curl -k -s https://harbor.local/api/v2.0/projects/library/repositories/demo-app/artifacts | jq '.[].tags[].name'
+curl -k -s -u admin:Harbor12345 https://harbor.local/api/v2.0/projects/library/repositories/demo-app/artifacts | jq '.[].tags[].name'
 ```
 
 ## 📚 Detailed Guides
 
 For in-depth information about specific components:
 
-- **[KIND Configuration](bash-script-installation/z-Guides/z-Quick-Start-KIND.md)** - Cluster setup and configuration
-- **[Gateway API Guide](bash-script-installation/z-Guides/Gateway-API-Guide.md)** - Modern ingress and routing  
+- **[Gateway API Guide](z-Guides/Gateway-API-Guide.md)** - Modern ingress and routing  
 - **[ArgoCD Setup](ArgoCD/z-Quick-Start.md)** - GitOps workflow and applications
-- **[Argo Events Integration](ArgoDC-Events/README.md)** - Event-driven automation setup
+- **[Argo Events Integration](ArgoCD-Events/README.md)** - Event-driven automation setup
 - **[Harbor Registry](Harbor/z-Quick-Start.md)** - Container registry management
 - **[Tekton Pipelines](Tekton-Pipelines/z-Tekton-Pipeline-Details.md)** - CI/CD pipeline development
 - **[TLS Management](tls/z-tls.md)** - Certificate authority and TLS setup
-- **[Cilium CNI](bash-script-installation/z-cni/cilium/cilium-installation.md)** - eBPF networking configuration
 - **[MetalLB Setup](metalLB/z-Quick-Start.md)** - Load balancer configuration
 
 ## 📁 Repository Structure
 
 ```
-├── setup-kind-cilium-metallb-istio.sh  # Main setup script
+├── setup.sh                             # Main setup script (interactive menu)
 ├── kind-config.yaml                     # KIND cluster configuration
-├── ArgoCD/                              # ArgoCD configs & Image Updater
+├── install-kind-cluster/                # Individual setup scripts (01-11)
+│   ├── 01-kind-cluster.sh
+│   ├── 02-metallb.sh
+│   ├── 03-cilium.sh
+│   ├── 04-istio.sh
+│   ├── 05-tls-certs.sh
+│   ├── 06-harbor.sh
+│   ├── 07-tekton.sh
+│   ├── 08-argocd.sh
+│   ├── 09-argo-events.sh
+│   ├── 10-argo-workflows.sh
+│   ├── 11-deploy-apps.sh
+│   └── lib.sh
+├── ArgoCD/                              # ArgoCD configs
 ├── ArgoCD-demo-apps/                    # Demo applications for GitOps
-├── ArgoDC-Events/                       # Argo Events (webhooks, sensors)
+│   ├── apps/                            # Main demo app (nginx-demos)
+│   ├── api/                             # HTTPBin API app
+│   ├── applicationsets/                 # ArgoCD ApplicationSets
+│   └── projects/                        # ArgoCD Projects
+├── ArgoCD-Events/                       # Argo Events (webhooks, sensors)
 ├── Argo-Workflows/                      # Argo Workflows UI HTTPRoute
 ├── Harbor/                              # Harbor registry configs
 ├── Tekton/                              # Tekton dashboard HTTPRoute
 ├── Tekton-Pipelines/                    # CI/CD pipeline definitions
 ├── metalLB/                             # MetalLB configuration
 ├── tls/                                 # TLS certificates and CA
-└── bash-script-installation/            # Guides and additional scripts
+├── demo-app/                            # Demo app source (Dockerfile, index.html)
+└── z-Guides/                            # Documentation guides
 ```
 
 ---

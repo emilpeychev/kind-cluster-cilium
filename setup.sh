@@ -26,11 +26,12 @@ print_banner() {
   echo "╔════════════════════════════════════════════════════════════════╗"
   echo "║       Kind Cluster Setup - Cilium + Istio + GitOps             ║"
   echo "╠════════════════════════════════════════════════════════════════╣"
-  echo "║  1) Kind Cluster      6) Harbor Registry                       ║"
-  echo "║  2) MetalLB           7) Tekton Pipelines                      ║"
-  echo "║  3) Cilium CNI        8) ArgoCD                                ║"
-  echo "║  4) Istio Ambient     9) Argo Events                           ║"
-  echo "║  5) TLS + CoreDNS    10) Argo Workflows                        ║"
+  echo "║  1) Kind Cluster      7) Tekton Pipelines                      ║"
+  echo "║  2) MetalLB           8) ArgoCD                                ║"
+  echo "║  3) Cilium CNI        9) Argo Events + Smee                    ║"
+  echo "║  4) Istio Ambient    10) Argo Workflows                        ║"
+  echo "║  5) TLS + CoreDNS    11) Deploy Apps (HTTPBin)                 ║"
+  echo "║  6) Harbor Registry                                            ║"
   echo "╠════════════════════════════════════════════════════════════════╣"
   echo "║  all) Run all steps    delete) Delete cluster                  ║"
   echo "║  q) Quit                                                       ║"
@@ -53,6 +54,7 @@ run_step() {
     8)  script="08-argocd.sh" ;;
     9)  script="09-argo-events.sh" ;;
     10) script="10-argo-workflows.sh" ;;
+    11) script="11-deploy-apps.sh" ;;
     *)
       echo -e "${RED}Invalid step: $step${NC}" >&2
       return 1
@@ -72,7 +74,7 @@ run_step() {
 
 run_all() {
   echo -e "${YELLOW}Running all steps...${NC}"
-  for i in {1..10}; do
+  for i in {1..11}; do
     run_step "$i"
   done
   print_summary
@@ -105,8 +107,12 @@ print_summary() {
   echo "║  Argo Workflows: https://workflows.local                       ║"
   echo "║  Webhooks:       https://webhooks.local                        ║"
   echo "║  Demo App:       https://demo-app1.local                       ║"
+  echo "║  HTTPBin API:    https://httpbin.local                         ║"
   echo "╚════════════════════════════════════════════════════════════════╝"
   echo -e "${NC}"
+  echo ""
+  echo "Smee webhook forwarding: https://smee.io/1iIhi0YC0IolWxXJ"
+  echo "ArgoCD admin password: kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath='{.data.password}' | base64 -d"
 }
 
 # Main
@@ -117,7 +123,7 @@ if [[ $# -eq 0 ]]; then
     read -rp "Select option: " choice
     
     case "$choice" in
-      [1-9]|10)
+      [1-9]|10|11)
         run_step "$choice"
         ;;
       all|a)

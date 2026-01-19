@@ -2,99 +2,53 @@
 
 This integration automatically triggers Tekton pipelines when you push code to GitHub.
 
+## Architecture
+
+```
+GitHub Push → smee.io → localhost:12000 → Argo Events → Tekton Pipeline → Harbor
+```
+
 ## Quick Start
 
-### 1. Run the setup script
+The setup is fully automated via `./setup.sh 9` or `./setup.sh all`. After setup:
+
+1. **Smee.io** forwards GitHub webhooks to your local cluster
+2. **Port-forward** connects localhost:12000 to the Argo Events webhook service
+3. **Push to master** triggers the Tekton pipeline automatically
+
+### Verify the Setup
 
 ```bash
-./ArgoDC-Events/setup-github-integration.sh
+# Check if smee and port-forward are running
+ps aux | grep -E "smee|port-forward" | grep -v grep
+
+# If not running, restart them:
+pkill -f "port-forward.*github-eventsource" || true
+pkill -f "smee" || true
+kubectl port-forward -n argo-events svc/github-eventsource-svc 12000:12000 &
+smee --url https://smee.io/1iIhi0YC0IolWxXJ --target http://localhost:12000/github &
 ```
 
-This will:
-- Create RBAC permissions for the sensor
-- Prompt for your GitHub credentials
-- Deploy the GitHub EventSource
-- Deploy the Sensor that triggers Tekton pipelines
-
-### 2. Expose the webhook endpoint
-
-#### Option A: Local testing with port-forward
-
-```bash
-# Find the webhook service
-kubectl get svc -n argo-events -l eventsource-name=github
-
-# Port-forward
-kubectl port-forward -n argo-events svc/github-eventsource-svc 12000:12000
-```
-
-Then use `http://localhost:12000/push` as your webhook URL (requires a tunnel like ngrok for GitHub to reach it).
-
-#### Option B: Using ngrok (recommended for testing)
-
-```bash
-# In one terminal
-kubectl port-forward -n argo-events svc/github-eventsource-svc 12000:12000
-
-# In another terminal
-ngrok http 12000
-```
-
-Use the ngrok HTTPS URL in your GitHub webhook configuration.
-
-#### Option C: Using the Istio Gateway (for production)
-
-```bash
-# Add webhooks.local to /etc/hosts
-echo "172.20.255.201 webhooks.local" | sudo tee -a /etc/hosts
-
-# Apply the HTTPRoute
-kubectl apply -f ArgoDC-Events/webhook-httproute.yaml
-
-# Update CoreDNS to include webhooks.local
-# (Already done if you ran the main setup script)
-```
-
-Then use `https://webhooks.local/push` as your webhook URL.
-
-### 3. Configure GitHub Webhook
-
-1. Go to your repository settings: https://github.com/emilpeychev/kind-cluster-cilium/settings/hooks
-2. Click **Add webhook**
-3. Configure:
-   - **Payload URL**: `<your-webhook-url>/push`
-   - **Content type**: `application/json`
-   - **Secret**: The webhook secret you entered during setup
-   - **Which events**: Select "Just the push event"
-   - **Active**: ✓ Check this box
-4. Click **Add webhook**
-
-### 4. Test the Integration
+### Test the Integration
 
 Push a commit to trigger the pipeline:
 
 ```bash
 git commit --allow-empty -m "Test Argo Events trigger"
 git push origin master
-```
 
-Watch for the pipeline run:
-
-```bash
 # Watch pipeline runs
 kubectl get pipelineruns -n tekton-builds -w
-
-# Check Argo Events logs
-kubectl logs -n argo-events -l sensor-name=github-tekton-trigger --tail=50 -f
 ```
 
 ## How It Works
 
-1. **GitHub Push** → You push code to the `master` or `main` branch
-2. **Webhook** → GitHub sends a webhook to the EventSource endpoint
-3. **EventSource** → Receives the webhook and publishes it to the EventBus
-4. **Sensor** → Listens for push events and triggers a Tekton PipelineRun
-5. **Tekton** → Builds and pushes the Docker image to Harbor
+1. **GitHub Push** → You push code to the `master` branch
+2. **Smee.io** → GitHub sends webhook to smee.io channel, which forwards to localhost:12000
+3. **Port-forward** → Routes localhost:12000 to the Argo Events webhook service
+4. **EventSource** → Receives the webhook and publishes it to the JetStream EventBus
+5. **Sensor** → Listens for push events and triggers a Tekton PipelineRun
+6. **Tekton** → Clones repo, builds Docker image, pushes to Harbor, updates deployment tag
 
 ## Configuration Files
 
