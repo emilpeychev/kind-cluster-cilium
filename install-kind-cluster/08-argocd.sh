@@ -71,6 +71,11 @@ echo "Harbor12345" | docker login harbor.local -u admin --password-stdin
 docker push harbor.local/library/demo-app:$TIMESTAMP
 log "Initial image pushed to Harbor successfully!"
 
+# Update deployment manifest with the pushed image tag
+log "Updating deployment manifest with image tag: $TIMESTAMP"
+sed -i "s|harbor.local/library/demo-app:.*|harbor.local/library/demo-app:$TIMESTAMP|" ArgoCD-demo-apps/apps/deployment.yaml
+sed -i "s|newTag:.*|newTag: $TIMESTAMP|" ArgoCD-demo-apps/apps/kustomization.yaml
+
 # Deploy ArgoCD Project and ApplicationSet
 kubectl apply -f ArgoCD-demo-apps/projects/application-sets-projects.yaml
 kubectl apply -f ArgoCD-demo-apps/applicationsets/application-sets.yaml

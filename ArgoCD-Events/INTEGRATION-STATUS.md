@@ -163,3 +163,15 @@ kubectl get pipelinerun <name> -n tekton-builds -o yaml
 **Integration Status**: ✅ Fully Operational  
 **Last Tested**: 2026-01-14  
 **Test Result**: Pipeline `github-triggered-build-2wrvj` succeeded in 22 seconds
+
+
+NB!
+
+Note: The smee client can become unresponsive over time. If webhooks stop working, restart it:
+
+```sh
+pkill -f smee
+
+smee --url https://smee.io/1iIhi0YC0IolWxXJ --target http://localhost:12000/github &
+
+```
