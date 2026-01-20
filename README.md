@@ -375,7 +375,84 @@ open https://tekton.local
 curl -k -s -u admin:Harbor12345 https://harbor.local/api/v2.0/projects/library/repositories/demo-app/artifacts | jq '.[].tags[].name'
 ```
 
-## 📚 Detailed Guides
+## � Troubleshooting
+
+### Tekton Pipeline Not Triggering on Push
+
+If you push to GitHub but no Tekton pipeline starts:
+
+**1. Check if Smee client is running and responsive:**
+```bash
+ps aux | grep smee
+```
+
+**2. Restart Smee client (most common fix):**
+```bash
+pkill -f smee
+smee --url https://smee.io/1iIhi0YC0IolWxXJ --target http://localhost:12000/github &
+```
+
+**3. Check if port-forward is running:**
+```bash
+ps aux | grep "port-forward.*12000"
+# If not running, restart it:
+kubectl port-forward -n argo-events svc/github-eventsource-svc 12000:12000 &
+```
+
+**4. Verify webhook is received by EventSource:**
+```bash
+kubectl logs -n argo-events -l eventsource-name=github --tail=10 --since=2m
+```
+
+**5. Check Sensor logs for filtering issues:**
+```bash
+kubectl logs -n argo-events -l sensor-name=github-tekton --tail=20
+```
+
+**6. Verify GitHub webhook configuration:**
+- Go to: https://github.com/emilpeychev/kind-cluster-cilium/settings/hooks
+- Check **Recent Deliveries** - should show green checkmarks
+- Payload URL should be: `https://smee.io/1iIhi0YC0IolWxXJ`
+- Content type: `application/json`
+- Secret: leave empty (Smee doesn't support secrets)
+
+### Image Pull Errors
+
+If pods show `ImagePullBackOff` or `ErrImagePull`:
+
+**1. Check what tag the deployment wants vs what Harbor has:**
+```bash
+# What deployment wants:
+kubectl get deployment demo-app1 -n demo-apps -o jsonpath='{.spec.template.spec.containers[0].image}'
+
+# What Harbor has:
+curl -sk -u admin:Harbor12345 https://harbor.local/api/v2.0/projects/library/repositories/demo-app/artifacts | jq -r '.[].tags[].name'
+```
+
+**2. Push missing image tag:**
+```bash
+# Replace TAG with the tag deployment needs
+docker tag nginx:trixie-perl harbor.local/library/demo-app:TAG
+docker push harbor.local/library/demo-app:TAG
+```
+
+**3. Restart the deployment:**
+```bash
+kubectl rollout restart deployment/demo-app1 -n demo-apps
+```
+
+### Quick Health Check
+```bash
+# All services running
+kubectl get pods -n argo-events
+kubectl get pods -n tekton-pipelines
+kubectl get pods -n tekton-builds
+
+# Recent pipeline runs
+kubectl get pipelineruns -n tekton-builds --sort-by=.metadata.creationTimestamp | tail -5
+```
+
+## �📚 Detailed Guides
 
 For in-depth information about specific components:
 
