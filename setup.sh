@@ -113,7 +113,14 @@ print_summary() {
   echo ""
   echo "Smee webhook forwarding: https://smee.io/1iIhi0YC0IolWxXJ"
   echo "ArgoCD admin password: kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath='{.data.password}' | base64 -d"
+  
+  echo "** Note: Smee must be running to receive webhooks. Starting Smee... **"
+  pkill -f smee
+  smee --url https://smee.io/1iIhi0YC0IolWxXJ --target http://localhost:12000/github &
+  echo "Smee is running in the background to forward webhooks."
 }
+
+
 
 # Main
 if [[ $# -eq 0 ]]; then

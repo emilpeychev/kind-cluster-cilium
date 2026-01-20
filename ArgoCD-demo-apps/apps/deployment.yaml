@@ -22,7 +22,11 @@ spec:
         - name: harbor-regcred
       containers:
         - name: app
+<<<<<<< HEAD
           image: harbor.local/library/demo-app:20012026-092825
+=======
+          image: harbor.local/library/demo-app:20260120-113807
+>>>>>>> c506002 (argoCD enable/disable auto-sync)
           imagePullPolicy: Always
           ports:
             - containerPort: 80
