@@ -7,4 +7,8 @@ resources:
 
 images:
 - name: harbor.local/library/demo-app
+<<<<<<< HEAD
   newTag: 20260120-080235
+=======
+  newTag: latest
+>>>>>>> 6f30c09 (bg color)
