@@ -31,4 +31,4 @@ spec:
         #!/bin/sh
         git clone --branch $(params.GIT_BRANCH) $(params.GIT_URL) $(workspaces.output.path)
         # Generate timestamp for image tag
-        date -u +"%Y%m%d-%H%M%S" | tr -d '\n' > $(results.timestamp.path)
+        date -u +"%d%m%Y-%H%M%S" | tr -d '\n' > $(results.timestamp.path)

@@ -57,21 +57,24 @@ argocd repo add "$REPO" \
   --ssh-private-key-path "$SSH_KEY" \
   --grpc-web
 
+TIMESTAMP=$(date +%Y%m%d-%H%M%S)
+
 # Push initial image to Harbor so ArgoCD has something to deploy
 log "Pushing initial image to Harbor..."
-docker pull nginxdemos/hello:latest
-docker tag nginxdemos/hello:latest harbor.local/library/demo-app:latest
+docker pull nginx:trixie-perl
+docker tag nginx:trixie-perl harbor.local/library/demo-app:$TIMESTAMP
 
 # Configure Docker to trust Harbor CA and push image
 sudo mkdir -p /etc/docker/certs.d/harbor.local
 sudo cp "$ROOT_DIR/tls/ca.crt" /etc/docker/certs.d/harbor.local/ca.crt
 echo "Harbor12345" | docker login harbor.local -u admin --password-stdin
-docker push harbor.local/library/demo-app:latest
+docker push harbor.local/library/demo-app:$TIMESTAMP
 log "Initial image pushed to Harbor successfully!"
 
 # Deploy ArgoCD Project and ApplicationSet
 kubectl apply -f ArgoCD-demo-apps/projects/application-sets-projects.yaml
 kubectl apply -f ArgoCD-demo-apps/applicationsets/application-sets.yaml
+sleep 10
 kubectl apply -k ArgoCD-demo-apps/apps/
 
 log "Waiting for ArgoCD Applications to be created..."
