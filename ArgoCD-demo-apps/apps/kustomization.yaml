@@ -7,8 +7,4 @@ resources:
 
 images:
 - name: harbor.local/library/demo-app
-<<<<<<< HEAD
-  newTag: 20012026-094736
-=======
-  newTag: 20012026-094736
->>>>>>> c506002 (argoCD enable/disable auto-sync)
+  newTag: 20260120-113807
