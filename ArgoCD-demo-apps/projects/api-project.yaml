@@ -1,6 +1,8 @@
 apiVersion: argoproj.io/v1alpha1
 kind: AppProject
 metadata:
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
   name: demo-api
   namespace: argocd
   finalizers:
@@ -8,13 +10,12 @@ metadata:
 spec:
   description: Demo API Project (httpbin)
   sourceRepos:
-    - '*'
+    - git@github.com:emilpeychev/kind-cluster-cilium.git
   destinations:
     - namespace: httpbin
       server: https://kubernetes.default.svc
-  clusterResourceWhitelist:
-    - group: ''
-      kind: Namespace
-  namespaceResourceWhitelist:
-    - group: '*'
-      kind: '*'
+  roles:
+    - name: api-admin
+      description: Full access for API admins
+      policies:
+        - p, proj:demo-api:api-admin, applications, *, demo-api/*, allow

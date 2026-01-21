@@ -5,6 +5,8 @@ metadata:
     argocd.argoproj.io/sync-wave: "1"
   name: demo-apps
   namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
 spec:
   description: Demo Apps project
 
