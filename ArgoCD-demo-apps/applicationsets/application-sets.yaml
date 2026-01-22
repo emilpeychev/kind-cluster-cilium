@@ -12,9 +12,6 @@ spec:
           - name: demo-apps
             namespace: demo-apps
             path: ArgoCD-demo-apps/apps
-          - name: httpbin-api
-            namespace: httpbin
-            path: ArgoCD-demo-apps/api
   template:
     metadata:
       name: '{{name}}'
