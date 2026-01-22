@@ -15,7 +15,7 @@ spec:
     spec:
       project: demo-api
       source:
-        repoURL: https://github.com/emilpeychev/kind-cluster-cilium.git
+        repoURL: git@github.com:emilpeychev/kind-cluster-cilium.git
         targetRevision: master
         path: ArgoCD-demo-apps/api
       destination:
