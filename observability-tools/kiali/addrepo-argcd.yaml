@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: harbor-helm-oci
+  namespace: argocd
+  labels:
+    argocd.argoproj.io/secret-type: repository
+stringData:
+  name: harbor-helm
+  url: oci://harbor.local/helm
+  type: helm
+  enableOCI: "true"
+  username: robot$helm+argocd
+  password: Kwk5IALcjXgeW8OHu86RqC2kihme0xs6
+  insecureSkipServerVerification: "true"
