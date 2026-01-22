@@ -9,7 +9,7 @@ spec:
         elements:
           - name: httpbin
             namespace: httpbin
-            path: ArgoCD-demo-apps/apps/api
+            path: ArgoCD-demo-apps/api
   template:
     metadata:
       name: '{{name}}'
@@ -25,5 +25,4 @@ spec:
       syncPolicy:
         automated:
           prune: true
-        syncOptions:
-          - CreateNamespace=true
+
