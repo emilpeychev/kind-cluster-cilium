@@ -19,6 +19,7 @@ curl -k -u admin:Harbor12345 \
     "project_name": "helm",
     "public": false
   }
+'
 
 # Create robot account
 curl -k -u admin:Harbor12345 \
