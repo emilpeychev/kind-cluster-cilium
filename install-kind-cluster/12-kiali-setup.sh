@@ -56,6 +56,7 @@ ROBOT_PASS=$(
           "namespace": "helm",
           "access": [
             { "resource": "repository", "action": "pull" },
+            { "resource": "repository", "action": "read" },
             { "resource": "artifact", "action": "read" }
           ]
         }

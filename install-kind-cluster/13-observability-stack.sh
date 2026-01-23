@@ -31,50 +31,90 @@ curl -sk -u admin:Harbor12345 \
 # 3. Push Helm chart to Harbor OCI repo
 helm push prometheus-28.6.0.tgz oci://harbor.local/helm || true
 
+# 3b. Package & push Grafana Helm chart
+log "Packaging and pushing Grafana Helm chart to Harbor..."
+helm repo add grafana https://grafana.github.io/helm-charts >/dev/null
+helm repo update >/dev/null
+helm pull grafana/grafana --version 10.5.12 || true
+helm push grafana-10.5.12.tgz oci://harbor.local/helm || true
+
 # 4. Create / load Harbor robot account (system-level, no project_id needed)
 log "Ensuring Harbor robot account for Argo CD..."
 
 ROBOT_ENV="$ROOT_DIR/.harbor-robot-pass.env"
 
-# Delete existing robot if present (to get fresh credentials)
-EXISTING_ROBOT_ID=$(curl -sk -u admin:Harbor12345 \
-  "https://harbor.local/api/v2.0/robots?q=name%3Dargocd" | jq -r '.[0].id // empty')
-if [[ -n "$EXISTING_ROBOT_ID" ]]; then
-  log "Deleting existing robot (id: $EXISTING_ROBOT_ID)..."
-  curl -sk -u admin:Harbor12345 -X DELETE "https://harbor.local/api/v2.0/robots/$EXISTING_ROBOT_ID"
-fi
-
-NEW_ROBOT_PASS=$(
-  curl -sk -u admin:Harbor12345 \
-    -X POST https://harbor.local/api/v2.0/robots \
-    -H "Content-Type: application/json" \
-    -d '{
-      "name": "argocd",
-      "level": "system",
-      "duration": -1,
-      "permissions": [
-        {
-          "kind": "project",
-          "namespace": "helm",
-          "access": [
-            { "resource": "repository", "action": "pull" },
-            { "resource": "artifact", "action": "read" }
+# Try to load existing robot credentials; if missing or invalid, create a new robot.
+if [[ -f "$ROBOT_ENV" ]]; then
+  source "$ROBOT_ENV"
+  # Use literal username 'robot$argocd' (dollar sign must not be expanded as a variable)
+  HTTP_CODE=$(curl -sk -u 'robot$argocd:'"$ROBOT_PASS" -o /dev/null -w "%{http_code}" https://harbor.local/api/v2.0/projects/helm || true)
+  if [[ "$HTTP_CODE" == "401" || -z "${ROBOT_PASS:-}" ]]; then
+    log "Existing robot credentials invalid or missing; creating new robot"
+    NEW_ROBOT_PASS=$(
+      curl -sk -u admin:Harbor12345 \
+        -X POST https://harbor.local/api/v2.0/robots \
+        -H "Content-Type: application/json" \
+        -d '{
+          "name": "argocd",
+          "level": "system",
+          "duration": -1,
+          "permissions": [
+            {
+              "kind": "project",
+              "namespace": "helm",
+              "access": [
+                { "resource": "repository", "action": "pull" },
+                { "resource": "repository", "action": "read" },
+                { "resource": "artifact", "action": "read" }
+              ]
+            }
           ]
-        }
-      ]
-    }' | jq -r '.secret // empty'
-)
-
-if [[ -n "$NEW_ROBOT_PASS" ]]; then
-  log "New robot created, saving credentials"
-  echo "export ROBOT_PASS='$NEW_ROBOT_PASS'" > "$ROBOT_ENV"
-  chmod 600 "$ROBOT_ENV"
+        }' | jq -r '.secret // empty'
+    )
+    if [[ -n "$NEW_ROBOT_PASS" ]]; then
+      echo "export ROBOT_PASS='$NEW_ROBOT_PASS'" > "$ROBOT_ENV"
+      chmod 600 "$ROBOT_ENV"
+      source "$ROBOT_ENV"
+    else
+      log "Failed to create robot or extract secret"
+    fi
+  else
+    log "Loaded existing robot credentials"
+  fi
+else
+  log "No robot credentials found; creating robot"
+  NEW_ROBOT_PASS=$(
+    curl -sk -u admin:Harbor12345 \
+      -X POST https://harbor.local/api/v2.0/robots \
+      -H "Content-Type: application/json" \
+      -d '{
+        "name": "argocd",
+        "level": "system",
+        "duration": -1,
+        "permissions": [
+          {
+            "kind": "project",
+            "namespace": "helm",
+            "access": [
+              { "resource": "repository", "action": "pull" },
+              { "resource": "repository", "action": "read" },
+              { "resource": "artifact", "action": "read" }
+            ]
+          }
+        ]
+      }' | jq -r '.secret // empty'
+  )
+  if [[ -n "$NEW_ROBOT_PASS" ]]; then
+    echo "export ROBOT_PASS='$NEW_ROBOT_PASS'" > "$ROBOT_ENV"
+    chmod 600 "$ROBOT_ENV"
+    source "$ROBOT_ENV"
+  fi
 fi
 
-source "$ROBOT_ENV" || {
-  echo "ERROR: Robot credentials missing. Delete and recreate robot."
+if [[ -z "${ROBOT_PASS:-}" ]]; then
+  echo "ERROR: ROBOT_PASS is empty. Cannot register Argo CD repo."
   exit 1
-}
+fi
 
 # 5. Register Harbor repo in Argo CD (OCI)
 log "Registering Harbor Helm OCI repo in Argo CD..."
@@ -86,6 +126,18 @@ argocd repo add harbor.local \
   --username 'robot$argocd' \
   --password "$ROBOT_PASS" \
   || true
+
+# Also create/update the repository Secret in argocd namespace so ArgoCD (repo-server)
+# can pick it up even if `argocd` CLI is not available.
+if command -v kubectl >/dev/null 2>&1; then
+  source "$ROOT_DIR/.harbor-robot-pass.env" || true
+  kubectl create secret generic harbor-helm-repo -n argocd \
+    --from-literal=url=https://harbor.local \
+    --from-literal=username='robot$argocd' \
+    --from-literal=password="$ROBOT_PASS" \
+    --dry-run=client -o yaml | kubectl apply -f - >/dev/null
+  kubectl label secret harbor-helm-repo -n argocd argocd.argoproj.io/secret-type=repository --overwrite >/dev/null
+fi
 
 # 6. Local DNS convenience
 grep -q "grafana.local" /etc/hosts || \
