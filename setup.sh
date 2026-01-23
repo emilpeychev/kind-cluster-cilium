@@ -8,7 +8,7 @@ set -euo pipefail
 #   ./setup.sh all       # Run all steps
 #   ./setup.sh 1         # Run step 1 only
 #   ./setup.sh 1-5       # Run steps 1 through 5
-#   ./setup.sh 6 7 8     # Run steps 6, 7, and 8
+#   ./setup.sh 6 7 13     # Run steps 6, 7, and 13
 #
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -32,6 +32,7 @@ print_banner() {
   echo "║  4) Istio Ambient    10) Argo Workflows                        ║"
   echo "║  5) TLS + CoreDNS    11) Deploy Apps (HTTPBin)                 ║"
   echo "║  6) Harbor Registry  12) Observability (Kiali)                 ║"
+  echo "║  13) Observability (Prometheus + Grafana)                      ║"
   echo "╠════════════════════════════════════════════════════════════════╣"
   echo "║  all) Run all steps    delete) Delete cluster                  ║"
   echo "║  q) Quit                                                       ║"
@@ -56,6 +57,7 @@ run_step() {
     10) script="10-argo-workflows.sh" ;;
     11) script="11-deploy-apps.sh" ;;
     12) script="12-kiali-setup.sh" ;;
+    13) script="13-observability-stack.sh" ;;
     *)
       echo -e "${RED}Invalid step: $step${NC}" >&2
       return 1
@@ -75,7 +77,7 @@ run_step() {
 
 run_all() {
   echo -e "${YELLOW}Running all steps...${NC}"
-  for i in {1..12}; do
+  for i in {1..13}; do
     run_step "$i"
   done
   print_summary
@@ -109,6 +111,8 @@ print_summary() {
   echo "║  Webhooks:       https://webhooks.local                        ║"
   echo "║  Demo App:       https://demo-app1.local                       ║"
   echo "║  HTTPBin API:    https://httpbin.local                         ║"
+  echo "║  Prometheus:     https://prometheus.local                      ║"
+  echo "║  Grafana:        https://grafana.local                         ║"
   echo "╚════════════════════════════════════════════════════════════════╝"
   echo -e "${NC}"
   echo ""
@@ -131,7 +135,7 @@ if [[ $# -eq 0 ]]; then
     read -rp "Select option: " choice
     
     case "$choice" in
-      [1-9]|10|11|12)
+      [1-9]|10|11|12|13)
         run_step "$choice"
         ;;
       all|a)
