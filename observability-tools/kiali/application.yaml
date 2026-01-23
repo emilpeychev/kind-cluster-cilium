@@ -1,0 +1,38 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: kiali
+  namespace: argocd
+  labels:
+    app.kubernetes.io/part-of: observability
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: kiali-project
+
+  source:
+    repoURL: harbor.local
+    chart: helm/kiali-server
+    targetRevision: 2.20.0
+    helm:
+      valueFiles:
+        - values.yaml
+      values: |
+        auth:
+          strategy: anonymous
+        server:
+          web_root: /
+          web_fqdn: kiali.local
+          web_schema: https
+          web_port: 443
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: istio-system
+
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

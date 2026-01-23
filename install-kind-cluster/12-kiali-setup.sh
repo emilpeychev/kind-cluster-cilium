@@ -31,8 +31,16 @@ curl -sk -u admin:Harbor12345 \
 # Push Helm chart to Harbor OCI repo
 helm push kiali-server-2.20.0.tgz oci://harbor.local/helm || true
 
-# 3. # 3. Create Harbor robot account
+# 3. Create Harbor robot account (system-level, no project_id needed)
 log "Creating Harbor robot account for Argo CD..."
+
+# Delete existing robot if present (to get fresh credentials)
+EXISTING_ROBOT_ID=$(curl -sk -u admin:Harbor12345 \
+  "https://harbor.local/api/v2.0/robots?q=name%3Dargocd" | jq -r '.[0].id // empty')
+if [[ -n "$EXISTING_ROBOT_ID" ]]; then
+  log "Deleting existing robot (id: $EXISTING_ROBOT_ID)..."
+  curl -sk -u admin:Harbor12345 -X DELETE "https://harbor.local/api/v2.0/robots/$EXISTING_ROBOT_ID"
+fi
 
 ROBOT_PASS=$(
   curl -sk -u admin:Harbor12345 \
@@ -40,15 +48,15 @@ ROBOT_PASS=$(
     -H "Content-Type: application/json" \
     -d '{
       "name": "argocd",
-      "level": "project",
-      "project_id": 2,
+      "level": "system",
       "duration": -1,
       "permissions": [
         {
           "kind": "project",
           "namespace": "helm",
           "access": [
-            { "resource": "repository", "action": "pull" }
+            { "resource": "repository", "action": "pull" },
+            { "resource": "artifact", "action": "read" }
           ]
         }
       ]
@@ -77,9 +85,8 @@ argocd repo add harbor.local \
   --type helm \
   --name harbor-helm \
   --enable-oci \
-  --username 'robot$helm+argocd' \
-  --password "$ROBOT_PASS" \
-  --insecure-skip-server-verification
+  --username 'robot$argocd' \
+  --password "$ROBOT_PASS"
 
 # 5. Local DNS convenience
 grep -q "kiali.local" /etc/hosts || \
