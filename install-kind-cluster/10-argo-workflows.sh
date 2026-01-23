@@ -26,12 +26,19 @@ kubectl wait --for=condition=available --timeout=300s deployment/argo-server -n 
 
 # Disable TLS on argo-server (gateway handles TLS termination)
 log "Configuring argo-server for HTTP mode..."
-kubectl patch deployment argo-server -n argo --type='json' \
-  -p='[{"op":"add","path":"/spec/template/spec/containers/0/args/-","value":"--secure=false"}]'
+
+# Check if --secure=false is already set
+if ! kubectl get deployment argo-server -n argo -o jsonpath='{.spec.template.spec.containers[0].args}' | grep -q 'secure=false'; then
+  kubectl patch deployment argo-server -n argo --type='json' \
+    -p='[{"op":"add","path":"/spec/template/spec/containers/0/args/-","value":"--secure=false"}]'
+fi
 
 # Update readiness probe to use HTTP instead of HTTPS
-kubectl patch deployment argo-server -n argo --type='json' \
-  -p='[{"op":"replace","path":"/spec/template/spec/containers/0/readinessProbe/httpGet/scheme","value":"HTTP"}]'
+CURRENT_SCHEME=$(kubectl get deployment argo-server -n argo -o jsonpath='{.spec.template.spec.containers[0].readinessProbe.httpGet.scheme}' 2>/dev/null || echo "HTTPS")
+if [[ "$CURRENT_SCHEME" != "HTTP" ]]; then
+  kubectl patch deployment argo-server -n argo --type='json' \
+    -p='[{"op":"replace","path":"/spec/template/spec/containers/0/readinessProbe/httpGet/scheme","value":"HTTP"}]'
+fi
 
 log "Waiting for Argo Server to restart..."
 kubectl rollout status deployment/argo-server -n argo --timeout=120s

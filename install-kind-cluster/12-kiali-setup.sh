@@ -31,51 +31,58 @@ curl -sk -u admin:Harbor12345 \
 # Push Helm chart to Harbor OCI repo
 helm push kiali-server-2.20.0.tgz oci://harbor.local/helm || true
 
-# 3. Create Harbor robot account (system-level, no project_id needed)
-log "Creating Harbor robot account for Argo CD..."
+# 3. Create / load Harbor robot account (system-level)
+log "Ensuring Harbor robot account for Argo CD..."
 
-# Delete existing robot if present (to get fresh credentials)
-EXISTING_ROBOT_ID=$(curl -sk -u admin:Harbor12345 \
-  "https://harbor.local/api/v2.0/robots?q=name%3Dargocd" | jq -r '.[0].id // empty')
-if [[ -n "$EXISTING_ROBOT_ID" ]]; then
-  log "Deleting existing robot (id: $EXISTING_ROBOT_ID)..."
-  curl -sk -u admin:Harbor12345 -X DELETE "https://harbor.local/api/v2.0/robots/$EXISTING_ROBOT_ID"
+ROBOT_ENV="$ROOT_DIR/.harbor-robot-pass.env"
+
+# Try to load and validate existing credentials
+if [[ -f "$ROBOT_ENV" ]]; then
+  source "$ROBOT_ENV"
+  HTTP_CODE=$(curl -sk -u 'robot$argocd:'"$ROBOT_PASS" -o /dev/null -w "%{http_code}" https://harbor.local/api/v2.0/projects/helm 2>/dev/null || echo "000")
+  if [[ "$HTTP_CODE" == "200" ]]; then
+    log "Loaded existing robot credentials (valid)"
+  else
+    log "Existing credentials invalid, recreating robot..."
+    # Delete existing robot
+    EXISTING_ROBOT_ID=$(curl -sk -u admin:Harbor12345 \
+      "https://harbor.local/api/v2.0/robots?q=name%3Dargocd" | jq -r '.[0].id // empty')
+    [[ -n "$EXISTING_ROBOT_ID" ]] && curl -sk -u admin:Harbor12345 -X DELETE "https://harbor.local/api/v2.0/robots/$EXISTING_ROBOT_ID"
+    unset ROBOT_PASS
+  fi
 fi
 
-ROBOT_PASS=$(
-  curl -sk -u admin:Harbor12345 \
-    -X POST "https://harbor.local/api/v2.0/robots" \
-    -H "Content-Type: application/json" \
-    -d '{
-      "name": "argocd",
-      "level": "system",
-      "duration": -1,
-      "permissions": [
-        {
-          "kind": "project",
-          "namespace": "helm",
-          "access": [
-            { "resource": "repository", "action": "pull" },
-            { "resource": "repository", "action": "read" },
-            { "resource": "artifact", "action": "read" }
-          ]
-        }
-      ]
-    }' | jq -r '.secret // empty'
-)
-
-if [[ -n "$ROBOT_PASS" ]]; then
-  log "New robot created, saving credentials"
-  echo "export ROBOT_PASS='$ROBOT_PASS'" > "$ROOT_DIR/.harbor-robot-pass.env"
-  chmod 600 "$ROOT_DIR/.harbor-robot-pass.env"
-else
-  log "Robot already exists, loading existing credentials"
-  source "$ROOT_DIR/.harbor-robot-pass.env"
-fi
-
+# Create robot if needed
 if [[ -z "${ROBOT_PASS:-}" ]]; then
-  echo "ERROR: ROBOT_PASS is empty. Cannot register Argo CD repo."
-  exit 1
+  ROBOT_PASS=$(
+    curl -sk -u admin:Harbor12345 \
+      -X POST "https://harbor.local/api/v2.0/robots" \
+      -H "Content-Type: application/json" \
+      -d '{
+        "name": "argocd",
+        "level": "system",
+        "duration": -1,
+        "permissions": [
+          {
+            "kind": "project",
+            "namespace": "helm",
+            "access": [
+              { "resource": "repository", "action": "pull" },
+              { "resource": "repository", "action": "read" },
+              { "resource": "artifact", "action": "read" }
+            ]
+          }
+        ]
+      }' | jq -r '.secret // empty'
+  )
+  if [[ -n "$ROBOT_PASS" ]]; then
+    log "New robot created, saving credentials"
+    echo "export ROBOT_PASS='$ROBOT_PASS'" > "$ROBOT_ENV"
+    chmod 600 "$ROBOT_ENV"
+  else
+    echo "ERROR: Failed to create robot. Cannot register Argo CD repo."
+    exit 1
+  fi
 fi
 
 
@@ -87,23 +94,30 @@ argocd repo add harbor.local \
   --name harbor-helm \
   --enable-oci \
   --username 'robot$argocd' \
-  --password "$ROBOT_PASS"
+  --password "$ROBOT_PASS" \
+  --upsert
 
 # 5. Local DNS convenience
 grep -q "kiali.local" /etc/hosts || \
   echo "$METALLB_IP kiali.local" | sudo tee -a /etc/hosts >/dev/null
 
-# 6. Hand off to GitOps
-log "Kiali will be deployed by Argo CD"
-log "Check status with: kubectl get applications -n argocd"
-log "URL (once synced): https://kiali.local"
+# 6. Apply Kiali Argo CD manifests (project, application, httproute)
+log "Applying Kiali Argo CD application..."
 
+# Create kiali namespace if it doesn't exist
+kubectl create namespace kiali 2>/dev/null || true
 
-# DNS entry for Kiali (MetalLB)
-grep -q "kiali.local" /etc/hosts || echo "$METALLB_IP kiali.local" | sudo tee -a /etc/hosts
+# Apply kiali manifests
+kubectl apply -f "$ROOT_DIR/observability-tools/kiali/project.yaml"
+kubectl apply -f "$ROOT_DIR/observability-tools/kiali/application.yaml"
+kubectl apply -f "$ROOT_DIR/observability-tools/kiali/httproute.yaml"
 
-# Verify deployments
-log "Verifying deployments..."
-kubectl get deployments -n kiali
-log "Kiali:       https://kiali.local"
+log "Waiting for Argo CD application to sync..."
+sleep 5
+
+# Show application status
+kubectl get applications -n argocd kiali 2>/dev/null || true
+
+log "Kiali deployed via Argo CD"
+log "URL: https://kiali.local"
 log "Step 12 complete."

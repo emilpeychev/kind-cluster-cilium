@@ -15,6 +15,8 @@ spec:
   destinations:
     - namespace: istio-system
       server: https://kubernetes.default.svc
+    - namespace: kiali
+      server: https://kubernetes.default.svc
     - namespace: monitoring
       server: https://kubernetes.default.svc
 

@@ -25,11 +25,23 @@ kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/v3
 # Wait for ArgoCD to be ready
 kubectl wait --for=condition=available --timeout=300s deployment/argocd-server -n argocd
 
+# Add Harbor CA to ArgoCD TLS certs so repo-server trusts Harbor OCI registry
+if [[ -f "$ROOT_DIR/tls/ca.crt" ]]; then
+  log "Adding Harbor CA to ArgoCD TLS config..."
+  kubectl create configmap argocd-tls-certs-cm \
+    --from-file=harbor.local="$ROOT_DIR/tls/ca.crt" \
+    -n argocd --dry-run=client -o yaml | kubectl apply -f -
+fi
+
 # Apply custom configurations via Kustomize
 kubectl apply -k ArgoCD/
 sleep 1
 kubectl rollout restart deployment/argocd-server -n argocd
 kubectl rollout status deployment/argocd-server -n argocd
+
+# Restart repo-server to pick up TLS certs
+kubectl rollout restart deployment/argocd-repo-server -n argocd
+kubectl rollout status deployment/argocd-repo-server -n argocd --timeout=120s
 
 sleep 5
 # Login and add repository
@@ -52,10 +64,11 @@ argocd login "$SERVER" \
 HOST=github.com
 ssh-keygen -F "$HOST" >/dev/null 2>&1 || ssh-keyscan -H "$HOST" >> ~/.ssh/known_hosts
 
-# Add Git repository
+# Add Git repository (upsert for idempotency)
 argocd repo add "$REPO" \
   --ssh-private-key-path "$SSH_KEY" \
-  --grpc-web
+  --grpc-web \
+  --upsert
 
 TIMESTAMP=$(date +%Y%m%d-%H%M%S)
 

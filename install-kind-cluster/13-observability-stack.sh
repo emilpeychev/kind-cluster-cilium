@@ -125,6 +125,7 @@ argocd repo add harbor.local \
   --enable-oci \
   --username 'robot$argocd' \
   --password "$ROBOT_PASS" \
+  --upsert \
   || true
 
 # Also create/update the repository Secret in argocd namespace so ArgoCD (repo-server)
@@ -142,7 +143,39 @@ fi
 # 6. Local DNS convenience
 grep -q "grafana.local" /etc/hosts || \
   echo "$METALLB_IP grafana.local" | sudo tee -a /etc/hosts >/dev/null
+grep -q "kiali.local" /etc/hosts || \
+  echo "$METALLB_IP kiali.local" | sudo tee -a /etc/hosts >/dev/null
+grep -q "prometheus.local" /etc/hosts || \
+  echo "$METALLB_IP prometheus.local" | sudo tee -a /etc/hosts >/dev/null
 
-log "Prometheus stack artifact ready"
-log "Next step: create Argo CD Application for kube-prometheus-stack"
+# 7. Apply all observability Argo CD manifests (projects, applications, httproutes)
+log "Applying Argo CD observability applications..."
+
+# Create namespaces if they don't exist
+kubectl create namespace kiali 2>/dev/null || true
+kubectl create namespace monitoring 2>/dev/null || true
+
+# Apply kiali manifests (project, application, httproute)
+kubectl apply -f "$ROOT_DIR/observability-tools/kiali/project.yaml"
+kubectl apply -f "$ROOT_DIR/observability-tools/kiali/application.yaml"
+kubectl apply -f "$ROOT_DIR/observability-tools/kiali/httproute.yaml"
+
+# Apply prometheus/grafana manifests (project, applications, httproutes)
+kubectl apply -f "$ROOT_DIR/observability-tools/prometheus/project.yaml"
+kubectl apply -f "$ROOT_DIR/observability-tools/prometheus/application.yaml"
+kubectl apply -f "$ROOT_DIR/observability-tools/prometheus/grafana-application.yaml"
+kubectl apply -f "$ROOT_DIR/observability-tools/prometheus/grafana-httproute.yaml"
+
+log "Waiting for Argo CD applications to sync..."
+sleep 5
+
+# Show application status
+kubectl get applications -n argocd -l app.kubernetes.io/part-of=observability 2>/dev/null || \
+  kubectl get applications -n argocd
+
+log "Observability stack deployed via Argo CD"
+log "URLs (once synced):"
+log "  Kiali:      https://kiali.local"
+log "  Prometheus: https://prometheus.local"
+log "  Grafana:    https://grafana.local"
 log "Step 13 complete."
