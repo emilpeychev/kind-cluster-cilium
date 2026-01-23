@@ -1,16 +1,13 @@
 apiVersion: argoproj.io/v1alpha1
 kind: AppProject
 metadata:
-  name: kiali-project
+  name: observability-project
   namespace: argocd
-  annotations:
-    argocd.argoproj.io/sync-wave: "3"
   finalizers:
     - resources-finalizer.argocd.argoproj.io
 spec:
   description: Observability stack (Kiali, Prometheus, Grafana)
 
-  # OCI Helm repo - both formats for compatibility
   sourceRepos:
     - harbor.local
     - harbor.local/helm
@@ -18,15 +15,19 @@ spec:
   destinations:
     - namespace: istio-system
       server: https://kubernetes.default.svc
+    - namespace: monitoring
+      server: https://kubernetes.default.svc
 
   clusterResourceWhitelist:
-    - group: rbac.authorization.k8s.io
-      kind: ClusterRole
-    - group: rbac.authorization.k8s.io
-      kind: ClusterRoleBinding
+    - group: '*'
+      kind: '*'
+
+  namespaceResourceWhitelist:
+    - group: '*'
+      kind: '*'
 
   roles:
-    - name: kiali-admin
+    - name: observability-admin
       description: Full access for observability admins
       policies:
-        - p, proj:kiali-project:kiali-admin, applications, *, kiali-project/*, allow
+        - p, proj:observability-project:observability-admin, applications, *, observability-project/*, allow
