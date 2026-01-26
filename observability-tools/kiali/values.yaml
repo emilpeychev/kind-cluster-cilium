@@ -2,7 +2,11 @@ auth:
   strategy: anonymous
 
 server:
-  web_root: /
+  web_root: /kiali
   web_fqdn: kiali.local
   web_schema: https   # external scheme (browser)
   web_port: 20001     # INTERNAL port (must stay 20001)
+
+external_services:
+  prometheus:
+    url: http://prometheus-server.monitoring:80
