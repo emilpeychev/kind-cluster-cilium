@@ -27,9 +27,13 @@ kubectl apply -k ArgoCD-demo-apps/api/
 log "Waiting for httpbin to be ready..."
 kubectl wait --for=condition=available --timeout=120s deployment/httpbin -n httpbin
 
-# Sync ArgoCD ApplicationSet to pick up new apps
-log "Updating ArgoCD ApplicationSet..."
-kubectl apply -f ArgoCD-demo-apps/applicationsets/application-sets.yaml
+# Apply ArgoCD Projects
+log "Applying ArgoCD Projects..."
+kubectl apply -f ArgoCD-demo-apps/projects/
+
+# Sync ArgoCD ApplicationSets to pick up new apps
+log "Applying ArgoCD ApplicationSets..."
+kubectl apply -f ArgoCD-demo-apps/applicationsets/
 
 # Verify deployments
 log "Verifying deployments..."
