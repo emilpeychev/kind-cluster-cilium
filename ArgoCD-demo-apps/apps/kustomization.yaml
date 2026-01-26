@@ -7,4 +7,4 @@ resources:
 
 images:
 - name: harbor.local/library/demo-app
-  newTag: 26012026-081724
+  newTag: 26012026-083435
