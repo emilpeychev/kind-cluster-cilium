@@ -25,6 +25,12 @@ grafana:
 
   adminUser: admin
   adminPassword: admin
+  
+  # Customize Grafana settings
+  grafana.ini:
+    security:
+      disable_initial_admin_password_change: true
+  # disable the change password prompt on first login
 
   defaultDashboardsEnabled: true
 
