@@ -22,10 +22,13 @@ spec:
         runAsUser: 0
       env:
         - name: HOME
-          value: /kaniko
+          value: /workspace
+        - name: DOCKER_CONFIG
+          value: /kaniko/.docker
       volumeMounts:
         - name: docker-config
           mountPath: /kaniko/.docker
+          readOnly: true
       args:
         - "--context=$(workspaces.source.path)/$(params.CONTEXT_PATH)"
         - "--dockerfile=$(params.DOCKERFILE_PATH)"
