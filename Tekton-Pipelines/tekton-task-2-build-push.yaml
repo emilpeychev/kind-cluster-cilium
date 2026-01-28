@@ -51,12 +51,14 @@ spec:
       env:
         - name: HOME
           value: /kaniko
+        - name: DOCKER_CONFIG
+          value: /kaniko/.docker
       volumeMounts:
         - name: docker-config-writable
           mountPath: /kaniko/.docker
       args:
         - "--context=$(workspaces.source.path)/$(params.CONTEXT_PATH)"
-        - "--dockerfile=$(workspaces.source.path)/$(params.CONTEXT_PATH)/$(params.DOCKERFILE_PATH)"
+        - "--dockerfile=$(params.DOCKERFILE_PATH)"
         - "--destination=$(params.IMAGE_URL)"
         - "--insecure"
         - "--skip-tls-verify"
