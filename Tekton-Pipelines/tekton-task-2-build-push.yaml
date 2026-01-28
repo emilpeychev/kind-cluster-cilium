@@ -11,7 +11,7 @@ spec:
       type: string
     - name: DOCKERFILE_PATH
       type: string
-      default: demo-app/Dockerfile
+      default: Dockerfile
     - name: CONTEXT_PATH
       type: string
       default: demo-app
