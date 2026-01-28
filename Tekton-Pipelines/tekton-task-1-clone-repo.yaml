@@ -22,7 +22,7 @@ spec:
       image: alpine/git
       env:
         - name: HOME
-          value: /home/git
+          value: /workspace
       securityContext:
         runAsNonRoot: true
         runAsUser: 65532
@@ -34,9 +34,22 @@ spec:
           type: RuntimeDefault
       script: |
         #!/bin/sh
+        set -e
         mkdir -p ~/.ssh
         cp $(workspaces.ssh-directory.path)/* ~/.ssh/ 2>/dev/null || true
         chmod 700 ~/.ssh && chmod 600 ~/.ssh/* 2>/dev/null || true
         ssh-keyscan github.com >> ~/.ssh/known_hosts 2>/dev/null
-        git clone --branch $(params.GIT_BRANCH) $(params.GIT_URL) $(workspaces.output.path)
+        
+        # Convert HTTPS URL to SSH URL
+        GIT_URL="$(params.GIT_URL)"
+        if echo "$GIT_URL" | grep -q "https://github.com"; then
+          GIT_URL=$(echo "$GIT_URL" | sed 's|https://github.com/|git@github.com:|')
+        fi
+        
+        echo "Cloning: $GIT_URL"
+        git clone --branch $(params.GIT_BRANCH) "$GIT_URL" $(workspaces.output.path)
+        
+        echo "=== Clone complete ==="
+        ls -la $(workspaces.output.path)
+        
         date -u +"%Y%m%d-%H%M%S" | tr -d '\n' > $(results.timestamp.path)
