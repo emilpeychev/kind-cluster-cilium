@@ -16,6 +16,15 @@ spec:
       type: string
       default: demo-app
   steps:
+    - name: setup-creds
+      image: busybox
+      script: |
+        cp /docker-secret/config.json /kaniko/.docker/config.json
+      volumeMounts:
+        - name: docker-secret
+          mountPath: /docker-secret
+        - name: docker-config
+          mountPath: /kaniko/.docker
     - name: kaniko-build
       image: gcr.io/kaniko-project/executor:v1.12.0
       securityContext:
@@ -24,14 +33,13 @@ spec:
         - name: HOME
           value: /workspace
         - name: DOCKER_CONFIG
-          value: /docker-config
+          value: /kaniko/.docker
       volumeMounts:
         - name: docker-config
-          mountPath: /docker-config
-          readOnly: true
+          mountPath: /kaniko/.docker
       args:
         - "--context=$(workspaces.source.path)/$(params.CONTEXT_PATH)"
-        - "--dockerfile=$(params.DOCKERFILE_PATH)"
+        - "--dockerfile=$(workspaces.source.path)/$(params.CONTEXT_PATH)/$(params.DOCKERFILE_PATH)"
         - "--destination=$(params.IMAGE_URL)"
         - "--insecure"
         - "--skip-tls-verify"
@@ -42,6 +50,8 @@ spec:
           memory: "2Gi"
   volumes:
     - name: docker-config
+      emptyDir: {}
+    - name: docker-secret
       secret:
         secretName: harbor-registry
         items:
