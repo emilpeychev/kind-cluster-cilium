@@ -6,10 +6,10 @@ metadata:
 spec:
   pipelineRef:
     name: clone-build-push
-  serviceAccountName: pipeline
+  serviceAccountName: tekton-build-sa
   podTemplate:
     securityContext:
-      fsGroup: 65532
+      fsGroup: 0
   workspaces:
   - name: shared-data
     volumeClaimTemplate:

@@ -23,16 +23,20 @@ spec:
       env:
         - name: HOME
           value: /root
+        - name: GIT_SSH_COMMAND
+          value: "ssh -i /root/.ssh/id_rsa -o StrictHostKeyChecking=no"
       securityContext:
         runAsUser: 0
       script: |
         #!/bin/sh
         set -e
         mkdir -p ~/.ssh
-        cp $(workspaces.ssh-directory.path)/* ~/.ssh/ 2>/dev/null || true
+        # Copy and rename SSH key
+        cp $(workspaces.ssh-directory.path)/ssh-privatekey ~/.ssh/id_rsa 2>/dev/null || true
+        cp $(workspaces.ssh-directory.path)/known_hosts ~/.ssh/known_hosts 2>/dev/null || true
         chmod 700 ~/.ssh && chmod 600 ~/.ssh/* 2>/dev/null || true
-        ssh-keyscan github.com >> ~/.ssh/known_hosts 2>/dev/null
         
+        ls -la ~/.ssh/
         # Convert HTTPS URL to SSH URL
         GIT_URL="$(params.GIT_URL)"
         if echo "$GIT_URL" | grep -q "https://github.com"; then
