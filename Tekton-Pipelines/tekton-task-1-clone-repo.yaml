@@ -22,16 +22,9 @@ spec:
       image: alpine/git
       env:
         - name: HOME
-          value: /workspace
+          value: /root
       securityContext:
-        runAsNonRoot: true
-        runAsUser: 65532
-        allowPrivilegeEscalation: false
-        capabilities:
-          drop:
-            - ALL
-        seccompProfile:
-          type: RuntimeDefault
+        runAsUser: 0
       script: |
         #!/bin/sh
         set -e
