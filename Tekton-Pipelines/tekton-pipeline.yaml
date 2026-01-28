@@ -38,6 +38,8 @@ spec:
       workspaces:
         - name: output
           workspace: shared-data
+        - name: ssh-directory
+          workspace: ssh-creds
       params:
         - name: GIT_URL
           value: $(params.GIT_URL)
