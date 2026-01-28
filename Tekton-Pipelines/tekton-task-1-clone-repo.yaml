@@ -18,10 +18,17 @@ spec:
   steps:
     - name: git-clone
       image: alpine/git
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65532
+        allowPrivilegeEscalation: false
+        capabilities:
+          drop:
+            - ALL
+        seccompProfile:
+          type: RuntimeDefault
       script: |
         #!/bin/sh
-        set -e
         git clone --branch $(params.GIT_BRANCH) $(params.GIT_URL) $(workspaces.output.path)
-        ls -la $(workspaces.output.path)/
-        # Generate timestamp for image tag (YYYYMMDD-HHMMSS)
+        # Generate timestamp for image tag
         date -u +"%Y%m%d-%H%M%S" | tr -d '\n' > $(results.timestamp.path)

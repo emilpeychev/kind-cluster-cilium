@@ -17,16 +17,15 @@ spec:
       default: demo-app
   steps:
     - name: kaniko-build
-      image: gcr.io/kaniko-project/executor:v1.23.2
+      image: gcr.io/kaniko-project/executor:v1.12.0
       securityContext:
         runAsUser: 0
       env:
-        - name: DOCKER_CONFIG
-          value: /kaniko/.docker
+        - name: HOME
+          value: /kaniko
       volumeMounts:
         - name: docker-config
-          mountPath: /kaniko/.docker/config.json
-          subPath: config.json
+          mountPath: /kaniko/.docker
       args:
         - "--context=$(workspaces.source.path)/$(params.CONTEXT_PATH)"
         - "--dockerfile=$(workspaces.source.path)/$(params.DOCKERFILE_PATH)"
