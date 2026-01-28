@@ -24,10 +24,10 @@ spec:
         - name: HOME
           value: /workspace
         - name: DOCKER_CONFIG
-          value: /kaniko/.docker
+          value: /docker-config
       volumeMounts:
         - name: docker-config
-          mountPath: /kaniko/.docker
+          mountPath: /docker-config
           readOnly: true
       args:
         - "--context=$(workspaces.source.path)/$(params.CONTEXT_PATH)"
