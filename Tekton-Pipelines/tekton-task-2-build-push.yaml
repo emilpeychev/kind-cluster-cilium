@@ -20,6 +20,9 @@ spec:
       image: busybox
       script: |
         cp /docker-secret/config.json /kaniko/.docker/config.json
+        echo "=== Checking workspace ==="
+        ls -la $(workspaces.source.path)/
+        ls -la $(workspaces.source.path)/$(params.CONTEXT_PATH)/ || echo "Context path not found"
       volumeMounts:
         - name: docker-secret
           mountPath: /docker-secret
@@ -39,7 +42,7 @@ spec:
           mountPath: /kaniko/.docker
       args:
         - "--context=$(workspaces.source.path)/$(params.CONTEXT_PATH)"
-        - "--dockerfile=$(workspaces.source.path)/$(params.CONTEXT_PATH)/$(params.DOCKERFILE_PATH)"
+        - "--dockerfile=Dockerfile"
         - "--destination=$(params.IMAGE_URL)"
         - "--insecure"
         - "--skip-tls-verify"
