@@ -22,7 +22,7 @@ spec:
         - name: harbor-regcred
       containers:
         - name: app
-          image: harbor.local/library/demo-app:20260128-151852
+          image: harbor.local/library/demo-app:20260128-143231
           imagePullPolicy: Always
           ports:
             - containerPort: 80

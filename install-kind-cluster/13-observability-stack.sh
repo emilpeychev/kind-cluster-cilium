@@ -28,6 +28,9 @@ curl -sk -u admin:Harbor12345 \
   -H "Content-Type: application/json" \
   -d '{"project_name":"helm","public":false}' || true
 
+# Login to Harbor for helm push
+echo "Harbor12345" | helm registry login harbor.local -u admin --password-stdin
+
 # 3. Push Helm chart to Harbor OCI repo
 helm push prometheus-28.6.0.tgz oci://harbor.local/helm || true
 

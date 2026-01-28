@@ -27,6 +27,9 @@ curl -sk -u admin:Harbor12345 \
   -H "Content-Type: application/json" \
   -d '{"project_name":"helm","public":false}' || true
 
+# Login to Harbor for helm push
+echo "Harbor12345" | helm registry login harbor.local -u admin --password-stdin
+
 # Push Helm chart to Harbor OCI repo
 helm push kiali-server-2.20.0.tgz oci://harbor.local/helm || true
 
