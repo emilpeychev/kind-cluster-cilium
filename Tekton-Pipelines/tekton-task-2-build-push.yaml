@@ -16,34 +16,6 @@ spec:
       type: string
       default: demo-app
   steps:
-    # Debug step - uncomment to see what Kaniko will see
-    - name: debug
-      image: busybox
-      script: |
-        echo "=== Workspace contents ==="
-        ls -la $(workspaces.source.path)
-        echo "=== Context path contents ==="
-        ls -la $(workspaces.source.path)/$(params.CONTEXT_PATH)
-        echo "=== Docker config ==="
-        cat /kaniko/.docker/config.json || echo "No config.json yet"
-      volumeMounts:
-        - name: docker-config-writable
-          mountPath: /kaniko/.docker
-
-    # Copy secret to writable volume (secrets are read-only in K8s)
-    - name: copy-docker-config
-      image: busybox
-      script: |
-        cp /docker-config-secret/config.json /kaniko/.docker/config.json
-        chmod 600 /kaniko/.docker/config.json
-        echo "Docker config copied successfully"
-      volumeMounts:
-        - name: docker-config-secret
-          mountPath: /docker-config-secret
-          readOnly: true
-        - name: docker-config-writable
-          mountPath: /kaniko/.docker
-
     - name: kaniko-build
       image: gcr.io/kaniko-project/executor:v1.12.0
       securityContext:
@@ -51,14 +23,12 @@ spec:
       env:
         - name: HOME
           value: /kaniko
-        - name: DOCKER_CONFIG
-          value: /kaniko/.docker
       volumeMounts:
-        - name: docker-config-writable
+        - name: docker-config
           mountPath: /kaniko/.docker
       args:
         - "--context=$(workspaces.source.path)/$(params.CONTEXT_PATH)"
-        - "--dockerfile=$(params.DOCKERFILE_PATH)"
+        - "--dockerfile=$(workspaces.source.path)/$(params.DOCKERFILE_PATH)"
         - "--destination=$(params.IMAGE_URL)"
         - "--insecure"
         - "--skip-tls-verify"
@@ -68,13 +38,9 @@ spec:
           cpu: "1"
           memory: "2Gi"
   volumes:
-    # Read-only secret volume
-    - name: docker-config-secret
+    - name: docker-config
       secret:
         secretName: harbor-registry
         items:
           - key: .dockerconfigjson
             path: config.json
-    # Writable emptyDir for Kaniko to use
-    - name: docker-config-writable
-      emptyDir: {}
