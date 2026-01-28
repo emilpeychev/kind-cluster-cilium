@@ -28,7 +28,7 @@ spec:
           mountPath: /kaniko/.docker
       args:
         - "--context=$(workspaces.source.path)/$(params.CONTEXT_PATH)"
-        - "--dockerfile=$(workspaces.source.path)/$(params.DOCKERFILE_PATH)"
+        - "--dockerfile=$(params.DOCKERFILE_PATH)"
         - "--destination=$(params.IMAGE_URL)"
         - "--insecure"
         - "--skip-tls-verify"
