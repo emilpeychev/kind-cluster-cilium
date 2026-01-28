@@ -15,8 +15,6 @@ spec:
     chart: helm/kiali-server
     targetRevision: 2.20.0
     helm:
-      valueFiles:
-        - values.yaml
       values: |
         auth:
           strategy: anonymous

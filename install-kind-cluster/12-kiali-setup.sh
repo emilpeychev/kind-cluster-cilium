@@ -19,7 +19,6 @@ helm repo add kiali https://kiali.org/helm-charts >/dev/null
 helm repo update >/dev/null
 helm pull kiali/kiali-server --version 2.20.0
 
-
 # 2. Ensure Harbor project exists
 log "Ensuring Harbor project 'helm' exists..."
 
@@ -30,6 +29,9 @@ curl -sk -u admin:Harbor12345 \
 
 # Push Helm chart to Harbor OCI repo
 helm push kiali-server-2.20.0.tgz oci://harbor.local/helm || true
+
+# Clean up downloaded chart
+rm -f kiali-server-2.20.0.tgz
 
 # 3. Create / load Harbor robot account (system-level)
 log "Ensuring Harbor robot account for Argo CD..."
@@ -68,6 +70,7 @@ if [[ -z "${ROBOT_PASS:-}" ]]; then
             "namespace": "helm",
             "access": [
               { "resource": "repository", "action": "pull" },
+              { "resource": "repository", "action": "push" },
               { "resource": "repository", "action": "read" },
               { "resource": "artifact", "action": "read" }
             ]

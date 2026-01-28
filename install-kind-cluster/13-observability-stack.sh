@@ -31,12 +31,18 @@ curl -sk -u admin:Harbor12345 \
 # 3. Push Helm chart to Harbor OCI repo
 helm push prometheus-28.6.0.tgz oci://harbor.local/helm || true
 
+# Clean up downloaded chart
+rm -f prometheus-28.6.0.tgz
+
 # 3b. Package & push Grafana Helm chart
 log "Packaging and pushing Grafana Helm chart to Harbor..."
 helm repo add grafana https://grafana.github.io/helm-charts >/dev/null
 helm repo update >/dev/null
 helm pull grafana/grafana --version 10.5.12 || true
 helm push grafana-10.5.12.tgz oci://harbor.local/helm || true
+
+# Clean up downloaded chart
+rm -f grafana-10.5.12.tgz
 
 # 4. Create / load Harbor robot account (system-level, no project_id needed)
 log "Ensuring Harbor robot account for Argo CD..."
@@ -64,6 +70,7 @@ if [[ -f "$ROBOT_ENV" ]]; then
               "namespace": "helm",
               "access": [
                 { "resource": "repository", "action": "pull" },
+                { "resource": "repository", "action": "push" },
                 { "resource": "repository", "action": "read" },
                 { "resource": "artifact", "action": "read" }
               ]
@@ -97,6 +104,7 @@ else
             "namespace": "helm",
             "access": [
               { "resource": "repository", "action": "pull" },
+              { "resource": "repository", "action": "push" },
               { "resource": "repository", "action": "read" },
               { "resource": "artifact", "action": "read" }
             ]

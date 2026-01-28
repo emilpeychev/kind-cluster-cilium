@@ -20,8 +20,8 @@ spec:
       project: kiali-project
 
       source:
-        repoURL: harbor.local/helm
-        chart: '{{chart}}'
+        repoURL: harbor.local
+        chart: 'helm/{{chart}}'
         targetRevision: '{{version}}'
         helm:
           values: |
@@ -32,6 +32,11 @@ spec:
               web_fqdn: kiali.local
               web_schema: https
               web_port: 443
+            external_services:
+              prometheus:
+                url: http://prometheus-server.monitoring:80
+              istio:
+                root_namespace: istio-system
       destination:
         server: https://kubernetes.default.svc
         namespace: '{{namespace}}'
