@@ -7,11 +7,11 @@ metadata:
     - resources-finalizer.argocd.argoproj.io
 spec:
   description: Prometheus monitoring stack
-
+# Define the source repositories that applications in this project can use
   sourceRepos:
     - harbor.local
     - harbor.local/helm
-
+# Define the cluster and namespaces where applications in this project can be deployed
   destinations:
     - namespace: monitoring
       server: https://kubernetes.default.svc
