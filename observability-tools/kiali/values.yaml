@@ -10,3 +10,8 @@ server:
 external_services:
   prometheus:
     url: http://prometheus-server.monitoring:80
+
+
+  grafana:
+    enabled: true
+    url: http://grafana.monitoring:3000
