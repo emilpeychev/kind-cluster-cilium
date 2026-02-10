@@ -5,6 +5,10 @@ metadata:
   namespace: argocd
   finalizers:
     - resources-finalizer.argocd.argoproj.io
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"
+    labels:
+      app.kubernetes.io/part-of: observability
 spec:
   description: Prometheus monitoring stack
 # Define the source repositories that applications in this project can use

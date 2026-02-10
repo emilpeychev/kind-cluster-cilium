@@ -26,8 +26,8 @@ print_banner() {
   echo "╔════════════════════════════════════════════════════════════════╗"
   echo "║       Kind Cluster Setup - Cilium + Istio + GitOps             ║"
   echo "╠════════════════════════════════════════════════════════════════╣"
-  echo "║  1) Kind Cluster      7) Tekton Pipelines                      ║"
-  echo "║  2) MetalLB           8) ArgoCD                                ║"
+  echo "║  1) Kind Cluster      7) ArgoCD                                ║"
+  echo "║  2) MetalLB           8) Tekton Pipelines                      ║"
   echo "║  3) Cilium CNI        9) Argo Events + Smee                    ║"
   echo "║  4) Istio Ambient    10) Argo Workflows                        ║"
   echo "║  5) TLS + CoreDNS    11) Deploy Apps (HTTPBin)                 ║"
@@ -51,8 +51,8 @@ run_step() {
     4)  script="04-istio.sh" ;;
     5)  script="05-tls-certs.sh" ;;
     6)  script="06-harbor.sh" ;;
-    7)  script="07-tekton.sh" ;;
-    8)  script="08-argocd.sh" ;;
+    7)  script="07-argocd.sh" ;;
+    8)  script="08-tekton.sh" ;;
     9)  script="09-argo-events.sh" ;;
     10) script="10-argo-workflows.sh" ;;
     11) script="11-deploy-apps.sh" ;;
