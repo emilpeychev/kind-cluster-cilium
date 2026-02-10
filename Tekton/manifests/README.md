@@ -7,6 +7,7 @@ This directory contains the Tekton installation manifests that are deployed via 
 ### tekton-pipelines.yaml
 - **Source**: https://storage.googleapis.com/tekton-releases/pipeline/latest/release.yaml
 - **Description**: Core Tekton Pipelines CRDs, controllers, and webhooks
+- **Modifications**: `set-security-context: "true"` in feature-flags ConfigMap (allows TaskRuns in restricted namespaces)
 - **Components**:
   - Custom Resource Definitions (CRDs) for Pipelines, Tasks, Runs
   - tekton-pipelines-controller deployment
@@ -40,6 +41,10 @@ To update to a newer version of Tekton:
 # Update Tekton Pipelines
 curl -sL https://storage.googleapis.com/tekton-releases/pipeline/latest/release.yaml \
   -o Tekton/manifests/tekton-pipelines.yaml
+
+# Enable security context support (required for baseline PSA)
+sed -i 's/set-security-context: "false"/set-security-context: "true"/' \
+  Tekton/manifests/tekton-pipelines.yaml
 
 # Update Tekton Dashboard
 curl -sL https://storage.googleapis.com/tekton-releases/dashboard/latest/release.yaml \

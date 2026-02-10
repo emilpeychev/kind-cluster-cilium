@@ -13,6 +13,7 @@ spec:
   sourceRepos:
     - harbor.local
     - harbor.local/helm
+    - https://github.com/tektoncd/pipeline.git
 
   destinations:
     - namespace: tekton-pipelines
