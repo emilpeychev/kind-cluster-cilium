@@ -28,87 +28,13 @@ cd "$ROOT_DIR"
 # Add /etc/hosts entry
 grep -q "tekton.local" /etc/hosts || echo "$METALLB_IP tekton.local" | sudo tee -a /etc/hosts
 
-# 1. Package tekton pipelines and push to harbor
-log "Packaging Tekton Pipelines Helm chart..."
+# Deploy Tekton via ArgoCD using Git manifests
+# Tekton v1.6.0 with proper ghcr.io images (not ko:// placeholders)
 
-# Tekton now deployed via Git (official manifests) instead of Helm
-# Version v0.70.0 compatible with K8s 1.33+
-
-# Harbor setup no longer needed - using Git deployment
-# 3. Create / load Harbor robot account (system-level)
-log "Ensuring Harbor robot account for Argo CD..."
-
-ROBOT_ENV="$ROOT_DIR/.harbor-robot-pass.env"
-
-# Try to load and validate existing credentials
-if [[ -f "$ROBOT_ENV" ]]; then
-  source "$ROBOT_ENV"
-  HTTP_CODE=$(curl -sk -u 'robot$argocd:'"$ROBOT_PASS" -o /dev/null -w "%{http_code}" https://harbor.local/api/v2.0/projects/helm 2>/dev/null || echo "000")
-  if [[ "$HTTP_CODE" == "200" ]]; then
-    log "Loaded existing robot credentials (valid)"
-  else
-    log "Existing credentials invalid, recreating robot..."
-    # Delete existing robot
-    EXISTING_ROBOT_ID=$(curl -sk -u admin:Harbor12345 \
-      "https://harbor.local/api/v2.0/robots?q=name%3Dargocd" | jq -r '.[0].id // empty')
-    [[ -n "$EXISTING_ROBOT_ID" ]] && curl -sk -u admin:Harbor12345 -X DELETE "https://harbor.local/api/v2.0/robots/$EXISTING_ROBOT_ID"
-    unset ROBOT_PASS
-  fi
-fi
-
-# Create robot if needed
-if [[ -z "${ROBOT_PASS:-}" ]]; then
-  ROBOT_PASS=$(
-    curl -sk -u admin:Harbor12345 \
-      -X POST "https://harbor.local/api/v2.0/robots" \
-      -H "Content-Type: application/json" \
-      -d '{
-        "name": "argocd",
-        "level": "system",
-        "duration": -1,
-        "permissions": [
-          {
-            "kind": "project",
-            "namespace": "helm",
-            "access": [
-              { "resource": "repository", "action": "pull" },
-              { "resource": "repository", "action": "push" },
-              { "resource": "repository", "action": "read" },
-              { "resource": "artifact", "action": "read" }
-            ]
-          }
-        ]
-      }' | jq -r '.secret // empty'
-  )
-  if [[ -n "$ROBOT_PASS" ]]; then
-    log "New robot created, saving credentials"
-    echo "export ROBOT_PASS='$ROBOT_PASS'" > "$ROBOT_ENV"
-    chmod 600 "$ROBOT_ENV"
-  else
-    echo "ERROR: Failed to create robot. Cannot register Argo CD repo."
-    exit 1
-  fi
-fi
-
-# 4. Register Harbor repo in Argo CD
-log "Registering Harbor Helm OCI repo in Argo CD (via manifest)..."
-# kubectl apply -f ArgoCD-demo-apps/argocd-repos/harbor-helm-repo.yaml
-argocd repo add harbor.local \
-  --type helm \
-  --name harbor-helm \
-  --enable-oci \
-  --username 'robot$argocd' \
-  --password "$ROBOT_PASS" \
-  --upsert
-
-# 5. Local DNS convenience
-grep -q "tekton.local" /etc/hosts || \
-  echo "$METALLB_IP tekton.local" | sudo tee -a /etc/hosts >/dev/null
-
-# 6. Deploy Tekton via ArgoCD (control plane: tekton-pipelines namespace)
+# Deploy Tekton via ArgoCD (control plane: tekton-pipelines namespace)
 log "Deploying Tekton control plane via ArgoCD..."
 log "  - Tekton Pipelines → tekton-pipelines namespace (privileged)"
-log "  - Using ghcr.io mirrors to avoid gcr.io auth issues"
+log "  - Using official manifests from Git with ghcr.io images"
 
 kubectl apply -f "$ROOT_DIR/Tekton/project.yaml"
 kubectl apply -f "$ROOT_DIR/Tekton/application.yaml"
