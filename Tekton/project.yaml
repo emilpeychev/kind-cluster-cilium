@@ -14,9 +14,12 @@ spec:
     - harbor.local
     - harbor.local/helm
     - https://github.com/tektoncd/pipeline.git
+    - git@github.com:emilpeychev/kind-cluster-cilium.git
 
   destinations:
     - namespace: tekton-pipelines
+      server: https://kubernetes.default.svc
+    - namespace: tekton-pipelines-resolvers
       server: https://kubernetes.default.svc
     - namespace: tekton-dashboard
       server: https://kubernetes.default.svc
