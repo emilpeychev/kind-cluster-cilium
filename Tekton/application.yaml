@@ -12,7 +12,7 @@ spec:
 
   source:
     repoURL: git@github.com:emilpeychev/kind-cluster-cilium.git
-    targetRevision: infra-reorder
+    targetRevision: master
     path: Tekton/manifests
 
   destination:

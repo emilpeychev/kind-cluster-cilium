@@ -71,6 +71,7 @@ flowchart LR
 - Triggers GitOps workflow by committing manifest changes
 
 **Tekton Pipelines** include:
+
 - Clone repository task
 - Build and push image task
 - Update manifest with new image tag task
