@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
-# 08-argocd.sh - Install ArgoCD and deploy applications
+# 07-argocd.sh - Install ArgoCD and deploy applications
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
@@ -8,7 +8,7 @@ source "$SCRIPT_DIR/lib.sh"
 
 METALLB_IP="${METALLB_IP:-172.20.255.200}"
 
-log "Step 8: Install ArgoCD"
+log "Step 7: Install ArgoCD"
 
 require_cmd argocd
 

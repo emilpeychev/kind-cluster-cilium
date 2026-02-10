@@ -1,0 +1,35 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: tekton-project
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+spec:
+  description: Tekton CI/CD pipelines
+
+  sourceRepos:
+    - harbor.local
+    - harbor.local/helm
+
+  destinations:
+    - namespace: tekton-pipelines
+      server: https://kubernetes.default.svc
+    - namespace: tekton-dashboard
+      server: https://kubernetes.default.svc
+
+  clusterResourceWhitelist:
+    - group: '*'
+      kind: '*'
+
+  namespaceResourceWhitelist:
+    - group: '*'
+      kind: '*'
+
+  roles:
+    - name: tekton-admin
+      description: Full access for Tekton admins
+      policies:
+        - p, proj:tekton-project:tekton-admin, applications, *, tekton-project/*, allow
