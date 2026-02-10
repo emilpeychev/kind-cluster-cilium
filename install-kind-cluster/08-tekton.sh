@@ -29,27 +29,12 @@ cd "$ROOT_DIR"
 grep -q "tekton.local" /etc/hosts || echo "$METALLB_IP tekton.local" | sudo tee -a /etc/hosts
 
 # 1. Package tekton pipelines and push to harbor
-log "Installing Tekton Pipelines via kubectl apply..."
-helm repo add tekton https://charts.tekton.dev >/dev/null
-helm repo update >/dev/null
-helm pull tekton/tekton-pipelines --version 1.9.0
+log "Packaging Tekton Pipelines Helm chart..."
 
-# 2. Ensure Harbor project exists
-log "Ensuring Harbor project 'helm' exists..."
+# Tekton now deployed via Git (official manifests) instead of Helm
+# Version v0.70.0 compatible with K8s 1.33+
 
-curl -sk -u admin:Harbor12345 \
-  -X POST https://harbor.local/api/v2.0/projects \
-  -H "Content-Type: application/json" \
-  -d '{"project_name":"helm","public":false}' || true
-
-# Login to Harbor for helm push
-echo "Harbor12345" | helm registry login harbor.local -u admin --password-stdin
-
-# Push Helm chart to Harbor OCI repo
-helm push tekton-pipelines-1.9.0.tgz oci://harbor.local/helm || true
-
-# Clean up downloaded chart
-rm -f tekton-pipelines-1.9.0.tgz
+# Harbor setup no longer needed - using Git deployment
 # 3. Create / load Harbor robot account (system-level)
 log "Ensuring Harbor robot account for Argo CD..."
 
@@ -123,24 +108,55 @@ grep -q "tekton.local" /etc/hosts || \
 # 6. Deploy Tekton via ArgoCD (control plane: tekton-pipelines namespace)
 log "Deploying Tekton control plane via ArgoCD..."
 log "  - Tekton Pipelines → tekton-pipelines namespace (privileged)"
-log "  - Tekton Dashboard → deployed directly (not via ArgoCD)"
+log "  - Using ghcr.io mirrors to avoid gcr.io auth issues"
 
 kubectl apply -f "$ROOT_DIR/Tekton/project.yaml"
 kubectl apply -f "$ROOT_DIR/Tekton/application.yaml"
 
+log "Waiting for ArgoCD to sync Tekton application..."
+for i in {1..60}; do
+  SYNC_STATUS=$(kubectl get application tekton-pipelines -n argocd -o jsonpath='{.status.sync.status}' 2>/dev/null || echo "")
+  HEALTH_STATUS=$(kubectl get application tekton-pipelines -n argocd -o jsonpath='{.status.health.status}' 2>/dev/null || echo "")
+  
+  if [[ "$SYNC_STATUS" == "Synced" ]]; then
+    log "ArgoCD application synced (Health: $HEALTH_STATUS)"
+    break
+  fi
+  
+  echo "  Waiting for sync... (Status: $SYNC_STATUS, Health: $HEALTH_STATUS) - attempt $i/60"
+  sleep 5
+done
+
 log "Waiting for Tekton CRDs to be established..."
-sleep 10
-kubectl wait --for=condition=established --timeout=120s crd/pipelines.tekton.dev 2>/dev/null || true
+for i in {1..30}; do
+  if kubectl get crd pipelines.tekton.dev >/dev/null 2>&1; then
+    kubectl wait --for=condition=established --timeout=60s crd/pipelines.tekton.dev 2>/dev/null || true
+    break
+  fi
+  echo "  CRD not yet created... attempt $i/30"
+  sleep 3
+done
 
 log "Waiting for Tekton controllers to be ready..."
-kubectl wait --for=condition=available --timeout=300s \
-  deployment/tekton-pipelines-controller -n tekton-pipelines 2>/dev/null || true
+for i in {1..60}; do
+  if kubectl get deployment tekton-pipelines-controller -n tekton-pipelines >/dev/null 2>&1; then
+    kubectl wait --for=condition=available --timeout=60s \
+      deployment/tekton-pipelines-controller -n tekton-pipelines 2>/dev/null && break
+  fi
+  echo "  Controller deployment not yet ready... attempt $i/60"
+  sleep 5
+done
 
-kubectl wait --for=condition=available --timeout=300s \
-  deployment/tekton-pipelines-webhook -n tekton-pipelines 2>/dev/null || true
+for i in {1..60}; do
+  if kubectl get deployment tekton-pipelines-webhook -n tekton-pipelines >/dev/null 2>&1; then
+    kubectl wait --for=condition=available --timeout=60s \
+      deployment/tekton-pipelines-webhook -n tekton-pipelines 2>/dev/null && break
+  fi
+  echo "  Webhook deployment not yet ready... attempt $i/60"
+  sleep 5
+done
 
-log "Deploying Tekton Dashboard..."
-kubectl apply -f https://storage.googleapis.com/tekton-releases/dashboard/latest/release.yaml
+log "Tekton Dashboard deployed via manifests (included in ArgoCD application)"
 
 log "Applying Tekton HTTPRoute..."
 kubectl apply -f "$ROOT_DIR/Tekton/tekton-dashboard-httproute.yaml"

@@ -1,9 +1,27 @@
 # Tekton Quick Start
 
 ## Installation
+
+Tekton is deployed via ArgoCD using local manifests:
+
 ```bash
-kubectl apply -f https://storage.googleapis.com/tekton-releases/pipeline/latest/release.yaml
-kubectl apply -f https://infra.tekton.dev/tekton-releases/dashboard/latest/release.yaml
+# Deploy via ArgoCD
+kubectl apply -f Tekton/project.yaml
+kubectl apply -f Tekton/application.yaml
+```
+
+The manifests are stored locally in `Tekton/manifests/`:
+- `tekton-pipelines.yaml` - Core Tekton Pipelines CRDs and controllers
+- `tekton-dashboard.yaml` - Tekton Dashboard UI
+- `kustomization.yaml` - Kustomize configuration
+
+Original source:
+```bash
+# Tekton Pipelines (already downloaded)
+# https://storage.googleapis.com/tekton-releases/pipeline/latest/release.yaml
+
+# Tekton Dashboard (already downloaded)
+# https://storage.googleapis.com/tekton-releases/dashboard/latest/release.yaml
 ```
 
 ## Access Dashboard
