@@ -5,7 +5,8 @@ This directory contains the Tekton installation manifests that are deployed via 
 ## Files
 
 ### tekton-pipelines.yaml
-- **Source**: https://storage.googleapis.com/tekton-releases/pipeline/latest/release.yaml
+
+- **Source**: <https://storage.googleapis.com/tekton-releases/pipeline/latest/release.yaml>
 - **Description**: Core Tekton Pipelines CRDs, controllers, and webhooks
 - **Modifications**: `set-security-context: "true"` in feature-flags ConfigMap (allows TaskRuns in restricted namespaces)
 - **Components**:
@@ -16,20 +17,23 @@ This directory contains the Tekton installation manifests that are deployed via 
   - ConfigMaps and Services
 
 ### tekton-dashboard.yaml
-- **Source**: https://storage.googleapis.com/tekton-releases/dashboard/latest/release.yaml
+
+- **Source**: <https://storage.googleapis.com/tekton-releases/dashboard/latest/release.yaml>
 - **Description**: Tekton Dashboard web UI
-- **Access**: https://tekton.local (via HTTPRoute)
+- **Access**: <https://tekton.local> (via HTTPRoute)
 
 ### kustomization.yaml
+
 - **Description**: Kustomize configuration for managing the manifests
 - **Purpose**: Allows ArgoCD to apply all resources together
 
 ## Deployment
 
 These manifests are deployed via ArgoCD:
+
 - **Application**: `Tekton/application.yaml`
 - **Project**: `Tekton/project.yaml`
-- **Namespaces**: 
+- **Namespaces**:
   - `tekton-pipelines` - Control plane (privileged)
   - `tekton-builds` - Pipeline execution environment (baseline PSA)
 
@@ -58,7 +62,7 @@ git push
 
 ## Architecture
 
-```
+```html
 tekton-pipelines (namespace)
 ├── tekton-pipelines-controller (deployment)
 ├── tekton-pipelines-webhook (deployment)

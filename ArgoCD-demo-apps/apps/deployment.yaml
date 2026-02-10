@@ -2,7 +2,8 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   annotations:
-    argocd.argoproj.io/sync-wave: "2"
+    labels:
+      app.kubernetes.io/part-of: demo-apps
   name: demo-app1
   namespace: demo-apps
 spec:
@@ -22,7 +23,7 @@ spec:
         - name: harbor-regcred
       containers:
         - name: app
-          image: harbor.local/library/demo-app:20260210-073027
+          image: harbor.local/library/demo-app:20260210-150334
           imagePullPolicy: Always
           ports:
             - containerPort: 80
