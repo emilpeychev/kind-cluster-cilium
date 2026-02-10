@@ -5,6 +5,10 @@ metadata:
   namespace: argocd
   finalizers:
     - resources-finalizer.argocd.argoproj.io
+  annotations:
+    argocd.argoproj.io/sync-wave: "4"
+    labels:
+      app.kubernetes.io/part-of: observability
 spec:
   description: Observability stack (Kiali, Prometheus, Grafana)
 
@@ -15,18 +19,12 @@ spec:
   destinations:
     - namespace: istio-system
       server: https://kubernetes.default.svc
-    - namespace: kiali
-      server: https://kubernetes.default.svc
-    - namespace: monitoring
-      server: https://kubernetes.default.svc
 
   clusterResourceWhitelist:
-    - group: '*'
-      kind: '*'
-
-  namespaceResourceWhitelist:
-    - group: '*'
-      kind: '*'
+    - group: rbac.authorization.k8s.io
+      kind: ClusterRole
+    - group: rbac.authorization.k8s.io
+      kind: ClusterRoleBinding
 
   roles:
     - name: observability-admin
