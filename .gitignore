@@ -9,6 +9,7 @@ tls/*.crt
 tls/*.csr
 tls/*.crs
 tls/*.srl
+ArgoCD/certs/*
 
 
 # Secrets - never commit these!
