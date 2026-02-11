@@ -3,11 +3,13 @@ kind: AppProject
 metadata:
   name: observability-project
   namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"
   finalizers:
     - resources-finalizer.argocd.argoproj.io
 spec:
   description: Observability stack (Kiali, Prometheus, Grafana)
-
+  # OCI Helm repo - both formats for compatibility
   sourceRepos:
     - harbor.local
     - harbor.local/helm
@@ -15,14 +17,14 @@ spec:
   destinations:
     - namespace: istio-system
       server: https://kubernetes.default.svc
-    - namespace: kiali
-      server: https://kubernetes.default.svc
     - namespace: monitoring
       server: https://kubernetes.default.svc
 
   clusterResourceWhitelist:
-    - group: '*'
-      kind: '*'
+    - group: rbac.authorization.k8s.io
+      kind: ClusterRole
+    - group: rbac.authorization.k8s.io
+      kind: ClusterRoleBinding
 
   namespaceResourceWhitelist:
     - group: '*'
