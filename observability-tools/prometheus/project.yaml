@@ -3,6 +3,10 @@ kind: AppProject
 metadata:
   name: prometheus-project
   namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"
+  labels:
+    app.kubernetes.io/part-of: observability
   finalizers:
     - resources-finalizer.argocd.argoproj.io
 spec:
@@ -17,8 +21,10 @@ spec:
       server: https://kubernetes.default.svc
 
   clusterResourceWhitelist:
-    - group: '*'
-      kind: '*'
+    - group: rbac.authorization.k8s.io
+      kind: ClusterRole
+    - group: rbac.authorization.k8s.io
+      kind: ClusterRoleBinding
 
   namespaceResourceWhitelist:
     - group: '*'
