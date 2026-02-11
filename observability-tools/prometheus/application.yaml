@@ -1,5 +1,5 @@
 apiVersion: argoproj.io/v1alpha1
-kind: Application
+kind: ApplicationSet
 metadata:
   name: prometheus
   namespace: argocd
@@ -7,41 +7,54 @@ metadata:
     app.kubernetes.io/part-of: observability
   finalizers:
     - resources-finalizer.argocd.argoproj.io
+
 spec:
-  project: prometheus-project
+  generators:
+    - list:
+        elements:
+          - name: prometheus
+            namespace: monitoring
+            chart: prometheus
+            version: 28.6.0
 
-  source:
-    repoURL: harbor.local
-    chart: helm/prometheus
-    targetRevision: 28.6.0
-    helm:
-      values: |
-        alertmanager:
-          enabled: false
-        kube-state-metrics:
-          enabled: true
-        prometheus-node-exporter:
-          enabled: true
-        prometheus-pushgateway:
-          enabled: false
-        server:
-          persistentVolume:
-            enabled: false
-          resources:
-            requests:
-              cpu: 500m
-              memory: 512Mi
-            limits:
-              memory: 1Gi
+  template:
+    metadata:
+      name: '{{name}}'
+      labels:
+        app.kubernetes.io/part-of: observability
+    spec:
+      project: prometheus-project
+      source:
+        repoURL: harbor.local
+        chart: 'helm/{{chart}}'
+        targetRevision: '{{version}}'
+        helm:
+          values: |
+            alertmanager:
+              enabled: false
+            kube-state-metrics:
+              enabled: true
+            prometheus-node-exporter:
+              enabled: true
+            prometheus-pushgateway:
+              enabled: false
+            server:
+              persistentVolume:
+                enabled: false
+              resources:
+                requests:
+                  cpu: 500m
+                  memory: 512Mi
+                limits:
+                  memory: 1Gi
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: monitoring
 
-  destination:
-    server: https://kubernetes.default.svc
-    namespace: monitoring
-
-  syncPolicy:
-    automated:
-      prune: true
-      selfHeal: true
-    syncOptions:
-      - CreateNamespace=true
-      - ServerSideApply=true
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+        syncOptions:
+          - CreateNamespace=true
+          - ServerSideApply=true

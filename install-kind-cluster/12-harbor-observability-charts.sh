@@ -1,6 +1,6 @@
 #!/bin/bash
 set -euo pipefail
-# 12-kiali - Publish Kiali Helm chart and register it for Argo CD (GitOps-safe)
+# 12-harbor-observability-charts - Publish all observability Helm charts to Harbor OCI registry
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
@@ -8,11 +8,11 @@ source "$SCRIPT_DIR/lib.sh"
 
 METALLB_IP="${METALLB_IP:-172.20.255.200}"
 
-log "Step 12: Observability (Kiali) – Artifact & GitOps setup"
+log "Step 12: Observability Charts – Publishing to Harbor OCI registry"
 
 cd "$ROOT_DIR"
 
-# 1. Package kiali Helm chart
+# 1. Package and push Kiali Helm chart
 log "Packaging and pushing Kiali Helm chart to Harbor..."
 
 helm repo add kiali https://kiali.org/helm-charts >/dev/null
@@ -36,7 +36,33 @@ helm push kiali-server-2.20.0.tgz oci://harbor.local/helm || true
 # Clean up downloaded chart
 rm -f kiali-server-2.20.0.tgz
 
-# 3. Create / load Harbor robot account (system-level)
+# 2. Package and push Prometheus Helm chart
+log "Packaging and pushing Prometheus Helm chart to Harbor..."
+
+helm repo add prometheus-community https://prometheus-community.github.io/helm-charts >/dev/null
+helm repo update >/dev/null
+helm pull prometheus-community/prometheus --version 28.6.0
+
+# Push Helm chart to Harbor OCI repo
+helm push prometheus-28.6.0.tgz oci://harbor.local/helm || true
+
+# Clean up downloaded chart
+rm -f prometheus-28.6.0.tgz
+
+# 3. Package and push Grafana Helm chart
+log "Packaging and pushing Grafana Helm chart to Harbor..."
+
+helm repo add grafana https://grafana.github.io/helm-charts >/dev/null
+helm repo update >/dev/null
+helm pull grafana/grafana --version 10.5.12
+
+# Push Helm chart to Harbor OCI repo
+helm push grafana-10.5.12.tgz oci://harbor.local/helm || true
+
+# Clean up downloaded chart
+rm -f grafana-10.5.12.tgz
+
+# 4. Create / load Harbor robot account (system-level)
 log "Ensuring Harbor robot account for Argo CD..."
 
 ROBOT_ENV="$ROOT_DIR/.harbor-robot-pass.env"
@@ -92,9 +118,9 @@ if [[ -z "${ROBOT_PASS:-}" ]]; then
 fi
 
 
-# 4. Register Harbor repo in Argo CD
-log "Registering Harbor Helm OCI repo in Argo CD (via manifest)..."
-# kubectl apply -f observability-tools/kiali/addrepo-argcd.yaml
+# 5. Register Harbor repo in Argo CD
+log "Registering Harbor Helm OCI repo in Argo CD..."
+
 argocd repo add harbor.local \
   --type helm \
   --name harbor-helm \
@@ -103,27 +129,23 @@ argocd repo add harbor.local \
   --password "$ROBOT_PASS" \
   --upsert
 
-# 5. Local DNS convenience
+# Also create/update the repository Secret in argocd namespace
+source "$ROOT_DIR/.harbor-robot-pass.env" || true
+kubectl create secret generic harbor-helm-repo -n argocd \
+  --from-literal=url=https://harbor.local \
+  --from-literal=username='robot$argocd' \
+  --from-literal=password="$ROBOT_PASS" \
+  --dry-run=client -o yaml | kubectl apply -f - >/dev/null
+kubectl label secret harbor-helm-repo -n argocd argocd.argoproj.io/secret-type=repository --overwrite >/dev/null
+
+# 6. Local DNS convenience
 grep -q "kiali.local" /etc/hosts || \
   echo "$METALLB_IP kiali.local" | sudo tee -a /etc/hosts >/dev/null
+grep -q "prometheus.local" /etc/hosts || \
+  echo "$METALLB_IP prometheus.local" | sudo tee -a /etc/hosts >/dev/null
+grep -q "grafana.local" /etc/hosts || \
+  echo "$METALLB_IP grafana.local" | sudo tee -a /etc/hosts >/dev/null
 
-# 6. Apply Kiali Argo CD manifests (project, application, httproute)
-log "Applying Kiali Argo CD application..."
-
-# Create kiali namespace if it doesn't exist
-kubectl create namespace kiali 2>/dev/null || true
-
-# Apply kiali manifests
-kubectl apply -f "$ROOT_DIR/observability-tools/kiali/project.yaml"
-kubectl apply -f "$ROOT_DIR/observability-tools/kiali/application.yaml"
-kubectl apply -f "$ROOT_DIR/observability-tools/kiali/httproute.yaml"
-
-log "Waiting for Argo CD application to sync..."
-sleep 5
-
-# Show application status
-kubectl get applications -n argocd kiali 2>/dev/null || true
-
-log "Kiali deployed via Argo CD"
-log "URL: https://kiali.local"
+log "Observability Helm charts published to Harbor OCI registry"
+log "Charts available at: oci://harbor.local/helm/{kiali-server,prometheus,grafana}"
 log "Step 12 complete."

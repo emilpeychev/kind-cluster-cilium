@@ -1,5 +1,5 @@
 apiVersion: argoproj.io/v1alpha1
-kind: Application
+kind: ApplicationSet
 metadata:
   name: grafana
   namespace: argocd
@@ -7,39 +7,54 @@ metadata:
     app.kubernetes.io/part-of: observability
   finalizers:
     - resources-finalizer.argocd.argoproj.io
+
 spec:
-  project: prometheus-project
-
-  source:
-    repoURL: harbor.local
-    chart: helm/grafana
-    targetRevision: 10.5.12
-    helm:
-      values: |
-        adminUser: admin
-        adminPassword: admin
-        service:
-          type: ClusterIP
-          port: 80
-        persistence:
-          enabled: false
-        datasources:
-          datasources.yaml:
-            apiVersion: 1
+  generators:
+    - list:
+        elements:
+          - name: grafana
+            namespace: monitoring
+            chart: grafana
+            version: 10.5.12
+            web_fqdn: grafana.local
+  template:
+    metadata:
+      name: '{{name}}'
+      labels:
+        app.kubernetes.io/part-of: observability
+    spec:
+      project: prometheus-project
+      source:
+        repoURL: harbor.local
+        chart: 'helm/{{chart}}'
+        targetRevision: '{{version}}'
+        helm:
+          values: |
+            adminUser: admin
+            adminPassword: admin
+            service:
+              type: ClusterIP
+              port: 80
+            persistence:
+              enabled: false
             datasources:
-              - name: Prometheus
-                type: prometheus
-                url: http://prometheus-server.monitoring.svc.cluster.local
-                access: proxy
-                isDefault: true
+              datasources.yaml:
+                apiVersion: 1
+                datasources:
+                  - name: Prometheus
+                    type: prometheus
+                    url: http://prometheus-server.monitoring.svc.cluster.local
+                    access: proxy
+                    isDefault: true
 
-  destination:
-    server: https://kubernetes.default.svc
-    namespace: monitoring
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: monitoring
 
-  syncPolicy:
-    automated:
-      prune: true
-      selfHeal: true
-    syncOptions:
-      - CreateNamespace=true
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+        syncOptions:
+          - CreateNamespace=true
+          - ServerSideApply=true

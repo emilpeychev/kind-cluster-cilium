@@ -31,7 +31,7 @@ print_banner() {
   echo "║  3) Cilium CNI        9) Argo Events + Smee                    ║"
   echo "║  4) Istio Ambient    10) Argo Workflows                        ║"
   echo "║  5) TLS + CoreDNS    11) Deploy Apps (HTTPBin)                 ║"
-  echo "║  6) Harbor Registry  12) Observability (Kiali)                 ║"
+  echo "║  6) Harbor Registry  12) Harbor Charts (Observability)         ║"
   echo "║  13) Observability (Prometheus + Grafana)                      ║"
   echo "╠════════════════════════════════════════════════════════════════╣"
   echo "║  all) Run all steps    delete) Delete cluster                  ║"
@@ -56,7 +56,7 @@ run_step() {
     9)  script="09-argo-events.sh" ;;
     10) script="10-argo-workflows.sh" ;;
     11) script="11-deploy-apps.sh" ;;
-    12) script="12-kiali-setup.sh" ;;
+    12) script="12-harbor-observability-charts.sh" ;;
     13) script="13-observability-stack.sh" ;;
     *)
       echo -e "${RED}Invalid step: $step${NC}" >&2
