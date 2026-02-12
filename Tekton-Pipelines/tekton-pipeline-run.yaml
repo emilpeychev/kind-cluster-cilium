@@ -25,9 +25,13 @@ spec:
   params:
   - name: GIT_URL
     value: git@github.com:emilpeychev/kind-cluster-cilium.git
+  - name: GIT_REPO
+    value: emilpeychev/kind-cluster-cilium
   - name: GIT_BRANCH
     value: master
   - name: IMAGE_REPO
     value: harbor.local/library/demo-app
   - name: VERSION
     value: "v0.1"
+  - name: COMMIT_SHA
+    value: "unknown"
