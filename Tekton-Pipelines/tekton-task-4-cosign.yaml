@@ -11,15 +11,32 @@ spec:
   steps:
     - name: sign
       image: gcr.io/projectsigstore/cosign:v2.2.0
-      script: |
-        #!/bin/sh
-        set -e
-
-        cosign sign --key /cosign/cosign.key $(params.IMAGE_URL)
+      env:
+        - name: COSIGN_PASSWORD
+          value: ""
+        - name: DOCKER_CONFIG
+          value: /docker-config
+      command:
+        - cosign
+      args:
+        - sign
+        - --key
+        - /cosign/cosign.key
+        - --allow-insecure-registry
+        - --yes
+        - $(params.IMAGE_URL)
       volumeMounts:
         - name: cosign-key
           mountPath: /cosign
+        - name: docker-config
+          mountPath: /docker-config
   volumes:
     - name: cosign-key
       secret:
         secretName: cosign-key
+    - name: docker-config
+      secret:
+        secretName: harbor-registry
+        items:
+          - key: .dockerconfigjson
+            path: config.json

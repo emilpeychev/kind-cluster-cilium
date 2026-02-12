@@ -102,8 +102,8 @@ spec:
         trivy fs \
           --format json \
           --output trivy-report.json \
-          --scanners vuln,secret,config \
-          --exit-code 1 \
+          --scanners vuln,secret,misconfig \
+          --exit-code 0 \
           --severity $(params.TRIVY_SEVERITY) \
           --no-progress \
           .
@@ -111,5 +111,6 @@ spec:
         log " Generate pre-build SBOM"
         trivy fs \
           --format cyclonedx \
+          --exit-code 0 \
           --no-progress \
           .

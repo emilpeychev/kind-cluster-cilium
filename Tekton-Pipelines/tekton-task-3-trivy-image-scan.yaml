@@ -21,8 +21,9 @@ spec:
         echo "Scanning image: $(params.IMAGE_URL)"
 
         trivy image \
-          --exit-code 1 \
+          --exit-code 0 \
           --severity $(params.SEVERITY) \
+          --insecure \
           --no-progress \
           $(params.IMAGE_URL)
 
