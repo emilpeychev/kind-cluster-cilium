@@ -3,18 +3,18 @@
   "Trivy": {
     "Version": "0.69.1"
   },
-  "ReportID": "019c5193-39b8-7aac-92e2-3c8b5da25954",
-  "CreatedAt": "2026-02-12T11:18:49.016704314Z",
-  "ArtifactID": "sha256:e71272a95284d891e6b457e3c0b1a8262f23f33327e503306bca6077cd385b78",
+  "ReportID": "019c5199-875c-70de-9586-d52451cbb122",
+  "CreatedAt": "2026-02-12T11:25:42.108063207Z",
+  "ArtifactID": "sha256:fc513718dec74e015d510e44dc1def297ac7d57af7b2a4c6e82edeb7ab802bca",
   "ArtifactName": ".",
   "ArtifactType": "repository",
   "Metadata": {
     "RepoURL": "git@github.com:emilpeychev/kind-cluster-cilium.git",
     "Branch": "master",
-    "Commit": "2c0de7255d5220c57d32cb673f6c42c2aa2d1dd9",
-    "CommitMsg": "ci: update image tag to 20260212-110617 [skip ci]",
-    "Author": "Tekton Pipeline \u003ctekton@local\u003e",
-    "Committer": "Tekton Pipeline \u003ctekton@local\u003e"
+    "Commit": "68d619b7ef692158e331a2049a31d3f21a8b604d",
+    "CommitMsg": "Trivy cosign (#61)\n\n* test trivy\n\n* trivy-cosign\n\n* green bg\n\n* green bg\n\n---------\n\nCo-authored-by: eepeychev \u003ceepeychev@yettel.bg\u003e",
+    "Author": "emilpeychev \u003c69958740+emilpeychev@users.noreply.github.com\u003e",
+    "Committer": "GitHub \u003cnoreply@github.com\u003e"
   },
   "Results": [
     {
@@ -790,11 +790,11 @@
                 },
                 {
                   "Number": 25,
-                  "Content": "          image: harbor.local/library/demo-app:20260212-110617",
+                  "Content": "          image: harbor.local/library/demo-app:20260212-074442",
                   "IsCause": true,
                   "Annotation": "",
                   "Truncated": false,
-                  "Highlighted": "          \u001b[38;5;33mimage\u001b[0m: harbor.local/library/demo-app:20260212-110617",
+                  "Highlighted": "          \u001b[38;5;33mimage\u001b[0m: harbor.local/library/demo-app:20260212-074442",
                   "FirstCause": false,
                   "LastCause": false
                 },
@@ -916,11 +916,11 @@
                 },
                 {
                   "Number": 25,
-                  "Content": "          image: harbor.local/library/demo-app:20260212-110617",
+                  "Content": "          image: harbor.local/library/demo-app:20260212-074442",
                   "IsCause": true,
                   "Annotation": "",
                   "Truncated": false,
-                  "Highlighted": "          \u001b[38;5;33mimage\u001b[0m: harbor.local/library/demo-app:20260212-110617",
+                  "Highlighted": "          \u001b[38;5;33mimage\u001b[0m: harbor.local/library/demo-app:20260212-074442",
                   "FirstCause": false,
                   "LastCause": false
                 },
@@ -1082,11 +1082,11 @@
                 },
                 {
                   "Number": 25,
-                  "Content": "          image: harbor.local/library/demo-app:20260212-110617",
+                  "Content": "          image: harbor.local/library/demo-app:20260212-074442",
                   "IsCause": true,
                   "Annotation": "",
                   "Truncated": false,
-                  "Highlighted": "          \u001b[38;5;33mimage\u001b[0m: harbor.local/library/demo-app:20260212-110617",
+                  "Highlighted": "          \u001b[38;5;33mimage\u001b[0m: harbor.local/library/demo-app:20260212-074442",
                   "FirstCause": false,
                   "LastCause": false
                 },
