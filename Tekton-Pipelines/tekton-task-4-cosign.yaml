@@ -9,25 +9,6 @@ spec:
       type: string
 
   steps:
-    - name: generate-sbom
-      image: aquasec/trivy:latest
-      script: |
-        #!/bin/sh
-        set -e
-        
-        echo "Generating SBOM for image: $(params.IMAGE_URL)"
-        
-        trivy image \
-          --format cyclonedx \
-          --output /workspace/sbom.json \
-          --insecure \
-          $(params.IMAGE_URL)
-        
-        echo "SBOM generated successfully"
-        ls -lh /workspace/sbom.json
-      volumeMounts:
-        - name: sbom-storage
-          mountPath: /workspace
     - name: sign
       image: gcr.io/projectsigstore/cosign:v2.2.0
       env:
@@ -49,35 +30,7 @@ spec:
           mountPath: /cosign
         - name: docker-config
           mountPath: /docker-config
-    - name: attest-sbom
-      image: gcr.io/projectsigstore/cosign:v2.2.0
-      env:
-        - name: COSIGN_PASSWORD
-          value: ""
-        - name: DOCKER_CONFIG
-          value: /docker-config
-      command:
-        - cosign
-      args:
-        - attest
-        - --key
-        - /cosign/cosign.key
-        - --predicate
-        - /workspace/sbom.json
-        - --type
-        - cyclonedx
-        - --allow-insecure-registry
-        - --yes
-        - $(params.IMAGE_URL)
-      volumeMounts:
-        - name: cosign-key
-          mountPath: /cosign
-        - name: docker-config
-          mountPath: /docker-config
-        - name: sbom-storage
-          mountPath: /workspace
-        - name: docker-config
-          mountPath: /docker-config
+
   volumes:
     - name: cosign-key
       secret:
@@ -88,5 +41,3 @@ spec:
         items:
           - key: .dockerconfigjson
             path: config.json
-    - name: sbom-storage
-      emptyDir: {}
