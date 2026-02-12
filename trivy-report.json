@@ -3,18 +3,18 @@
   "Trivy": {
     "Version": "0.69.1"
   },
-  "ReportID": "019c51da-f537-7375-8d86-feaa77543804",
-  "CreatedAt": "2026-02-12T12:37:10.071231524Z",
-  "ArtifactID": "sha256:a83be0ba824c23d73456dee0c9dbaee8e98ba90ecf930aec7a5cecea1fc17645",
+  "ReportID": "019c51e6-362c-7b21-af15-456910e319f7",
+  "CreatedAt": "2026-02-12T12:49:27.596734578Z",
+  "ArtifactID": "sha256:7711d3d423ef52b999b735339ff952b5628fae453f2a4a089a43a4d7e961e6e1",
   "ArtifactName": ".",
   "ArtifactType": "repository",
   "Metadata": {
     "RepoURL": "git@github.com:emilpeychev/kind-cluster-cilium.git",
     "Branch": "master",
-    "Commit": "9d3d4e70bcbcf7498ea0a54230aa3a578f90554b",
-    "CommitMsg": "red bg",
-    "Author": "eepeychev \u003ceepeychev@yettel.bg\u003e",
-    "Committer": "eepeychev \u003ceepeychev@yettel.bg\u003e"
+    "Commit": "d47af42b9427b19bbdf425be3f6867a64fa3ee20",
+    "CommitMsg": "ci: update image tag to 20260212-123655 [skip ci]",
+    "Author": "Tekton Pipeline \u003ctekton@local\u003e",
+    "Committer": "Tekton Pipeline \u003ctekton@local\u003e"
   },
   "Results": [
     {
@@ -790,11 +790,11 @@
                 },
                 {
                   "Number": 25,
-                  "Content": "          image: harbor.local/library/demo-app:20260212-121515",
+                  "Content": "          image: harbor.local/library/demo-app:20260212-123655",
                   "IsCause": true,
                   "Annotation": "",
                   "Truncated": false,
-                  "Highlighted": "          \u001b[38;5;33mimage\u001b[0m: harbor.local/library/demo-app:20260212-121515",
+                  "Highlighted": "          \u001b[38;5;33mimage\u001b[0m: harbor.local/library/demo-app:20260212-123655",
                   "FirstCause": false,
                   "LastCause": false
                 },
@@ -916,11 +916,11 @@
                 },
                 {
                   "Number": 25,
-                  "Content": "          image: harbor.local/library/demo-app:20260212-121515",
+                  "Content": "          image: harbor.local/library/demo-app:20260212-123655",
                   "IsCause": true,
                   "Annotation": "",
                   "Truncated": false,
-                  "Highlighted": "          \u001b[38;5;33mimage\u001b[0m: harbor.local/library/demo-app:20260212-121515",
+                  "Highlighted": "          \u001b[38;5;33mimage\u001b[0m: harbor.local/library/demo-app:20260212-123655",
                   "FirstCause": false,
                   "LastCause": false
                 },
@@ -1082,11 +1082,11 @@
                 },
                 {
                   "Number": 25,
-                  "Content": "          image: harbor.local/library/demo-app:20260212-121515",
+                  "Content": "          image: harbor.local/library/demo-app:20260212-123655",
                   "IsCause": true,
                   "Annotation": "",
                   "Truncated": false,
-                  "Highlighted": "          \u001b[38;5;33mimage\u001b[0m: harbor.local/library/demo-app:20260212-121515",
+                  "Highlighted": "          \u001b[38;5;33mimage\u001b[0m: harbor.local/library/demo-app:20260212-123655",
                   "FirstCause": false,
                   "LastCause": false
                 },
