@@ -1,0 +1,37 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: generate-cosign-key
+  namespace: tekton-builds
+spec:
+  template:
+    spec:
+      serviceAccountName: tekton-admin
+      restartPolicy: OnFailure
+      containers:
+      - name: generate-key
+        image: gcr.io/projectsigstore/cosign:v2.2.0
+        env:
+        - name: COSIGN_PASSWORD
+          value: ""
+        command:
+        - /bin/sh
+        - -c
+        - |
+          # Check if secret already exists
+          if kubectl get secret cosign-key -n tekton-builds 2>/dev/null; then
+            echo "Cosign key secret already exists, skipping generation"
+            exit 0
+          fi
+          
+          # Generate key pair
+          cd /tmp
+          cosign generate-key-pair
+          
+          # Create Kubernetes secret
+          kubectl create secret generic cosign-key \
+            --from-file=cosign.key=/tmp/cosign.key \
+            --from-file=cosign.pub=/tmp/cosign.pub \
+            -n tekton-builds
+          
+          echo "Cosign key pair generated and stored in secret cosign-key"

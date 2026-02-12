@@ -1,0 +1,24 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: copy-harbor-ca-cert
+  namespace: tekton-builds
+spec:
+  template:
+    spec:
+      serviceAccountName: tekton-admin
+      restartPolicy: OnFailure
+      containers:
+      - name: copy-configmap
+        image: bitnami/kubectl:latest
+        command:
+        - /bin/bash
+        - -c
+        - |
+          kubectl get configmap harbor-ca-cert -n kube-system -o yaml | \
+            sed 's/namespace: kube-system/namespace: tekton-builds/' | \
+            sed '/resourceVersion:/d' | \
+            sed '/uid:/d' | \
+            sed '/creationTimestamp:/d' | \
+            kubectl apply -f -
+
