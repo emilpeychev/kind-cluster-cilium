@@ -49,35 +49,7 @@ spec:
           mountPath: /cosign
         - name: docker-config
           mountPath: /docker-config
-    - name: attest-sbom
-      image: gcr.io/projectsigstore/cosign:v2.2.0
-      env:
-        - name: COSIGN_PASSWORD
-          value: ""
-        - name: DOCKER_CONFIG
-          value: /docker-config
-      command:
-        - cosign
-      args:
-        - attest
-        - --key
-        - /cosign/cosign.key
-        - --predicate
-        - /workspace/sbom.json
-        - --type
-        - cyclonedx
-        - --allow-insecure-registry
-        - --yes
-        - $(params.IMAGE_URL)
-      volumeMounts:
-        - name: cosign-key
-          mountPath: /cosign
-        - name: docker-config
-          mountPath: /docker-config
-        - name: sbom-storage
-          mountPath: /workspace
-        - name: docker-config
-          mountPath: /docker-config
+
   volumes:
     - name: cosign-key
       secret:
