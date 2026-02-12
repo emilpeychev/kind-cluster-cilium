@@ -1,0 +1,25 @@
+apiVersion: tekton.dev/v1
+kind: Task
+metadata:
+  name: cosign-sign
+  namespace: tekton-builds
+spec:
+  params:
+    - name: IMAGE_URL
+      type: string
+
+  steps:
+    - name: sign
+      image: gcr.io/projectsigstore/cosign:v2.2.0
+      script: |
+        #!/bin/sh
+        set -e
+
+        cosign sign --key /cosign/cosign.key $(params.IMAGE_URL)
+      volumeMounts:
+        - name: cosign-key
+          mountPath: /cosign
+  volumes:
+    - name: cosign-key
+      secret:
+        secretName: cosign-key

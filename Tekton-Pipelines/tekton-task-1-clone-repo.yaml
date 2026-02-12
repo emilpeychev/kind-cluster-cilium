@@ -1,4 +1,5 @@
-apiVersion: tekton.dev/v1beta1
+apiVersion: tekton.dev/v1
+
 kind: Task
 metadata:
   name: clone-repo
@@ -14,28 +15,56 @@ spec:
       default: master
     - name: GIT_URL
       type: string
+    - name: COMMIT_SHA
+      type: string
+      default: ""
+    - name: TRIVY_SEVERITY
+      type: string
+      default: "HIGH,CRITICAL"
+    
   results:
     - name: timestamp
       description: Build timestamp for image tag (YYYYMMDD-HHMMSS)
+      
   steps:
     - name: git-clone
       image: alpine/git
       env:
         - name: HOME
           value: /root
-        - name: GIT_SSH_COMMAND
-          value: "ssh -i /root/.ssh/id_rsa -o StrictHostKeyChecking=no"
       securityContext:
         runAsUser: 0
       script: |
         #!/bin/sh
         set -e
+        log() {
+          echo "[$(date -u +"%Y-%m-%dT%H:%M:%SZ")] $1"
+        }
         mkdir -p ~/.ssh
-        # Copy and rename SSH key
-        cp $(workspaces.ssh-directory.path)/ssh-privatekey ~/.ssh/id_rsa 2>/dev/null || true
-        cp $(workspaces.ssh-directory.path)/known_hosts ~/.ssh/known_hosts 2>/dev/null || true
-        chmod 700 ~/.ssh && chmod 600 ~/.ssh/* 2>/dev/null || true
-        
+        chmod 700 ~/.ssh
+
+        log " Starting Git clone of repository: $(params.GIT_URL)"
+        if [ -f "$(workspaces.ssh-directory.path)/ssh-privatekey" ]; then
+          cp $(workspaces.ssh-directory.path)/ssh-privatekey ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+        fi
+
+        log " SSH configuration completed"
+        if [ -f "$(workspaces.ssh-directory.path)/known_hosts" ]; then
+          cp $(workspaces.ssh-directory.path)/known_hosts ~/.ssh/known_hosts
+        fi
+        log " Starting Git clone operation..."
+        if [ ! -f ~/.ssh/known_hosts ]; then
+          ssh-keyscan github.com >> ~/.ssh/known_hosts 2>/dev/null
+        fi
+        chmod 644 ~/.ssh/known_hosts
+
+        log " SSH setup complete. Cloning repository..."
+        if [ -f ~/.ssh/id_rsa ]; then
+          export GIT_SSH_COMMAND="ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=yes"
+        fi
+
+        log " Current SSH directory contents:"
         ls -la ~/.ssh/
         # Convert HTTPS URL to SSH URL
         GIT_URL="$(params.GIT_URL)"
@@ -43,10 +72,44 @@ spec:
           GIT_URL=$(echo "$GIT_URL" | sed 's|https://github.com/|git@github.com:|')
         fi
         
-        echo "Cloning: $GIT_URL"
-        git clone --branch $(params.GIT_BRANCH) "$GIT_URL" $(workspaces.output.path)
-        
-        echo "=== Clone complete ==="
+        log " Cloning repository using URL: $GIT_URL"
+        git clone "$GIT_URL" $(workspaces.output.path)
+        cd $(workspaces.output.path)
+
+        log " Repository cloned. Checking out branch: $(params.GIT_BRANCH)"
+        if [ -n "$(params.COMMIT_SHA)" ]; then
+          git checkout "$(params.COMMIT_SHA)"
+        else
+          git checkout "$(params.GIT_BRANCH)"
+        fi
+
+        log "=== Clone complete ==="
         ls -la $(workspaces.output.path)
         
         date -u +"%Y%m%d-%H%M%S" | tr -d '\n' > $(results.timestamp.path)
+        
+    - name: scan
+      image: aquasec/trivy:latest
+      script: |
+        #!/bin/sh
+        set -e
+        log() {
+          echo "[$(date -u +"%Y-%m-%dT%H:%M:%SZ")] $1"
+        }
+
+        log " Starting Trivy scan on cloned repository"
+        cd $(workspaces.output.path)
+        trivy fs \
+          --format json \
+          --output trivy-report.json \
+          --scanners vuln,secret,config \
+          --exit-code 1 \
+          --severity $(params.TRIVY_SEVERITY) \
+          --no-progress \
+          .
+
+        log " Generate pre-build SBOM"
+        trivy fs \
+          --format cyclonedx \
+          --no-progress \
+          .
