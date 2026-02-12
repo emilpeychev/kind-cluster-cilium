@@ -26,6 +26,5 @@ spec:
         namespace: '{{namespace}}'
       syncPolicy:
         automated:
-          enabled: true
           prune: true
-          selfHeal: true
+
