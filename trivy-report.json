@@ -3,16 +3,16 @@
   "Trivy": {
     "Version": "0.69.1"
   },
-  "ReportID": "019c517c-ffa7-799d-8a20-dadac7086f4e",
-  "CreatedAt": "2026-02-12T10:54:32.359633741Z",
-  "ArtifactID": "sha256:3dd26ef870f2d248ed82e0a315f0d940f62107c8b356a57bbf39366cd83cbf51",
+  "ReportID": "019c5188-005c-7ed8-894e-3d57cdf0e83a",
+  "CreatedAt": "2026-02-12T11:06:33.436980385Z",
+  "ArtifactID": "sha256:8ccbc4a38a54b274ec87d95d0e916529b09a25ca26b4f3ff5e59d6051e1c28b1",
   "ArtifactName": ".",
   "ArtifactType": "repository",
   "Metadata": {
     "RepoURL": "git@github.com:emilpeychev/kind-cluster-cilium.git",
     "Branch": "master",
-    "Commit": "47d80ff0f54d552879c5a6dd45104f9592aacd6b",
-    "CommitMsg": "Trivcosign (#59)\n\n* test trivy\n\n* trivy-cosign\n\n---------\n\nCo-authored-by: eepeychev \u003ceepeychev@yettel.bg\u003e",
+    "Commit": "a10ea4287d7ce4f640279190d4d6797633987ac4",
+    "CommitMsg": "Trivy cosign (#60)\n\n* test trivy\n\n* trivy-cosign\n\n* green bg\n\n---------\n\nCo-authored-by: eepeychev \u003ceepeychev@yettel.bg\u003e",
     "Author": "emilpeychev \u003c69958740+emilpeychev@users.noreply.github.com\u003e",
     "Committer": "GitHub \u003cnoreply@github.com\u003e"
   },
