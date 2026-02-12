@@ -53,11 +53,6 @@ spec:
         
         cd $(workspaces.source.path)
         
-        # Clone fresh copy using SSH
-        GIT_SSH_URL="git@github.com:$(params.GIT_REPO).git"
-        rm -rf repo
-        git clone "$GIT_SSH_URL" repo
-        cd repo
         git checkout $(params.GIT_BRANCH)
         
         # Update kustomization.yaml with new tag

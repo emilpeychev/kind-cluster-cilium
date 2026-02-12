@@ -1,0 +1,29 @@
+apiVersion: tekton.dev/v1
+kind: Task
+metadata:
+  name: trivy-image-scan
+  namespace: tekton-builds
+spec:
+  params:
+    - name: IMAGE_URL
+      type: string
+    - name: SEVERITY
+      type: string
+      default: "HIGH,CRITICAL"
+
+  steps:
+    - name: scan
+      image: aquasec/trivy:latest
+      script: |
+        #!/bin/sh
+        set -e
+
+        echo "Scanning image: $(params.IMAGE_URL)"
+
+        trivy image \
+          --exit-code 1 \
+          --severity $(params.SEVERITY) \
+          --no-progress \
+          $(params.IMAGE_URL)
+
+        echo "Image scan passed"

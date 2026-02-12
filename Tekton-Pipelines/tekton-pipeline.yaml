@@ -56,9 +56,27 @@ spec:
       params:
         - name: IMAGE_URL
           value: $(params.IMAGE_REPO):$(tasks.clone-repo.results.timestamp)
-    - name: update-deployment-tag
+    - name: trivy-image-scan
       runAfter:
         - build-and-push-image
+      taskRef:
+        name: trivy-image-scan
+      params:
+        - name: IMAGE_URL
+          value: $(params.IMAGE_REPO):$(tasks.clone-repo.results.timestamp)
+        - name: SEVERITY
+          value: "HIGH,CRITICAL"
+    - name: cosign-sign
+      runAfter:
+        - trivy-image-scan
+      taskRef:
+        name: cosign-sign
+      params:
+        - name: IMAGE_URL
+          value: $(params.IMAGE_REPO):$(tasks.clone-repo.results.timestamp)
+    - name: update-deployment-tag
+      runAfter:
+        - cosign-sign
       taskRef:
         name: update-deployment-tag
       workspaces:
