@@ -3,16 +3,16 @@
   "Trivy": {
     "Version": "0.69.1"
   },
-  "ReportID": "019c5179-0d4e-7e18-a73d-4e919fb97c29",
-  "CreatedAt": "2026-02-12T10:50:13.71092932Z",
-  "ArtifactID": "sha256:e7cecb817b0985d1a2741d6107eeb464170e7424fb8db9edac4ba7f9bdf09a11",
+  "ReportID": "019c517c-ffa7-799d-8a20-dadac7086f4e",
+  "CreatedAt": "2026-02-12T10:54:32.359633741Z",
+  "ArtifactID": "sha256:3dd26ef870f2d248ed82e0a315f0d940f62107c8b356a57bbf39366cd83cbf51",
   "ArtifactName": ".",
   "ArtifactType": "repository",
   "Metadata": {
     "RepoURL": "git@github.com:emilpeychev/kind-cluster-cilium.git",
     "Branch": "master",
-    "Commit": "e24bb233c26ab07b192c738c01b7ca9b4cea86b3",
-    "CommitMsg": "Revert \"test trivy (#57)\" (#58)\n\nThis reverts commit fba855a9df171e38049d56df142f63e946f7c0b7.",
+    "Commit": "47d80ff0f54d552879c5a6dd45104f9592aacd6b",
+    "CommitMsg": "Trivcosign (#59)\n\n* test trivy\n\n* trivy-cosign\n\n---------\n\nCo-authored-by: eepeychev \u003ceepeychev@yettel.bg\u003e",
     "Author": "emilpeychev \u003c69958740+emilpeychev@users.noreply.github.com\u003e",
     "Committer": "GitHub \u003cnoreply@github.com\u003e"
   },
@@ -790,11 +790,11 @@
                 },
                 {
                   "Number": 25,
-                  "Content": "          image: harbor.local/library/demo-app:20260211-161030",
+                  "Content": "          image: harbor.local/library/demo-app:20260212-074442",
                   "IsCause": true,
                   "Annotation": "",
                   "Truncated": false,
-                  "Highlighted": "          \u001b[38;5;33mimage\u001b[0m: harbor.local/library/demo-app:20260211-161030",
+                  "Highlighted": "          \u001b[38;5;33mimage\u001b[0m: harbor.local/library/demo-app:20260212-074442",
                   "FirstCause": false,
                   "LastCause": false
                 },
@@ -916,11 +916,11 @@
                 },
                 {
                   "Number": 25,
-                  "Content": "          image: harbor.local/library/demo-app:20260211-161030",
+                  "Content": "          image: harbor.local/library/demo-app:20260212-074442",
                   "IsCause": true,
                   "Annotation": "",
                   "Truncated": false,
-                  "Highlighted": "          \u001b[38;5;33mimage\u001b[0m: harbor.local/library/demo-app:20260211-161030",
+                  "Highlighted": "          \u001b[38;5;33mimage\u001b[0m: harbor.local/library/demo-app:20260212-074442",
                   "FirstCause": false,
                   "LastCause": false
                 },
@@ -1082,11 +1082,11 @@
                 },
                 {
                   "Number": 25,
-                  "Content": "          image: harbor.local/library/demo-app:20260211-161030",
+                  "Content": "          image: harbor.local/library/demo-app:20260212-074442",
                   "IsCause": true,
                   "Annotation": "",
                   "Truncated": false,
-                  "Highlighted": "          \u001b[38;5;33mimage\u001b[0m: harbor.local/library/demo-app:20260211-161030",
+                  "Highlighted": "          \u001b[38;5;33mimage\u001b[0m: harbor.local/library/demo-app:20260212-074442",
                   "FirstCause": false,
                   "LastCause": false
                 },
@@ -1912,7 +1912,25 @@
       }
     },
     {
-      "Target": "Tekton-Pipelines/tekton-task-3-update-tag.yaml",
+      "Target": "Tekton-Pipelines/tekton-task-3-trivy-image-scan.yaml",
+      "Class": "config",
+      "Type": "kubernetes",
+      "MisconfSummary": {
+        "Successes": 33,
+        "Failures": 0
+      }
+    },
+    {
+      "Target": "Tekton-Pipelines/tekton-task-4-cosign.yaml",
+      "Class": "config",
+      "Type": "kubernetes",
+      "MisconfSummary": {
+        "Successes": 33,
+        "Failures": 0
+      }
+    },
+    {
+      "Target": "Tekton-Pipelines/tekton-task-5-update-tag.yaml",
       "Class": "config",
       "Type": "kubernetes",
       "MisconfSummary": {
