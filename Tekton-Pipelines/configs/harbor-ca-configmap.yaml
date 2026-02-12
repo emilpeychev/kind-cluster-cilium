@@ -6,7 +6,7 @@ metadata:
 spec:
   template:
     spec:
-      serviceAccountName: tekton-admin
+      serviceAccountName: tekton-build-sa
       restartPolicy: OnFailure
       containers:
       - name: copy-configmap

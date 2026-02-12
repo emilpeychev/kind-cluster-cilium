@@ -84,6 +84,7 @@ sleep 1
 log "Deploying Tekton ServiceAccounts, Pipeline, and Tasks"
 kubectl apply -f Tekton-Pipelines/configs/tekton-sa.yaml
 kubectl apply -f Tekton-Pipelines/configs/tekton-sa-builds.yaml
+kubectl apply -f Tekton-Pipelines/configs/tekton-rbac.yaml
 kubectl apply -f Tekton-Pipelines/configs/cosign-keygen-job.yaml
 kubectl apply -f Tekton-Pipelines/configs/harbor-ca-configmap.yaml
 kubectl apply -f Tekton-Pipelines/tekton-pipeline.yaml

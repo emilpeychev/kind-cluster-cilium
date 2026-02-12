@@ -6,32 +6,74 @@ metadata:
 spec:
   template:
     spec:
-      serviceAccountName: tekton-admin
+      serviceAccountName: tekton-build-sa
       restartPolicy: OnFailure
-      containers:
+      initContainers:
+      - name: check-secret
+        image: bitnami/kubectl:latest
+        command:
+        - /bin/bash
+        - -c
+        - |
+          # Check if secret already exists
+          if kubectl get secret cosign-key -n tekton-builds 2>/dev/null; then
+            echo "Cosign key secret already exists, using existing"
+            # Touch a file to skip generation
+            touch /shared/skip-generation
+          else
+            echo "Secret does not exist, will generate new keys"
+          fi
+        volumeMounts:
+        - name: shared
+          mountPath: /shared
       - name: generate-key
         image: gcr.io/projectsigstore/cosign:v2.2.0
         env:
         - name: COSIGN_PASSWORD
           value: ""
+        workingDir: /keys
         command:
-        - /bin/sh
+        - sh
         - -c
         - |
-          # Check if secret already exists
-          if kubectl get secret cosign-key -n tekton-builds 2>/dev/null; then
-            echo "Cosign key secret already exists, skipping generation"
+          if [ -f /shared/skip-generation ]; then
+            echo "Skipping key generation - secret already exists"
+            exit 0
+          fi
+          cosign generate-key-pair
+          # Make keys readable by next container
+          chmod 644 /keys/cosign.key /keys/cosign.pub
+        volumeMounts:
+        - name: cosign-keys
+          mountPath: /keys
+        - name: shared
+          mountPath: /shared
+      containers:
+      - name: create-secret
+        image: bitnami/kubectl:latest
+        command:
+        - /bin/bash
+        - -c
+        - |
+          if [ -f /shared/skip-generation ]; then
+            echo "Secret already exists, job complete"
             exit 0
           fi
           
-          # Generate key pair
-          cd /tmp
-          cosign generate-key-pair
-          
-          # Create Kubernetes secret
+          # Create Kubernetes secret from generated keys
           kubectl create secret generic cosign-key \
-            --from-file=cosign.key=/tmp/cosign.key \
-            --from-file=cosign.pub=/tmp/cosign.pub \
+            --from-file=cosign.key=/keys/cosign.key \
+            --from-file=cosign.pub=/keys/cosign.pub \
             -n tekton-builds
           
           echo "Cosign key pair generated and stored in secret cosign-key"
+        volumeMounts:
+        - name: cosign-keys
+          mountPath: /keys
+        - name: shared
+          mountPath: /shared
+      volumes:
+      - name: cosign-keys
+        emptyDir: {}
+      - name: shared
+        emptyDir: {}
