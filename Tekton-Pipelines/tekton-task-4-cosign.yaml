@@ -9,6 +9,25 @@ spec:
       type: string
 
   steps:
+    - name: generate-sbom
+      image: aquasec/trivy:latest
+      script: |
+        #!/bin/sh
+        set -e
+        
+        echo "Generating SBOM for image: $(params.IMAGE_URL)"
+        
+        trivy image \
+          --format cyclonedx \
+          --output /workspace/sbom.json \
+          --insecure \
+          $(params.IMAGE_URL)
+        
+        echo "SBOM generated successfully"
+        ls -lh /workspace/sbom.json
+      volumeMounts:
+        - name: sbom-storage
+          mountPath: /workspace
     - name: sign
       image: gcr.io/projectsigstore/cosign:v2.2.0
       env:
@@ -41,3 +60,5 @@ spec:
         items:
           - key: .dockerconfigjson
             path: config.json
+    - name: sbom-storage
+      emptyDir: {}
