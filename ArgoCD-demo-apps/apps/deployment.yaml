@@ -15,7 +15,7 @@ spec:
       labels:
         app: demo-app1
       annotations:
-        kubectl.kubernetes.io/restartedAt: "2026-02-11T16:10:55Z"
+        kubectl.kubernetes.io/restartedAt: "2026-02-12T10:55:21Z"
         git.commit-sha: "placeholder-sha"
     spec:
       imagePullSecrets:
