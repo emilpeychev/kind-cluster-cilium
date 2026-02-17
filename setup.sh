@@ -31,8 +31,9 @@ print_banner() {
   echo "║  3) Cilium CNI        9) Argo Events + Smee                    ║"
   echo "║  4) Istio Ambient    10) Argo Workflows                        ║"
   echo "║  5) TLS + CoreDNS    11) Deploy Apps (HTTPBin)                 ║"
-  echo "║  6) Harbor Registry  12) Harbor Charts (Observability)         ║"
+  echo "║  6) Harbor Registry  12) Harbor Helm Charts                    ║"
   echo "║  13) Observability (Prometheus + Grafana)                      ║"
+  echo "║  14) Kyverno (Image Verification)                              ║"
   echo "╠════════════════════════════════════════════════════════════════╣"
   echo "║  all) Run all steps    delete) Delete cluster                  ║"
   echo "║  q) Quit                                                       ║"
@@ -56,8 +57,9 @@ run_step() {
     9)  script="09-argo-events.sh" ;;
     10) script="10-argo-workflows.sh" ;;
     11) script="11-deploy-apps.sh" ;;
-    12) script="12-harbor-observability-charts.sh" ;;
+    12) script="12-harbor-helm-charts.sh" ;;
     13) script="13-observability-stack.sh" ;;
+    14) script="14-kyverno.sh" ;;
     *)
       echo -e "${RED}Invalid step: $step${NC}" >&2
       return 1
@@ -77,7 +79,7 @@ run_step() {
 
 run_all() {
   echo -e "${YELLOW}Running all steps...${NC}"
-  for i in {1..13}; do
+  for i in {1..14}; do
     run_step "$i"
   done
   print_summary
@@ -113,6 +115,7 @@ print_summary() {
   echo "║  HTTPBin API:    https://httpbin.local                         ║"
   echo "║  Prometheus:     https://prometheus.local                      ║"
   echo "║  Grafana:        https://grafana.local                         ║"
+  echo "║  Kyverno:        Policy engine (verify-signed-images)          ║"
   echo "╚════════════════════════════════════════════════════════════════╝"
   echo -e "${NC}"
   echo ""
@@ -135,7 +138,7 @@ if [[ $# -eq 0 ]]; then
     read -rp "Select option: " choice
     
     case "$choice" in
-      [1-9]|10|11|12|13)
+      [1-9]|10|11|12|13|14)
         run_step "$choice"
         ;;
       all|a)

@@ -1,0 +1,30 @@
+# PolicyException: Allow system namespaces and infrastructure workloads
+# to run without image signature verification
+apiVersion: kyverno.io/v2beta1
+kind: PolicyException
+metadata:
+  name: exclude-system-namespaces
+  namespace: kyverno
+spec:
+  exceptions:
+    - policyName: verify-signed-images
+      ruleNames:
+        - verify-harbor-images
+  match:
+    any:
+      - resources:
+          kinds:
+            - Pod
+          namespaces:
+            - kube-system
+            - kyverno
+            - istio-system
+            - tekton-pipelines
+            - tekton-builds
+            - argocd
+            - argo-events
+            - argo
+            - metallb-system
+            - harbor
+            - monitoring
+            - cert-manager

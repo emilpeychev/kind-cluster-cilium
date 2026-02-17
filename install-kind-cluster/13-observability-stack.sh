@@ -15,7 +15,7 @@ ROBOT_ENV="$ROOT_DIR/.harbor-robot-pass.env"
 
 if [[ ! -f "$ROBOT_ENV" ]]; then
   echo "ERROR: Harbor robot credentials not found at $ROBOT_ENV"
-  echo "Please run step 12 (12-harbor-observability-charts.sh) first"
+  echo "Please run step 12 (12-harbor-helm-charts.sh) first"
   exit 1
 fi
 
@@ -23,7 +23,7 @@ source "$ROBOT_ENV"
 
 if [[ -z "${ROBOT_PASS:-}" ]]; then
   echo "ERROR: ROBOT_PASS is empty in $ROBOT_ENV"
-  echo "Please run step 12 (12-harbor-observability-charts.sh) first"
+  echo "Please run step 12 (12-harbor-helm-charts.sh) first"
   exit 1
 fi
 

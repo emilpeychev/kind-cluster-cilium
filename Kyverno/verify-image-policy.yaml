@@ -1,0 +1,36 @@
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: verify-signed-images
+  annotations:
+    policies.kyverno.io/title: Verify Cosign Signed Images
+    policies.kyverno.io/description: >-
+      Ensures only cosign-signed images from Harbor are admitted.
+      Images in harbor.local/library/* must have a valid cosign signature.
+spec:
+  validationFailureAction: Enforce
+  background: false
+  webhookTimeoutSeconds: 30
+  rules:
+    - name: verify-harbor-images
+      match:
+        any:
+          - resources:
+              kinds:
+                - Pod
+              namespaces:
+                - demo-apps
+      verifyImages:
+        - imageReferences:
+            - "harbor.local/library/*"
+          attestors:
+            - entries:
+                - keys:
+                    publicKeys: |-
+                      -----BEGIN PUBLIC KEY-----
+                      REPLACE_WITH_COSIGN_PUBLIC_KEY
+                      -----END PUBLIC KEY-----
+                    signatureAlgorithm: sha256
+          mutateDigest: false
+          verifyDigest: false
+          required: true
