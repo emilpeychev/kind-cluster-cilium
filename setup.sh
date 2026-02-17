@@ -34,6 +34,7 @@ print_banner() {
   echo "║  6) Harbor Registry  12) Harbor Helm Charts                    ║"
   echo "║  13) Observability (Prometheus + Grafana)                      ║"
   echo "║  14) Kyverno (Image Verification)                              ║"
+  echo "║  15) Metrics Server                                            ║"
   echo "╠════════════════════════════════════════════════════════════════╣"
   echo "║  all) Run all steps    delete) Delete cluster                  ║"
   echo "║  q) Quit                                                       ║"
@@ -60,6 +61,7 @@ run_step() {
     12) script="12-harbor-helm-charts.sh" ;;
     13) script="13-observability-stack.sh" ;;
     14) script="14-kyverno.sh" ;;
+    15) script="15-metrics-server.sh" ;;
     *)
       echo -e "${RED}Invalid step: $step${NC}" >&2
       return 1
@@ -79,7 +81,7 @@ run_step() {
 
 run_all() {
   echo -e "${YELLOW}Running all steps...${NC}"
-  for i in {1..14}; do
+  for i in {1..15}; do
     run_step "$i"
   done
   print_summary

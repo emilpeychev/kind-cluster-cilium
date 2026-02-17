@@ -1,0 +1,28 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: metrics-server-project
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  description: Kubernetes Metrics Server
+  sourceRepos:
+    - harbor.local
+    - harbor.local/helm
+
+  destinations:
+    - namespace: kube-system
+      server: https://kubernetes.default.svc
+
+  clusterResourceWhitelist:
+    - group: rbac.authorization.k8s.io
+      kind: ClusterRole
+    - group: rbac.authorization.k8s.io
+      kind: ClusterRoleBinding
+    - group: apiregistration.k8s.io
+      kind: APIService
+
+  namespaceResourceWhitelist:
+    - group: '*'
+      kind: '*'
