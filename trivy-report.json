@@ -3,16 +3,16 @@
   "Trivy": {
     "Version": "0.69.1"
   },
-  "ReportID": "019c6ad4-6c7e-7828-b427-fa6a67236eb2",
-  "CreatedAt": "2026-02-17T09:00:32.254539796Z",
-  "ArtifactID": "sha256:3f0d5dda86a964f95a65789843256f25afe94a1c060ace9157e0972f04f250d4",
+  "ReportID": "019c6af7-4f81-78fd-9220-348fd49d297f",
+  "CreatedAt": "2026-02-17T09:38:38.593594299Z",
+  "ArtifactID": "sha256:128f9fe8c037b7cbf1d462381c1a7cbe0f20612cd548b1605f69be726cb345d4",
   "ArtifactName": ".",
   "ArtifactType": "repository",
   "Metadata": {
     "RepoURL": "git@github.com:emilpeychev/kind-cluster-cilium.git",
     "Branch": "master",
-    "Commit": "2fc66b130df166e7818f72481a94c26f463bf22a",
-    "CommitMsg": "demo-app: change background to green",
+    "Commit": "f8af2f8d7fe772ae8241d8fed8b01157bd099369",
+    "CommitMsg": "blue bg",
     "Author": "eepeychev \u003ceepeychev@yettel.bg\u003e",
     "Committer": "eepeychev \u003ceepeychev@yettel.bg\u003e"
   },
@@ -790,11 +790,11 @@
                 },
                 {
                   "Number": 25,
-                  "Content": "          image: harbor.local/library/demo-app:20260217-083205",
+                  "Content": "          image: harbor.local/library/demo-app:20260217-090013",
                   "IsCause": true,
                   "Annotation": "",
                   "Truncated": false,
-                  "Highlighted": "          \u001b[38;5;33mimage\u001b[0m: harbor.local/library/demo-app:20260217-083205",
+                  "Highlighted": "          \u001b[38;5;33mimage\u001b[0m: harbor.local/library/demo-app:20260217-090013",
                   "FirstCause": false,
                   "LastCause": false
                 },
@@ -916,11 +916,11 @@
                 },
                 {
                   "Number": 25,
-                  "Content": "          image: harbor.local/library/demo-app:20260217-083205",
+                  "Content": "          image: harbor.local/library/demo-app:20260217-090013",
                   "IsCause": true,
                   "Annotation": "",
                   "Truncated": false,
-                  "Highlighted": "          \u001b[38;5;33mimage\u001b[0m: harbor.local/library/demo-app:20260217-083205",
+                  "Highlighted": "          \u001b[38;5;33mimage\u001b[0m: harbor.local/library/demo-app:20260217-090013",
                   "FirstCause": false,
                   "LastCause": false
                 },
@@ -1082,11 +1082,11 @@
                 },
                 {
                   "Number": 25,
-                  "Content": "          image: harbor.local/library/demo-app:20260217-083205",
+                  "Content": "          image: harbor.local/library/demo-app:20260217-090013",
                   "IsCause": true,
                   "Annotation": "",
                   "Truncated": false,
-                  "Highlighted": "          \u001b[38;5;33mimage\u001b[0m: harbor.local/library/demo-app:20260217-083205",
+                  "Highlighted": "          \u001b[38;5;33mimage\u001b[0m: harbor.local/library/demo-app:20260217-090013",
                   "FirstCause": false,
                   "LastCause": false
                 },
@@ -2290,32 +2290,72 @@
           "CauseMetadata": {
             "Provider": "Kubernetes",
             "Service": "general",
-            "StartLine": 52,
-            "EndLine": 74,
+            "StartLine": 29,
+            "EndLine": 50,
             "Code": {
               "Lines": [
                 {
-                  "Number": 52,
-                  "Content": "      - name: create-secret",
+                  "Number": 29,
+                  "Content": "      - name: generate-key",
                   "IsCause": true,
                   "Annotation": "",
                   "Truncated": false,
-                  "Highlighted": "      - \u001b[38;5;33mname\u001b[0m: create-secret",
+                  "Highlighted": "      - \u001b[38;5;33mname\u001b[0m: generate-key",
                   "FirstCause": true,
                   "LastCause": false
                 },
                 {
-                  "Number": 53,
-                  "Content": "        image: bitnami/kubectl:latest",
+                  "Number": 30,
+                  "Content": "        image: gcr.io/projectsigstore/cosign:v2.2.0",
                   "IsCause": true,
                   "Annotation": "",
                   "Truncated": false,
-                  "Highlighted": "        \u001b[38;5;33mimage\u001b[0m: bitnami/kubectl:latest",
+                  "Highlighted": "        \u001b[38;5;33mimage\u001b[0m: gcr.io/projectsigstore/cosign:v2.2.0",
                   "FirstCause": false,
                   "LastCause": false
                 },
                 {
-                  "Number": 54,
+                  "Number": 31,
+                  "Content": "        env:",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "        \u001b[38;5;33menv\u001b[0m:",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 32,
+                  "Content": "        - name: COSIGN_PASSWORD",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "        - \u001b[38;5;33mname\u001b[0m: COSIGN_PASSWORD",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 33,
+                  "Content": "          value: \"\"",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "          \u001b[38;5;33mvalue\u001b[0m: \u001b[38;5;37m\"\"",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 34,
+                  "Content": "        workingDir: /keys",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[0m        \u001b[38;5;33mworkingDir\u001b[0m: /keys",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 35,
                   "Content": "        command:",
                   "IsCause": true,
                   "Annotation": "",
@@ -2325,67 +2365,27 @@
                   "LastCause": false
                 },
                 {
-                  "Number": 55,
-                  "Content": "        - /bin/bash",
+                  "Number": 36,
+                  "Content": "        - sh",
                   "IsCause": true,
                   "Annotation": "",
                   "Truncated": false,
-                  "Highlighted": "        - /bin/bash",
+                  "Highlighted": "        - sh",
                   "FirstCause": false,
                   "LastCause": false
                 },
                 {
-                  "Number": 56,
+                  "Number": 37,
                   "Content": "        - -c",
                   "IsCause": true,
                   "Annotation": "",
                   "Truncated": false,
                   "Highlighted": "        - -c",
                   "FirstCause": false,
-                  "LastCause": false
-                },
-                {
-                  "Number": 57,
-                  "Content": "        - |",
-                  "IsCause": true,
-                  "Annotation": "",
-                  "Truncated": false,
-                  "Highlighted": "        - |",
-                  "FirstCause": false,
-                  "LastCause": false
-                },
-                {
-                  "Number": 58,
-                  "Content": "          if [ -f /shared/skip-generation ]; then",
-                  "IsCause": true,
-                  "Annotation": "",
-                  "Truncated": false,
-                  "Highlighted": "\u001b[38;5;37m          if [ -f /shared/skip-generation ]; then",
-                  "FirstCause": false,
-                  "LastCause": false
-                },
-                {
-                  "Number": 59,
-                  "Content": "            echo \"Secret already exists, job complete\"",
-                  "IsCause": true,
-                  "Annotation": "",
-                  "Truncated": false,
-                  "Highlighted": "            echo \"Secret already exists, job complete\"",
-                  "FirstCause": false,
-                  "LastCause": false
-                },
-                {
-                  "Number": 60,
-                  "Content": "            exit 0",
-                  "IsCause": true,
-                  "Annotation": "",
-                  "Truncated": false,
-                  "Highlighted": "            exit 0",
-                  "FirstCause": false,
                   "LastCause": true
                 },
                 {
-                  "Number": 61,
+                  "Number": 38,
                   "Content": "",
                   "IsCause": false,
                   "Annotation": "",
@@ -2542,72 +2542,32 @@
           "CauseMetadata": {
             "Provider": "Kubernetes",
             "Service": "general",
-            "StartLine": 29,
-            "EndLine": 50,
+            "StartLine": 52,
+            "EndLine": 74,
             "Code": {
               "Lines": [
                 {
-                  "Number": 29,
-                  "Content": "      - name: generate-key",
+                  "Number": 52,
+                  "Content": "      - name: create-secret",
                   "IsCause": true,
                   "Annotation": "",
                   "Truncated": false,
-                  "Highlighted": "      - \u001b[38;5;33mname\u001b[0m: generate-key",
+                  "Highlighted": "      - \u001b[38;5;33mname\u001b[0m: create-secret",
                   "FirstCause": true,
                   "LastCause": false
                 },
                 {
-                  "Number": 30,
-                  "Content": "        image: gcr.io/projectsigstore/cosign:v2.2.0",
+                  "Number": 53,
+                  "Content": "        image: bitnami/kubectl:latest",
                   "IsCause": true,
                   "Annotation": "",
                   "Truncated": false,
-                  "Highlighted": "        \u001b[38;5;33mimage\u001b[0m: gcr.io/projectsigstore/cosign:v2.2.0",
+                  "Highlighted": "        \u001b[38;5;33mimage\u001b[0m: bitnami/kubectl:latest",
                   "FirstCause": false,
                   "LastCause": false
                 },
                 {
-                  "Number": 31,
-                  "Content": "        env:",
-                  "IsCause": true,
-                  "Annotation": "",
-                  "Truncated": false,
-                  "Highlighted": "        \u001b[38;5;33menv\u001b[0m:",
-                  "FirstCause": false,
-                  "LastCause": false
-                },
-                {
-                  "Number": 32,
-                  "Content": "        - name: COSIGN_PASSWORD",
-                  "IsCause": true,
-                  "Annotation": "",
-                  "Truncated": false,
-                  "Highlighted": "        - \u001b[38;5;33mname\u001b[0m: COSIGN_PASSWORD",
-                  "FirstCause": false,
-                  "LastCause": false
-                },
-                {
-                  "Number": 33,
-                  "Content": "          value: \"\"",
-                  "IsCause": true,
-                  "Annotation": "",
-                  "Truncated": false,
-                  "Highlighted": "          \u001b[38;5;33mvalue\u001b[0m: \u001b[38;5;37m\"\"",
-                  "FirstCause": false,
-                  "LastCause": false
-                },
-                {
-                  "Number": 34,
-                  "Content": "        workingDir: /keys",
-                  "IsCause": true,
-                  "Annotation": "",
-                  "Truncated": false,
-                  "Highlighted": "\u001b[0m        \u001b[38;5;33mworkingDir\u001b[0m: /keys",
-                  "FirstCause": false,
-                  "LastCause": false
-                },
-                {
-                  "Number": 35,
+                  "Number": 54,
                   "Content": "        command:",
                   "IsCause": true,
                   "Annotation": "",
@@ -2617,27 +2577,67 @@
                   "LastCause": false
                 },
                 {
-                  "Number": 36,
-                  "Content": "        - sh",
+                  "Number": 55,
+                  "Content": "        - /bin/bash",
                   "IsCause": true,
                   "Annotation": "",
                   "Truncated": false,
-                  "Highlighted": "        - sh",
+                  "Highlighted": "        - /bin/bash",
                   "FirstCause": false,
                   "LastCause": false
                 },
                 {
-                  "Number": 37,
+                  "Number": 56,
                   "Content": "        - -c",
                   "IsCause": true,
                   "Annotation": "",
                   "Truncated": false,
                   "Highlighted": "        - -c",
                   "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 57,
+                  "Content": "        - |",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "        - |",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 58,
+                  "Content": "          if [ -f /shared/skip-generation ]; then",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[38;5;37m          if [ -f /shared/skip-generation ]; then",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 59,
+                  "Content": "            echo \"Secret already exists, job complete\"",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "            echo \"Secret already exists, job complete\"",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 60,
+                  "Content": "            exit 0",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "            exit 0",
+                  "FirstCause": false,
                   "LastCause": true
                 },
                 {
-                  "Number": 38,
+                  "Number": 61,
                   "Content": "",
                   "IsCause": false,
                   "Annotation": "",
@@ -3240,6 +3240,24 @@
     },
     {
       "Target": "metalLB/metallb-config.yaml",
+      "Class": "config",
+      "Type": "kubernetes",
+      "MisconfSummary": {
+        "Successes": 35,
+        "Failures": 0
+      }
+    },
+    {
+      "Target": "metrics-server/application.yaml",
+      "Class": "config",
+      "Type": "kubernetes",
+      "MisconfSummary": {
+        "Successes": 35,
+        "Failures": 0
+      }
+    },
+    {
+      "Target": "metrics-server/project.yaml",
       "Class": "config",
       "Type": "kubernetes",
       "MisconfSummary": {
