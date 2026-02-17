@@ -3,6 +3,8 @@ kind: Application
 metadata:
   name: kyverno
   namespace: argocd
+  annotations:
+    argocd.argoproj.io/compare-options: ServerSideDiff=true,IncludeMutationWebhook=true
   labels:
     app.kubernetes.io/part-of: security
   finalizers:
@@ -23,6 +25,8 @@ spec:
           replicas: 1
         reportsController:
           replicas: 1
+        config:
+          preserve: false
         features:
           policyExceptions:
             enabled: true
@@ -36,11 +40,15 @@ spec:
       kind: CustomResourceDefinition
       jsonPointers:
         - /metadata/labels
+    - group: apps
+      kind: Deployment
+      jsonPointers:
+        - /spec/template/metadata/creationTimestamp
   syncPolicy:
     automated:
       prune: true
       selfHeal: true
     syncOptions:
       - CreateNamespace=true
-      - Replace=true
+      - ServerSideApply=true
       - RespectIgnoreDifferences=true
