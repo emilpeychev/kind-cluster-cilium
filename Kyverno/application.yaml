@@ -26,6 +26,8 @@ spec:
         features:
           policyExceptions:
             enabled: true
+          registryClient:
+            allowInsecure: true
   destination:
     server: https://kubernetes.default.svc
     namespace: kyverno

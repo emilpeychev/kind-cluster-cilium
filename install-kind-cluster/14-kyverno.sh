@@ -69,20 +69,17 @@ log "Deploying image verification policy..."
 POLICY_FILE="$ROOT_DIR/Kyverno/verify-image-policy.yaml"
 TEMP_POLICY=$(mktemp)
 
-# Replace placeholder with real cosign public key
-sed "s|-----BEGIN PUBLIC KEY-----.*-----END PUBLIC KEY-----|PLACEHOLDER_BLOCK|" "$POLICY_FILE" > "$TEMP_POLICY"
+# Extract key body lines (without BEGIN/END markers)
+KEY_BODY=$(echo "$COSIGN_PUB" | grep -v 'PUBLIC KEY')
+LINE1=$(echo "$KEY_BODY" | sed -n '1p')
+LINE2=$(echo "$KEY_BODY" | sed -n '2p')
 
-KEY_BLOCK=$(echo "$COSIGN_PUB" | sed 's/^/                      /')
-awk -v key="$KEY_BLOCK" '{
-  if ($0 ~ /PLACEHOLDER_BLOCK/) {
-    print key
-  } else {
-    print
-  }
-}' "$TEMP_POLICY" > "${TEMP_POLICY}.2"
-mv "${TEMP_POLICY}.2" "$TEMP_POLICY"
-
-sed -i '/REPLACE_WITH_COSIGN_PUBLIC_KEY/d' "$TEMP_POLICY"
+# Replace placeholder with actual key body, preserving YAML indentation
+if [[ -n "$LINE2" ]]; then
+  sed "s|REPLACE_WITH_COSIGN_PUBLIC_KEY|${LINE1}\\n                      ${LINE2}|" "$POLICY_FILE" > "$TEMP_POLICY"
+else
+  sed "s|REPLACE_WITH_COSIGN_PUBLIC_KEY|${LINE1}|" "$POLICY_FILE" > "$TEMP_POLICY"
+fi
 
 kubectl apply -f "$TEMP_POLICY"
 rm -f "$TEMP_POLICY"
