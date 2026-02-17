@@ -62,7 +62,20 @@ helm push grafana-10.5.12.tgz oci://harbor.local/helm || true
 # Clean up downloaded chart
 rm -f grafana-10.5.12.tgz
 
-# 4. Create / load Harbor robot account (system-level)
+# 4. Package and push Kyverno Helm chart
+log "Packaging and pushing Kyverno Helm chart to Harbor..."
+
+helm repo add kyverno https://kyverno.github.io/kyverno/ >/dev/null
+helm repo update >/dev/null
+helm pull kyverno/kyverno --version 3.7.0
+
+# Push Helm chart to Harbor OCI repo
+helm push kyverno-3.7.0.tgz oci://harbor.local/helm || true
+
+# Clean up downloaded chart
+rm -f kyverno-3.7.0.tgz
+
+# 5. Create / load Harbor robot account (system-level)
 log "Ensuring Harbor robot account for Argo CD..."
 
 ROBOT_ENV="$ROOT_DIR/.harbor-robot-pass.env"
@@ -118,7 +131,7 @@ if [[ -z "${ROBOT_PASS:-}" ]]; then
 fi
 
 
-# 5. Register Harbor repo in Argo CD
+# 6. Register Harbor repo in Argo CD
 log "Registering Harbor Helm OCI repo in Argo CD..."
 
 argocd repo add harbor.local \
@@ -138,7 +151,7 @@ kubectl create secret generic harbor-helm-repo -n argocd \
   --dry-run=client -o yaml | kubectl apply -f - >/dev/null
 kubectl label secret harbor-helm-repo -n argocd argocd.argoproj.io/secret-type=repository --overwrite >/dev/null
 
-# 6. Local DNS convenience
+# 7. Local DNS convenience
 grep -q "kiali.local" /etc/hosts || \
   echo "$METALLB_IP kiali.local" | sudo tee -a /etc/hosts >/dev/null
 grep -q "prometheus.local" /etc/hosts || \
@@ -147,5 +160,5 @@ grep -q "grafana.local" /etc/hosts || \
   echo "$METALLB_IP grafana.local" | sudo tee -a /etc/hosts >/dev/null
 
 log "Helm charts published to Harbor OCI registry"
-log "Charts available at: oci://harbor.local/helm/{kiali-server,prometheus,grafana}"
+log "Charts available at: oci://harbor.local/helm/{kiali-server,prometheus,grafana,kyverno}"
 log "Step 12 complete."

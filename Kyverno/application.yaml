@@ -1,23 +1,39 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: kyverno-crds
+  name: kyverno
   namespace: argocd
   labels:
     app.kubernetes.io/part-of: security
-  annotations:
-    argocd.argoproj.io/sync-wave: "0"
   finalizers:
     - resources-finalizer.argocd.argoproj.io
 spec:
   project: kyverno-project
   source:
-    repoURL: git@github.com:emilpeychev/kind-cluster-cilium.git
-    targetRevision: master
-    path: Kyverno/crds
+    repoURL: harbor.local
+    chart: helm/kyverno
+    targetRevision: 3.7.0
+    helm:
+      values: |
+        admissionController:
+          replicas: 1
+        backgroundController:
+          replicas: 1
+        cleanupController:
+          replicas: 1
+        reportsController:
+          replicas: 1
+        features:
+          policyExceptions:
+            enabled: true
   destination:
     server: https://kubernetes.default.svc
     namespace: kyverno
+  ignoreDifferences:
+    - group: apiextensions.k8s.io
+      kind: CustomResourceDefinition
+      jsonPointers:
+        - /spec
   syncPolicy:
     automated:
       prune: true
@@ -25,30 +41,4 @@ spec:
     syncOptions:
       - CreateNamespace=true
       - ServerSideApply=true
----
-apiVersion: argoproj.io/v1alpha1
-kind: Application
-metadata:
-  name: kyverno
-  namespace: argocd
-  labels:
-    app.kubernetes.io/part-of: security
-  annotations:
-    argocd.argoproj.io/sync-wave: "1"
-  finalizers:
-    - resources-finalizer.argocd.argoproj.io
-spec:
-  project: kyverno-project
-  source:
-    repoURL: git@github.com:emilpeychev/kind-cluster-cilium.git
-    targetRevision: master
-    path: Kyverno/manifests
-  destination:
-    server: https://kubernetes.default.svc
-    namespace: kyverno
-  syncPolicy:
-    automated:
-      prune: true
-      selfHeal: true
-    syncOptions:
-      - CreateNamespace=true
+      - RespectIgnoreDifferences=true

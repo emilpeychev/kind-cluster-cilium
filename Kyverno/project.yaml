@@ -12,7 +12,8 @@ metadata:
 spec:
   description: Kyverno policy engine
   sourceRepos:
-    - git@github.com:emilpeychev/kind-cluster-cilium.git
+    - harbor.local
+    - harbor.local/helm
   destinations:
     - namespace: kyverno
       server: https://kubernetes.default.svc
