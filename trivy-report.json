@@ -3,18 +3,18 @@
   "Trivy": {
     "Version": "0.69.1"
   },
-  "ReportID": "019c6af7-4f81-78fd-9220-348fd49d297f",
-  "CreatedAt": "2026-02-17T09:38:38.593594299Z",
-  "ArtifactID": "sha256:128f9fe8c037b7cbf1d462381c1a7cbe0f20612cd548b1605f69be726cb345d4",
+  "ReportID": "019c6b01-60fe-7c78-8e6d-5c313713a5b0",
+  "CreatedAt": "2026-02-17T09:49:38.430821772Z",
+  "ArtifactID": "sha256:b93fe69902f14d30937e8e67dc173cedb9e71b15ab6d5a2e4152f22fa72d0864",
   "ArtifactName": ".",
   "ArtifactType": "repository",
   "Metadata": {
     "RepoURL": "git@github.com:emilpeychev/kind-cluster-cilium.git",
     "Branch": "master",
-    "Commit": "f8af2f8d7fe772ae8241d8fed8b01157bd099369",
-    "CommitMsg": "blue bg",
-    "Author": "eepeychev \u003ceepeychev@yettel.bg\u003e",
-    "Committer": "eepeychev \u003ceepeychev@yettel.bg\u003e"
+    "Commit": "05cd56216b583003b33af6eab9009eb1c801308e",
+    "CommitMsg": "yellow bg (#63)\n\nCo-authored-by: eepeychev \u003ceepeychev@yettel.bg\u003e",
+    "Author": "emilpeychev \u003c69958740+emilpeychev@users.noreply.github.com\u003e",
+    "Committer": "GitHub \u003cnoreply@github.com\u003e"
   },
   "Results": [
     {
@@ -790,11 +790,11 @@
                 },
                 {
                   "Number": 25,
-                  "Content": "          image: harbor.local/library/demo-app:20260217-090013",
+                  "Content": "          image: harbor.local/library/demo-app:20260217-093809",
                   "IsCause": true,
                   "Annotation": "",
                   "Truncated": false,
-                  "Highlighted": "          \u001b[38;5;33mimage\u001b[0m: harbor.local/library/demo-app:20260217-090013",
+                  "Highlighted": "          \u001b[38;5;33mimage\u001b[0m: harbor.local/library/demo-app:20260217-093809",
                   "FirstCause": false,
                   "LastCause": false
                 },
@@ -916,11 +916,11 @@
                 },
                 {
                   "Number": 25,
-                  "Content": "          image: harbor.local/library/demo-app:20260217-090013",
+                  "Content": "          image: harbor.local/library/demo-app:20260217-093809",
                   "IsCause": true,
                   "Annotation": "",
                   "Truncated": false,
-                  "Highlighted": "          \u001b[38;5;33mimage\u001b[0m: harbor.local/library/demo-app:20260217-090013",
+                  "Highlighted": "          \u001b[38;5;33mimage\u001b[0m: harbor.local/library/demo-app:20260217-093809",
                   "FirstCause": false,
                   "LastCause": false
                 },
@@ -1082,11 +1082,11 @@
                 },
                 {
                   "Number": 25,
-                  "Content": "          image: harbor.local/library/demo-app:20260217-090013",
+                  "Content": "          image: harbor.local/library/demo-app:20260217-093809",
                   "IsCause": true,
                   "Annotation": "",
                   "Truncated": false,
-                  "Highlighted": "          \u001b[38;5;33mimage\u001b[0m: harbor.local/library/demo-app:20260217-090013",
+                  "Highlighted": "          \u001b[38;5;33mimage\u001b[0m: harbor.local/library/demo-app:20260217-093809",
                   "FirstCause": false,
                   "LastCause": false
                 },
@@ -2416,132 +2416,6 @@
           "CauseMetadata": {
             "Provider": "Kubernetes",
             "Service": "general",
-            "StartLine": 12,
-            "EndLine": 28,
-            "Code": {
-              "Lines": [
-                {
-                  "Number": 12,
-                  "Content": "      - name: check-secret",
-                  "IsCause": true,
-                  "Annotation": "",
-                  "Truncated": false,
-                  "Highlighted": "      - \u001b[38;5;33mname\u001b[0m: check-secret",
-                  "FirstCause": true,
-                  "LastCause": false
-                },
-                {
-                  "Number": 13,
-                  "Content": "        image: bitnami/kubectl:latest",
-                  "IsCause": true,
-                  "Annotation": "",
-                  "Truncated": false,
-                  "Highlighted": "        \u001b[38;5;33mimage\u001b[0m: bitnami/kubectl:latest",
-                  "FirstCause": false,
-                  "LastCause": false
-                },
-                {
-                  "Number": 14,
-                  "Content": "        command:",
-                  "IsCause": true,
-                  "Annotation": "",
-                  "Truncated": false,
-                  "Highlighted": "        \u001b[38;5;33mcommand\u001b[0m:",
-                  "FirstCause": false,
-                  "LastCause": false
-                },
-                {
-                  "Number": 15,
-                  "Content": "        - /bin/bash",
-                  "IsCause": true,
-                  "Annotation": "",
-                  "Truncated": false,
-                  "Highlighted": "        - /bin/bash",
-                  "FirstCause": false,
-                  "LastCause": false
-                },
-                {
-                  "Number": 16,
-                  "Content": "        - -c",
-                  "IsCause": true,
-                  "Annotation": "",
-                  "Truncated": false,
-                  "Highlighted": "        - -c",
-                  "FirstCause": false,
-                  "LastCause": false
-                },
-                {
-                  "Number": 17,
-                  "Content": "        - |",
-                  "IsCause": true,
-                  "Annotation": "",
-                  "Truncated": false,
-                  "Highlighted": "        - |",
-                  "FirstCause": false,
-                  "LastCause": false
-                },
-                {
-                  "Number": 18,
-                  "Content": "          # Check if secret already exists",
-                  "IsCause": true,
-                  "Annotation": "",
-                  "Truncated": false,
-                  "Highlighted": "\u001b[38;5;37m          # Check if secret already exists",
-                  "FirstCause": false,
-                  "LastCause": false
-                },
-                {
-                  "Number": 19,
-                  "Content": "          if kubectl get secret cosign-key -n tekton-builds 2\u003e/dev/null; then",
-                  "IsCause": true,
-                  "Annotation": "",
-                  "Truncated": false,
-                  "Highlighted": "          if kubectl get secret cosign-key -n tekton-builds 2\u003e/dev/null; then",
-                  "FirstCause": false,
-                  "LastCause": false
-                },
-                {
-                  "Number": 20,
-                  "Content": "            echo \"Cosign key secret already exists, using existing\"",
-                  "IsCause": true,
-                  "Annotation": "",
-                  "Truncated": false,
-                  "Highlighted": "            echo \"Cosign key secret already exists, using existing\"",
-                  "FirstCause": false,
-                  "LastCause": true
-                },
-                {
-                  "Number": 21,
-                  "Content": "",
-                  "IsCause": false,
-                  "Annotation": "",
-                  "Truncated": true,
-                  "FirstCause": false,
-                  "LastCause": false
-                }
-              ]
-            }
-          }
-        },
-        {
-          "Type": "Kubernetes Security Check",
-          "ID": "KSV-0118",
-          "Title": "Default security context configured",
-          "Description": "Security context controls the allocation of security parameters for the pod/container/volume, ensuring the appropriate level of protection. Relying on default security context may expose vulnerabilities to potential attacks that rely on privileged access.",
-          "Message": "container generate-cosign-key in tekton-builds namespace is using the default security context",
-          "Namespace": "builtin.kubernetes.KSV118",
-          "Query": "data.builtin.kubernetes.KSV118.deny",
-          "Resolution": "To enhance security, it is strongly recommended not to rely on the default security context. Instead, it is advisable to explicitly define the required security parameters (such as runAsNonRoot, capabilities, readOnlyRootFilesystem, etc.) within the security context.",
-          "Severity": "HIGH",
-          "PrimaryURL": "https://avd.aquasec.com/misconfig/ksv-0118",
-          "References": [
-            "https://kubernetes.io/docs/tasks/configure-pod-container/security-context/",
-            "https://avd.aquasec.com/misconfig/ksv-0118"
-          ],
-          "Status": "FAIL",
-          "CauseMetadata": {
-            "Provider": "Kubernetes",
-            "Service": "general",
             "StartLine": 52,
             "EndLine": 74,
             "Code": {
@@ -2638,6 +2512,132 @@
                 },
                 {
                   "Number": 61,
+                  "Content": "",
+                  "IsCause": false,
+                  "Annotation": "",
+                  "Truncated": true,
+                  "FirstCause": false,
+                  "LastCause": false
+                }
+              ]
+            }
+          }
+        },
+        {
+          "Type": "Kubernetes Security Check",
+          "ID": "KSV-0118",
+          "Title": "Default security context configured",
+          "Description": "Security context controls the allocation of security parameters for the pod/container/volume, ensuring the appropriate level of protection. Relying on default security context may expose vulnerabilities to potential attacks that rely on privileged access.",
+          "Message": "container generate-cosign-key in tekton-builds namespace is using the default security context",
+          "Namespace": "builtin.kubernetes.KSV118",
+          "Query": "data.builtin.kubernetes.KSV118.deny",
+          "Resolution": "To enhance security, it is strongly recommended not to rely on the default security context. Instead, it is advisable to explicitly define the required security parameters (such as runAsNonRoot, capabilities, readOnlyRootFilesystem, etc.) within the security context.",
+          "Severity": "HIGH",
+          "PrimaryURL": "https://avd.aquasec.com/misconfig/ksv-0118",
+          "References": [
+            "https://kubernetes.io/docs/tasks/configure-pod-container/security-context/",
+            "https://avd.aquasec.com/misconfig/ksv-0118"
+          ],
+          "Status": "FAIL",
+          "CauseMetadata": {
+            "Provider": "Kubernetes",
+            "Service": "general",
+            "StartLine": 12,
+            "EndLine": 28,
+            "Code": {
+              "Lines": [
+                {
+                  "Number": 12,
+                  "Content": "      - name: check-secret",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "      - \u001b[38;5;33mname\u001b[0m: check-secret",
+                  "FirstCause": true,
+                  "LastCause": false
+                },
+                {
+                  "Number": 13,
+                  "Content": "        image: bitnami/kubectl:latest",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "        \u001b[38;5;33mimage\u001b[0m: bitnami/kubectl:latest",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 14,
+                  "Content": "        command:",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "        \u001b[38;5;33mcommand\u001b[0m:",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 15,
+                  "Content": "        - /bin/bash",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "        - /bin/bash",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 16,
+                  "Content": "        - -c",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "        - -c",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 17,
+                  "Content": "        - |",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "        - |",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 18,
+                  "Content": "          # Check if secret already exists",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[38;5;37m          # Check if secret already exists",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 19,
+                  "Content": "          if kubectl get secret cosign-key -n tekton-builds 2\u003e/dev/null; then",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "          if kubectl get secret cosign-key -n tekton-builds 2\u003e/dev/null; then",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 20,
+                  "Content": "            echo \"Cosign key secret already exists, using existing\"",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "            echo \"Cosign key secret already exists, using existing\"",
+                  "FirstCause": false,
+                  "LastCause": true
+                },
+                {
+                  "Number": 21,
                   "Content": "",
                   "IsCause": false,
                   "Annotation": "",
