@@ -15,14 +15,14 @@ spec:
       labels:
         app: demo-app1
       annotations:
-        kubectl.kubernetes.io/restartedAt: "2026-02-18T11:36:23Z"
+        kubectl.kubernetes.io/restartedAt: "2026-02-18T11:41:06Z"
         git.commit-sha: "placeholder-sha"
     spec:
       imagePullSecrets:
         - name: harbor-regcred
       containers:
         - name: app
-          image: harbor.local/library/demo-app:20260218-113501
+          image: harbor.local/library/demo-app:20260218-113956
           imagePullPolicy: Always
           ports:
             - containerPort: 80
