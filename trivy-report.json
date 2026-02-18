@@ -3,16 +3,16 @@
   "Trivy": {
     "Version": "0.69.1"
   },
-  "ReportID": "019c7083-eb9f-7186-afa7-7da789b47335",
-  "CreatedAt": "2026-02-18T11:30:19.67910354Z",
-  "ArtifactID": "sha256:824e745d0295457be1e69c74803a0a85596bec0a8f04990232a7f38dcaa16c01",
+  "ReportID": "019c7088-7e53-757c-a866-22738bb68821",
+  "CreatedAt": "2026-02-18T11:35:19.379363642Z",
+  "ArtifactID": "sha256:39ea601210e7d721d350fa136151e55ced7f4a08b2c9f23034d50ebcb07bed55",
   "ArtifactName": ".",
   "ArtifactType": "repository",
   "Metadata": {
     "RepoURL": "git@github.com:emilpeychev/kind-cluster-cilium.git",
     "Branch": "master",
-    "Commit": "02e3c2bcbc16d53808f50d3a07fd64549c76847f",
-    "CommitMsg": "Revert \"blue-bg (#64)\" (#67)\n\nThis reverts commit bf44832fae31097d8393dbf872cbf8f2ab31499a.",
+    "Commit": "dc10eb2cde6b532b3e4979883bc50a604aaac5df",
+    "CommitMsg": "Revert \"Revert \"Revert \"blue-bg (#64)\" (#65)\" (#66)\" (#68)\n\nThis reverts commit 2d07741f5ac17cca5d13c1ec89de7bfcd0471189.",
     "Author": "emilpeychev \u003c69958740+emilpeychev@users.noreply.github.com\u003e",
     "Committer": "GitHub \u003cnoreply@github.com\u003e"
   },
@@ -790,11 +790,11 @@
                 },
                 {
                   "Number": 25,
-                  "Content": "          image: harbor.local/library/demo-app:20260218-101429",
+                  "Content": "          image: harbor.local/library/demo-app:20260218-112957",
                   "IsCause": true,
                   "Annotation": "",
                   "Truncated": false,
-                  "Highlighted": "          \u001b[38;5;33mimage\u001b[0m: harbor.local/library/demo-app:20260218-101429",
+                  "Highlighted": "          \u001b[38;5;33mimage\u001b[0m: harbor.local/library/demo-app:20260218-112957",
                   "FirstCause": false,
                   "LastCause": false
                 },
@@ -916,11 +916,11 @@
                 },
                 {
                   "Number": 25,
-                  "Content": "          image: harbor.local/library/demo-app:20260218-101429",
+                  "Content": "          image: harbor.local/library/demo-app:20260218-112957",
                   "IsCause": true,
                   "Annotation": "",
                   "Truncated": false,
-                  "Highlighted": "          \u001b[38;5;33mimage\u001b[0m: harbor.local/library/demo-app:20260218-101429",
+                  "Highlighted": "          \u001b[38;5;33mimage\u001b[0m: harbor.local/library/demo-app:20260218-112957",
                   "FirstCause": false,
                   "LastCause": false
                 },
@@ -1082,11 +1082,11 @@
                 },
                 {
                   "Number": 25,
-                  "Content": "          image: harbor.local/library/demo-app:20260218-101429",
+                  "Content": "          image: harbor.local/library/demo-app:20260218-112957",
                   "IsCause": true,
                   "Annotation": "",
                   "Truncated": false,
-                  "Highlighted": "          \u001b[38;5;33mimage\u001b[0m: harbor.local/library/demo-app:20260218-101429",
+                  "Highlighted": "          \u001b[38;5;33mimage\u001b[0m: harbor.local/library/demo-app:20260218-112957",
                   "FirstCause": false,
                   "LastCause": false
                 },
