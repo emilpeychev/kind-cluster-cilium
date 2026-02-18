@@ -3,16 +3,16 @@
   "Trivy": {
     "Version": "0.69.1"
   },
-  "ReportID": "019c703e-d927-7064-acb9-3c534e4fd01e",
-  "CreatedAt": "2026-02-18T10:14:52.967030349Z",
-  "ArtifactID": "sha256:3f29e860aff89ad1d394230d441a3108c5b3bfab61623ddae3410e530d774d4e",
+  "ReportID": "019c7083-eb9f-7186-afa7-7da789b47335",
+  "CreatedAt": "2026-02-18T11:30:19.67910354Z",
+  "ArtifactID": "sha256:824e745d0295457be1e69c74803a0a85596bec0a8f04990232a7f38dcaa16c01",
   "ArtifactName": ".",
   "ArtifactType": "repository",
   "Metadata": {
     "RepoURL": "git@github.com:emilpeychev/kind-cluster-cilium.git",
     "Branch": "master",
-    "Commit": "eb5ac6f6e33161df8808a2f086e822ff7c027b9e",
-    "CommitMsg": "Revert \"blue-bg (#64)\" (#65)\n\nThis reverts commit bf44832fae31097d8393dbf872cbf8f2ab31499a.",
+    "Commit": "02e3c2bcbc16d53808f50d3a07fd64549c76847f",
+    "CommitMsg": "Revert \"blue-bg (#64)\" (#67)\n\nThis reverts commit bf44832fae31097d8393dbf872cbf8f2ab31499a.",
     "Author": "emilpeychev \u003c69958740+emilpeychev@users.noreply.github.com\u003e",
     "Committer": "GitHub \u003cnoreply@github.com\u003e"
   },
@@ -790,11 +790,11 @@
                 },
                 {
                   "Number": 25,
-                  "Content": "          image: harbor.local/library/demo-app:20260217-094908",
+                  "Content": "          image: harbor.local/library/demo-app:20260218-101429",
                   "IsCause": true,
                   "Annotation": "",
                   "Truncated": false,
-                  "Highlighted": "          \u001b[38;5;33mimage\u001b[0m: harbor.local/library/demo-app:20260217-094908",
+                  "Highlighted": "          \u001b[38;5;33mimage\u001b[0m: harbor.local/library/demo-app:20260218-101429",
                   "FirstCause": false,
                   "LastCause": false
                 },
@@ -916,11 +916,11 @@
                 },
                 {
                   "Number": 25,
-                  "Content": "          image: harbor.local/library/demo-app:20260217-094908",
+                  "Content": "          image: harbor.local/library/demo-app:20260218-101429",
                   "IsCause": true,
                   "Annotation": "",
                   "Truncated": false,
-                  "Highlighted": "          \u001b[38;5;33mimage\u001b[0m: harbor.local/library/demo-app:20260217-094908",
+                  "Highlighted": "          \u001b[38;5;33mimage\u001b[0m: harbor.local/library/demo-app:20260218-101429",
                   "FirstCause": false,
                   "LastCause": false
                 },
@@ -1082,11 +1082,11 @@
                 },
                 {
                   "Number": 25,
-                  "Content": "          image: harbor.local/library/demo-app:20260217-094908",
+                  "Content": "          image: harbor.local/library/demo-app:20260218-101429",
                   "IsCause": true,
                   "Annotation": "",
                   "Truncated": false,
-                  "Highlighted": "          \u001b[38;5;33mimage\u001b[0m: harbor.local/library/demo-app:20260217-094908",
+                  "Highlighted": "          \u001b[38;5;33mimage\u001b[0m: harbor.local/library/demo-app:20260218-101429",
                   "FirstCause": false,
                   "LastCause": false
                 },
@@ -2290,22 +2290,22 @@
           "CauseMetadata": {
             "Provider": "Kubernetes",
             "Service": "general",
-            "StartLine": 52,
-            "EndLine": 74,
+            "StartLine": 12,
+            "EndLine": 28,
             "Code": {
               "Lines": [
                 {
-                  "Number": 52,
-                  "Content": "      - name: create-secret",
+                  "Number": 12,
+                  "Content": "      - name: check-secret",
                   "IsCause": true,
                   "Annotation": "",
                   "Truncated": false,
-                  "Highlighted": "      - \u001b[38;5;33mname\u001b[0m: create-secret",
+                  "Highlighted": "      - \u001b[38;5;33mname\u001b[0m: check-secret",
                   "FirstCause": true,
                   "LastCause": false
                 },
                 {
-                  "Number": 53,
+                  "Number": 13,
                   "Content": "        image: bitnami/kubectl:latest",
                   "IsCause": true,
                   "Annotation": "",
@@ -2315,7 +2315,7 @@
                   "LastCause": false
                 },
                 {
-                  "Number": 54,
+                  "Number": 14,
                   "Content": "        command:",
                   "IsCause": true,
                   "Annotation": "",
@@ -2325,7 +2325,7 @@
                   "LastCause": false
                 },
                 {
-                  "Number": 55,
+                  "Number": 15,
                   "Content": "        - /bin/bash",
                   "IsCause": true,
                   "Annotation": "",
@@ -2335,7 +2335,7 @@
                   "LastCause": false
                 },
                 {
-                  "Number": 56,
+                  "Number": 16,
                   "Content": "        - -c",
                   "IsCause": true,
                   "Annotation": "",
@@ -2345,7 +2345,7 @@
                   "LastCause": false
                 },
                 {
-                  "Number": 57,
+                  "Number": 17,
                   "Content": "        - |",
                   "IsCause": true,
                   "Annotation": "",
@@ -2355,37 +2355,37 @@
                   "LastCause": false
                 },
                 {
-                  "Number": 58,
-                  "Content": "          if [ -f /shared/skip-generation ]; then",
+                  "Number": 18,
+                  "Content": "          # Check if secret already exists",
                   "IsCause": true,
                   "Annotation": "",
                   "Truncated": false,
-                  "Highlighted": "\u001b[38;5;37m          if [ -f /shared/skip-generation ]; then",
+                  "Highlighted": "\u001b[38;5;37m          # Check if secret already exists",
                   "FirstCause": false,
                   "LastCause": false
                 },
                 {
-                  "Number": 59,
-                  "Content": "            echo \"Secret already exists, job complete\"",
+                  "Number": 19,
+                  "Content": "          if kubectl get secret cosign-key -n tekton-builds 2\u003e/dev/null; then",
                   "IsCause": true,
                   "Annotation": "",
                   "Truncated": false,
-                  "Highlighted": "            echo \"Secret already exists, job complete\"",
+                  "Highlighted": "          if kubectl get secret cosign-key -n tekton-builds 2\u003e/dev/null; then",
                   "FirstCause": false,
                   "LastCause": false
                 },
                 {
-                  "Number": 60,
-                  "Content": "            exit 0",
+                  "Number": 20,
+                  "Content": "            echo \"Cosign key secret already exists, using existing\"",
                   "IsCause": true,
                   "Annotation": "",
                   "Truncated": false,
-                  "Highlighted": "            exit 0",
+                  "Highlighted": "            echo \"Cosign key secret already exists, using existing\"",
                   "FirstCause": false,
                   "LastCause": true
                 },
                 {
-                  "Number": 61,
+                  "Number": 21,
                   "Content": "",
                   "IsCause": false,
                   "Annotation": "",
@@ -2542,22 +2542,22 @@
           "CauseMetadata": {
             "Provider": "Kubernetes",
             "Service": "general",
-            "StartLine": 12,
-            "EndLine": 28,
+            "StartLine": 52,
+            "EndLine": 74,
             "Code": {
               "Lines": [
                 {
-                  "Number": 12,
-                  "Content": "      - name: check-secret",
+                  "Number": 52,
+                  "Content": "      - name: create-secret",
                   "IsCause": true,
                   "Annotation": "",
                   "Truncated": false,
-                  "Highlighted": "      - \u001b[38;5;33mname\u001b[0m: check-secret",
+                  "Highlighted": "      - \u001b[38;5;33mname\u001b[0m: create-secret",
                   "FirstCause": true,
                   "LastCause": false
                 },
                 {
-                  "Number": 13,
+                  "Number": 53,
                   "Content": "        image: bitnami/kubectl:latest",
                   "IsCause": true,
                   "Annotation": "",
@@ -2567,7 +2567,7 @@
                   "LastCause": false
                 },
                 {
-                  "Number": 14,
+                  "Number": 54,
                   "Content": "        command:",
                   "IsCause": true,
                   "Annotation": "",
@@ -2577,7 +2577,7 @@
                   "LastCause": false
                 },
                 {
-                  "Number": 15,
+                  "Number": 55,
                   "Content": "        - /bin/bash",
                   "IsCause": true,
                   "Annotation": "",
@@ -2587,7 +2587,7 @@
                   "LastCause": false
                 },
                 {
-                  "Number": 16,
+                  "Number": 56,
                   "Content": "        - -c",
                   "IsCause": true,
                   "Annotation": "",
@@ -2597,7 +2597,7 @@
                   "LastCause": false
                 },
                 {
-                  "Number": 17,
+                  "Number": 57,
                   "Content": "        - |",
                   "IsCause": true,
                   "Annotation": "",
@@ -2607,37 +2607,37 @@
                   "LastCause": false
                 },
                 {
-                  "Number": 18,
-                  "Content": "          # Check if secret already exists",
+                  "Number": 58,
+                  "Content": "          if [ -f /shared/skip-generation ]; then",
                   "IsCause": true,
                   "Annotation": "",
                   "Truncated": false,
-                  "Highlighted": "\u001b[38;5;37m          # Check if secret already exists",
+                  "Highlighted": "\u001b[38;5;37m          if [ -f /shared/skip-generation ]; then",
                   "FirstCause": false,
                   "LastCause": false
                 },
                 {
-                  "Number": 19,
-                  "Content": "          if kubectl get secret cosign-key -n tekton-builds 2\u003e/dev/null; then",
+                  "Number": 59,
+                  "Content": "            echo \"Secret already exists, job complete\"",
                   "IsCause": true,
                   "Annotation": "",
                   "Truncated": false,
-                  "Highlighted": "          if kubectl get secret cosign-key -n tekton-builds 2\u003e/dev/null; then",
+                  "Highlighted": "            echo \"Secret already exists, job complete\"",
                   "FirstCause": false,
                   "LastCause": false
                 },
                 {
-                  "Number": 20,
-                  "Content": "            echo \"Cosign key secret already exists, using existing\"",
+                  "Number": 60,
+                  "Content": "            exit 0",
                   "IsCause": true,
                   "Annotation": "",
                   "Truncated": false,
-                  "Highlighted": "            echo \"Cosign key secret already exists, using existing\"",
+                  "Highlighted": "            exit 0",
                   "FirstCause": false,
                   "LastCause": true
                 },
                 {
-                  "Number": 21,
+                  "Number": 61,
                   "Content": "",
                   "IsCause": false,
                   "Annotation": "",
