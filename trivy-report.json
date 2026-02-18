@@ -3,16 +3,16 @@
   "Trivy": {
     "Version": "0.69.1"
   },
-  "ReportID": "019c6b01-60fe-7c78-8e6d-5c313713a5b0",
-  "CreatedAt": "2026-02-17T09:49:38.430821772Z",
-  "ArtifactID": "sha256:b93fe69902f14d30937e8e67dc173cedb9e71b15ab6d5a2e4152f22fa72d0864",
+  "ReportID": "019c703e-d927-7064-acb9-3c534e4fd01e",
+  "CreatedAt": "2026-02-18T10:14:52.967030349Z",
+  "ArtifactID": "sha256:3f29e860aff89ad1d394230d441a3108c5b3bfab61623ddae3410e530d774d4e",
   "ArtifactName": ".",
   "ArtifactType": "repository",
   "Metadata": {
     "RepoURL": "git@github.com:emilpeychev/kind-cluster-cilium.git",
     "Branch": "master",
-    "Commit": "05cd56216b583003b33af6eab9009eb1c801308e",
-    "CommitMsg": "yellow bg (#63)\n\nCo-authored-by: eepeychev \u003ceepeychev@yettel.bg\u003e",
+    "Commit": "eb5ac6f6e33161df8808a2f086e822ff7c027b9e",
+    "CommitMsg": "Revert \"blue-bg (#64)\" (#65)\n\nThis reverts commit bf44832fae31097d8393dbf872cbf8f2ab31499a.",
     "Author": "emilpeychev \u003c69958740+emilpeychev@users.noreply.github.com\u003e",
     "Committer": "GitHub \u003cnoreply@github.com\u003e"
   },
@@ -790,11 +790,11 @@
                 },
                 {
                   "Number": 25,
-                  "Content": "          image: harbor.local/library/demo-app:20260217-093809",
+                  "Content": "          image: harbor.local/library/demo-app:20260217-094908",
                   "IsCause": true,
                   "Annotation": "",
                   "Truncated": false,
-                  "Highlighted": "          \u001b[38;5;33mimage\u001b[0m: harbor.local/library/demo-app:20260217-093809",
+                  "Highlighted": "          \u001b[38;5;33mimage\u001b[0m: harbor.local/library/demo-app:20260217-094908",
                   "FirstCause": false,
                   "LastCause": false
                 },
@@ -916,11 +916,11 @@
                 },
                 {
                   "Number": 25,
-                  "Content": "          image: harbor.local/library/demo-app:20260217-093809",
+                  "Content": "          image: harbor.local/library/demo-app:20260217-094908",
                   "IsCause": true,
                   "Annotation": "",
                   "Truncated": false,
-                  "Highlighted": "          \u001b[38;5;33mimage\u001b[0m: harbor.local/library/demo-app:20260217-093809",
+                  "Highlighted": "          \u001b[38;5;33mimage\u001b[0m: harbor.local/library/demo-app:20260217-094908",
                   "FirstCause": false,
                   "LastCause": false
                 },
@@ -1082,11 +1082,11 @@
                 },
                 {
                   "Number": 25,
-                  "Content": "          image: harbor.local/library/demo-app:20260217-093809",
+                  "Content": "          image: harbor.local/library/demo-app:20260217-094908",
                   "IsCause": true,
                   "Annotation": "",
                   "Truncated": false,
-                  "Highlighted": "          \u001b[38;5;33mimage\u001b[0m: harbor.local/library/demo-app:20260217-093809",
+                  "Highlighted": "          \u001b[38;5;33mimage\u001b[0m: harbor.local/library/demo-app:20260217-094908",
                   "FirstCause": false,
                   "LastCause": false
                 },
@@ -2290,132 +2290,6 @@
           "CauseMetadata": {
             "Provider": "Kubernetes",
             "Service": "general",
-            "StartLine": 29,
-            "EndLine": 50,
-            "Code": {
-              "Lines": [
-                {
-                  "Number": 29,
-                  "Content": "      - name: generate-key",
-                  "IsCause": true,
-                  "Annotation": "",
-                  "Truncated": false,
-                  "Highlighted": "      - \u001b[38;5;33mname\u001b[0m: generate-key",
-                  "FirstCause": true,
-                  "LastCause": false
-                },
-                {
-                  "Number": 30,
-                  "Content": "        image: gcr.io/projectsigstore/cosign:v2.2.0",
-                  "IsCause": true,
-                  "Annotation": "",
-                  "Truncated": false,
-                  "Highlighted": "        \u001b[38;5;33mimage\u001b[0m: gcr.io/projectsigstore/cosign:v2.2.0",
-                  "FirstCause": false,
-                  "LastCause": false
-                },
-                {
-                  "Number": 31,
-                  "Content": "        env:",
-                  "IsCause": true,
-                  "Annotation": "",
-                  "Truncated": false,
-                  "Highlighted": "        \u001b[38;5;33menv\u001b[0m:",
-                  "FirstCause": false,
-                  "LastCause": false
-                },
-                {
-                  "Number": 32,
-                  "Content": "        - name: COSIGN_PASSWORD",
-                  "IsCause": true,
-                  "Annotation": "",
-                  "Truncated": false,
-                  "Highlighted": "        - \u001b[38;5;33mname\u001b[0m: COSIGN_PASSWORD",
-                  "FirstCause": false,
-                  "LastCause": false
-                },
-                {
-                  "Number": 33,
-                  "Content": "          value: \"\"",
-                  "IsCause": true,
-                  "Annotation": "",
-                  "Truncated": false,
-                  "Highlighted": "          \u001b[38;5;33mvalue\u001b[0m: \u001b[38;5;37m\"\"",
-                  "FirstCause": false,
-                  "LastCause": false
-                },
-                {
-                  "Number": 34,
-                  "Content": "        workingDir: /keys",
-                  "IsCause": true,
-                  "Annotation": "",
-                  "Truncated": false,
-                  "Highlighted": "\u001b[0m        \u001b[38;5;33mworkingDir\u001b[0m: /keys",
-                  "FirstCause": false,
-                  "LastCause": false
-                },
-                {
-                  "Number": 35,
-                  "Content": "        command:",
-                  "IsCause": true,
-                  "Annotation": "",
-                  "Truncated": false,
-                  "Highlighted": "        \u001b[38;5;33mcommand\u001b[0m:",
-                  "FirstCause": false,
-                  "LastCause": false
-                },
-                {
-                  "Number": 36,
-                  "Content": "        - sh",
-                  "IsCause": true,
-                  "Annotation": "",
-                  "Truncated": false,
-                  "Highlighted": "        - sh",
-                  "FirstCause": false,
-                  "LastCause": false
-                },
-                {
-                  "Number": 37,
-                  "Content": "        - -c",
-                  "IsCause": true,
-                  "Annotation": "",
-                  "Truncated": false,
-                  "Highlighted": "        - -c",
-                  "FirstCause": false,
-                  "LastCause": true
-                },
-                {
-                  "Number": 38,
-                  "Content": "",
-                  "IsCause": false,
-                  "Annotation": "",
-                  "Truncated": true,
-                  "FirstCause": false,
-                  "LastCause": false
-                }
-              ]
-            }
-          }
-        },
-        {
-          "Type": "Kubernetes Security Check",
-          "ID": "KSV-0118",
-          "Title": "Default security context configured",
-          "Description": "Security context controls the allocation of security parameters for the pod/container/volume, ensuring the appropriate level of protection. Relying on default security context may expose vulnerabilities to potential attacks that rely on privileged access.",
-          "Message": "container generate-cosign-key in tekton-builds namespace is using the default security context",
-          "Namespace": "builtin.kubernetes.KSV118",
-          "Query": "data.builtin.kubernetes.KSV118.deny",
-          "Resolution": "To enhance security, it is strongly recommended not to rely on the default security context. Instead, it is advisable to explicitly define the required security parameters (such as runAsNonRoot, capabilities, readOnlyRootFilesystem, etc.) within the security context.",
-          "Severity": "HIGH",
-          "PrimaryURL": "https://avd.aquasec.com/misconfig/ksv-0118",
-          "References": [
-            "https://kubernetes.io/docs/tasks/configure-pod-container/security-context/",
-            "https://avd.aquasec.com/misconfig/ksv-0118"
-          ],
-          "Status": "FAIL",
-          "CauseMetadata": {
-            "Provider": "Kubernetes",
-            "Service": "general",
             "StartLine": 52,
             "EndLine": 74,
             "Code": {
@@ -2512,6 +2386,132 @@
                 },
                 {
                   "Number": 61,
+                  "Content": "",
+                  "IsCause": false,
+                  "Annotation": "",
+                  "Truncated": true,
+                  "FirstCause": false,
+                  "LastCause": false
+                }
+              ]
+            }
+          }
+        },
+        {
+          "Type": "Kubernetes Security Check",
+          "ID": "KSV-0118",
+          "Title": "Default security context configured",
+          "Description": "Security context controls the allocation of security parameters for the pod/container/volume, ensuring the appropriate level of protection. Relying on default security context may expose vulnerabilities to potential attacks that rely on privileged access.",
+          "Message": "container generate-cosign-key in tekton-builds namespace is using the default security context",
+          "Namespace": "builtin.kubernetes.KSV118",
+          "Query": "data.builtin.kubernetes.KSV118.deny",
+          "Resolution": "To enhance security, it is strongly recommended not to rely on the default security context. Instead, it is advisable to explicitly define the required security parameters (such as runAsNonRoot, capabilities, readOnlyRootFilesystem, etc.) within the security context.",
+          "Severity": "HIGH",
+          "PrimaryURL": "https://avd.aquasec.com/misconfig/ksv-0118",
+          "References": [
+            "https://kubernetes.io/docs/tasks/configure-pod-container/security-context/",
+            "https://avd.aquasec.com/misconfig/ksv-0118"
+          ],
+          "Status": "FAIL",
+          "CauseMetadata": {
+            "Provider": "Kubernetes",
+            "Service": "general",
+            "StartLine": 29,
+            "EndLine": 50,
+            "Code": {
+              "Lines": [
+                {
+                  "Number": 29,
+                  "Content": "      - name: generate-key",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "      - \u001b[38;5;33mname\u001b[0m: generate-key",
+                  "FirstCause": true,
+                  "LastCause": false
+                },
+                {
+                  "Number": 30,
+                  "Content": "        image: gcr.io/projectsigstore/cosign:v2.2.0",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "        \u001b[38;5;33mimage\u001b[0m: gcr.io/projectsigstore/cosign:v2.2.0",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 31,
+                  "Content": "        env:",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "        \u001b[38;5;33menv\u001b[0m:",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 32,
+                  "Content": "        - name: COSIGN_PASSWORD",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "        - \u001b[38;5;33mname\u001b[0m: COSIGN_PASSWORD",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 33,
+                  "Content": "          value: \"\"",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "          \u001b[38;5;33mvalue\u001b[0m: \u001b[38;5;37m\"\"",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 34,
+                  "Content": "        workingDir: /keys",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[0m        \u001b[38;5;33mworkingDir\u001b[0m: /keys",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 35,
+                  "Content": "        command:",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "        \u001b[38;5;33mcommand\u001b[0m:",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 36,
+                  "Content": "        - sh",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "        - sh",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 37,
+                  "Content": "        - -c",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "        - -c",
+                  "FirstCause": false,
+                  "LastCause": true
+                },
+                {
+                  "Number": 38,
                   "Content": "",
                   "IsCause": false,
                   "Annotation": "",
