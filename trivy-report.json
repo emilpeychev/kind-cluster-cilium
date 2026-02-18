@@ -3,16 +3,16 @@
   "Trivy": {
     "Version": "0.69.1"
   },
-  "ReportID": "019c708c-fc4e-7ec1-83bd-1879530b534b",
-  "CreatedAt": "2026-02-18T11:40:13.774970977Z",
-  "ArtifactID": "sha256:2fedc419ab88177385d7df370802e6857caa6f1ad4f2a6c9e460ade8224bb186",
+  "ReportID": "019c7122-4472-7a31-9848-017c50f7578e",
+  "CreatedAt": "2026-02-18T14:23:17.10667308Z",
+  "ArtifactID": "sha256:6bf236f58f7310321c26d31f3a28fdb3be034a8e82fc7a6ab4b926f7edc17de1",
   "ArtifactName": ".",
   "ArtifactType": "repository",
   "Metadata": {
     "RepoURL": "git@github.com:emilpeychev/kind-cluster-cilium.git",
     "Branch": "master",
-    "Commit": "419f8d1cbdf2e151d30690b5f7edfae2bef7e65f",
-    "CommitMsg": "red bg (#69)\n\nCo-authored-by: eepeychev \u003ceepeychev@yettel.bg\u003e",
+    "Commit": "21acefb2dcd341f648b5ce68ead31a8dd5f90bed",
+    "CommitMsg": "carbon-blue (#72)\n\nCo-authored-by: eepeychev \u003ceepeychev@yettel.bg\u003e",
     "Author": "emilpeychev \u003c69958740+emilpeychev@users.noreply.github.com\u003e",
     "Committer": "GitHub \u003cnoreply@github.com\u003e"
   },
@@ -790,11 +790,11 @@
                 },
                 {
                   "Number": 25,
-                  "Content": "          image: harbor.local/library/demo-app:20260218-113501",
+                  "Content": "          image: harbor.local/library/demo-app:20260218-071225",
                   "IsCause": true,
                   "Annotation": "",
                   "Truncated": false,
-                  "Highlighted": "          \u001b[38;5;33mimage\u001b[0m: harbor.local/library/demo-app:20260218-113501",
+                  "Highlighted": "          \u001b[38;5;33mimage\u001b[0m: harbor.local/library/demo-app:20260218-071225",
                   "FirstCause": false,
                   "LastCause": false
                 },
@@ -916,11 +916,11 @@
                 },
                 {
                   "Number": 25,
-                  "Content": "          image: harbor.local/library/demo-app:20260218-113501",
+                  "Content": "          image: harbor.local/library/demo-app:20260218-071225",
                   "IsCause": true,
                   "Annotation": "",
                   "Truncated": false,
-                  "Highlighted": "          \u001b[38;5;33mimage\u001b[0m: harbor.local/library/demo-app:20260218-113501",
+                  "Highlighted": "          \u001b[38;5;33mimage\u001b[0m: harbor.local/library/demo-app:20260218-071225",
                   "FirstCause": false,
                   "LastCause": false
                 },
@@ -1082,11 +1082,11 @@
                 },
                 {
                   "Number": 25,
-                  "Content": "          image: harbor.local/library/demo-app:20260218-113501",
+                  "Content": "          image: harbor.local/library/demo-app:20260218-071225",
                   "IsCause": true,
                   "Annotation": "",
                   "Truncated": false,
-                  "Highlighted": "          \u001b[38;5;33mimage\u001b[0m: harbor.local/library/demo-app:20260218-113501",
+                  "Highlighted": "          \u001b[38;5;33mimage\u001b[0m: harbor.local/library/demo-app:20260218-071225",
                   "FirstCause": false,
                   "LastCause": false
                 },
@@ -1164,6 +1164,15 @@
     },
     {
       "Target": "ArgoCD-demo-apps/projects/application-sets-projects.yaml",
+      "Class": "config",
+      "Type": "kubernetes",
+      "MisconfSummary": {
+        "Successes": 35,
+        "Failures": 0
+      }
+    },
+    {
+      "Target": "ArgoCD/argocd-metrics-services.yaml",
       "Class": "config",
       "Type": "kubernetes",
       "MisconfSummary": {
@@ -1850,6 +1859,15 @@
     },
     {
       "Target": "Kyverno/application.yaml",
+      "Class": "config",
+      "Type": "kubernetes",
+      "MisconfSummary": {
+        "Successes": 35,
+        "Failures": 0
+      }
+    },
+    {
+      "Target": "Kyverno/kyverno-metrics.yaml",
       "Class": "config",
       "Type": "kubernetes",
       "MisconfSummary": {
@@ -3190,6 +3208,15 @@
     },
     {
       "Target": "Tekton/tekton-dashboard-httproute.yaml",
+      "Class": "config",
+      "Type": "kubernetes",
+      "MisconfSummary": {
+        "Successes": 35,
+        "Failures": 0
+      }
+    },
+    {
+      "Target": "Tekton/tekton-metrics-services.yaml",
       "Class": "config",
       "Type": "kubernetes",
       "MisconfSummary": {
