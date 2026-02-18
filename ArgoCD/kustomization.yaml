@@ -5,3 +5,4 @@ resources:
   - httproute.yaml
   - rbac-cm.yaml
   - configmap-cm.yaml
+  - argocd-metrics-services.yaml

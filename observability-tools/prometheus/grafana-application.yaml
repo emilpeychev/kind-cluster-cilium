@@ -37,6 +37,14 @@ spec:
               port: 80
             persistence:
               enabled: false
+            metrics:
+              enabled: true
+              serviceMonitor:
+                enabled: false
+              annotations:
+                prometheus.io/scrape: "true"
+                prometheus.io/port: "3000"
+                prometheus.io/path: "/metrics"
             datasources:
               datasources.yaml:
                 apiVersion: 1

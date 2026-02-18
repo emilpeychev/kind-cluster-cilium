@@ -45,3 +45,15 @@ kubectl get applications -n argocd metrics-server
 log "Metrics Server deployed via Argo CD successfully"
 log "Usage: kubectl top nodes | kubectl top pods -A"
 log "Step 15 complete."
+
+# Setup GitHub webhook proxy for Argo Events
+log "Setting up GitHub webhook proxy (smee)..."
+pkill -f smee 2>/dev/null || true
+sleep 2
+
+log "Starting smee webhook proxy in background..."
+smee --url https://smee.io/1iIhi0YC0IolWxXJ --target http://localhost:12000/github &
+sleep 2
+
+log "Smee proxy started. GitHub webhooks will be forwarded to Argo Events."
+log "Webhook URL: https://smee.io/1iIhi0YC0IolWxXJ"

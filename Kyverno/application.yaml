@@ -19,12 +19,32 @@ spec:
       values: |
         admissionController:
           replicas: 1
+          metricsService:
+            annotations:
+              prometheus.io/scrape: "true"
+              prometheus.io/port: "8000"
+              prometheus.io/path: "/metrics"
         backgroundController:
           replicas: 1
+          metricsService:
+            annotations:
+              prometheus.io/scrape: "true"
+              prometheus.io/port: "8000"
+              prometheus.io/path: "/metrics"
         cleanupController:
           replicas: 1
+          metricsService:
+            annotations:
+              prometheus.io/scrape: "true"
+              prometheus.io/port: "8000"
+              prometheus.io/path: "/metrics"
         reportsController:
           replicas: 1
+          metricsService:
+            annotations:
+              prometheus.io/scrape: "true"
+              prometheus.io/port: "8000"
+              prometheus.io/path: "/metrics"
         config:
           preserve: false
         features:
